@@ -86,7 +86,7 @@ public class Main {
 		}
 		
 		//setup the current data variable
-		currentData = allData.get(0);
+		currentData = allData.get(510);
 	}
 	
 	public DataHandler parseData(String data) {

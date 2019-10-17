@@ -32,26 +32,37 @@ public class DataHandler {
 	
 	public void set(int index, String currentData) {
 		
-//		if (index == LATITUDE || index == LONGITUDE) {
-//			float minutes = Float.parseFloat(currentData.substring(0, currentData.indexOf(".") - 2));
-//			float degrees = Float.parseFloat(currentData.replace(minutes + "", ""));
-//			
-//			data[index] = new Data(degrees, minutes);
-//		}
-		
-		float floatData = -1;
-		
-		try {
-			floatData = Float.parseFloat(currentData);
-		} catch (NumberFormatException e) {
-			if (currentData.equals("ovf")) {
-				//ovf means overflow
-				floatData = Float.MAX_VALUE;
-			} else {
-				System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
+		// Check for special cases first
+		if (index == LATITUDE || index == LONGITUDE) {
+			float degrees = 0;
+			float minutes = 0;
+			
+			int minutesIndex = currentData.indexOf(".") - 2;
+			//otherwise, it is badly formatted and probably still zero
+			if (minutesIndex >= 0) {
+				minutes = Float.parseFloat(currentData.substring(minutesIndex, currentData.length()));
+				degrees = Float.parseFloat(currentData.substring(0, minutesIndex));
 			}
+			
+			data[index] = new Data(degrees, minutes);
+		} else {
+			
+			// Normal case
+			float floatData = -1;
+			
+			try {
+				floatData = Float.parseFloat(currentData);
+			} catch (NumberFormatException e) {
+				if (currentData.equals("ovf")) {
+					//ovf means overflow
+					floatData = Float.MAX_VALUE;
+				} else {
+					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
+				}
+			}
+			
+			data[index] = new Data(floatData);
 		}
 		
-		data[index] = new Data(floatData);
 	}
 }
