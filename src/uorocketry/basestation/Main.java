@@ -58,7 +58,7 @@ public class Main implements ChangeListener {
 		
 		if (currentDataHandler != null) {
 			//set max value of the slider
-			window.slider.setMaximum(allData.size());
+			window.slider.setMaximum(allData.size() - 1);
 			
 			currentDataHandler.updateTableUIWithData(window.dataTable, labels);
 		}
