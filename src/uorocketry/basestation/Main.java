@@ -4,11 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.JFrame;
 
 public class Main {
 	
@@ -28,7 +25,8 @@ public class Main {
 	
 	String[] labels = new String[DATA_LENGTH];
 	
-	DataHandler currentData;
+	//index of the current data point being looked at
+	int currentData;
 	
 	Window window;
 	
@@ -48,7 +46,7 @@ public class Main {
 	}
 	
 	public void updateUI() {
-		currentData.updateTableUIWithData(window.dataTable, labels);
+		allData.get(currentData).updateTableUIWithData(window.dataTable, labels);
 	}
 	
 	/** 
@@ -86,7 +84,7 @@ public class Main {
 		}
 		
 		//setup the current data variable
-		currentData = allData.get(510);
+		currentData = 510;
 	}
 	
 	public DataHandler parseData(String data) {
