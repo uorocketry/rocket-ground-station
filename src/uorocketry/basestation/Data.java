@@ -1,5 +1,7 @@
 package uorocketry.basestation;
 
+import java.text.DecimalFormat;
+
 public class Data {
 	//the actual data point
 	float data;
@@ -8,6 +10,8 @@ public class Data {
 	float minutes;
 	
 	Types type;
+	
+	DecimalFormat format = new DecimalFormat("#.######");
 	
 	enum Types {
 		NORMAL,
@@ -18,6 +22,9 @@ public class Data {
 		this.data = data;
 		
 		type = Types.NORMAL;
+		
+		format.setGroupingUsed(true);
+		format.setGroupingSize(3);
 	}
 	
 	public Data(float degrees, float minutes) {
@@ -32,7 +39,7 @@ public class Data {
 			case COORDINATE:
 				return Math.round(data) + "° " + minutes + " '";
 			default: 
-				return data + "";
+				return format.format(data);
 		}
 	}
 }
