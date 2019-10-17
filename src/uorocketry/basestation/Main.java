@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JTable;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableModel;
 
 public class Main implements ChangeListener {
 	
@@ -54,13 +56,31 @@ public class Main implements ChangeListener {
 	}
 	
 	public void updateUI() {
+		//set max value of the slider
+		window.slider.setMaximum(allData.size() - 1);
+		
 		DataHandler currentDataHandler = allData.get(currentDataIndex);
 		
 		if (currentDataHandler != null) {
-			//set max value of the slider
-			window.slider.setMaximum(allData.size() - 1);
-			
 			currentDataHandler.updateTableUIWithData(window.dataTable, labels);
+		} else {
+			setTableToError(window.dataTable);
+		}
+	}
+	
+	public void setTableToError(JTable table) {
+		TableModel tableModel = table.getModel();
+		
+		// Set first item to "Error"
+		tableModel.setValueAt("Parsing Error", 0, 0);
+		tableModel.setValueAt(currentDataIndex, 0, 1);
+		
+		for (int i = 1; i < DATA_LENGTH; i++) {
+			// Set label
+			tableModel.setValueAt("", i, 0);
+			
+			// Set data
+			tableModel.setValueAt("", i, 1);
 		}
 	}
 	
