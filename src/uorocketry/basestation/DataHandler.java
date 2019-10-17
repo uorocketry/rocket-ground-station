@@ -1,7 +1,5 @@
 package uorocketry.basestation;
 
-import java.util.ArrayList;
-
 public class DataHandler {
 	
 	final int TIMESTAMP = 0;
@@ -20,13 +18,13 @@ public class DataHandler {
 	final int GPS_FIX = 13;
 	final int GPS_FIX_QUALITY = 14;
 	
-	Data[] data = new Data[15];
+	Data[] data = new Data[Main.DATA_LENGTH];
 	
-	public String getFormattedData(ArrayList<String> labels) {
+	public String getFormattedData(String[] labels) {
 		String text = "<html>";
 		
 		for (int i = 0; i < data.length; i++) {
-			text += labels.get(i) + ": " + data[i].getFormattedString() + "<br>";
+			text += labels[i] + ": " + data[i].getFormattedString() + "<br>";
 		}
 		
 		return text + "</html>";

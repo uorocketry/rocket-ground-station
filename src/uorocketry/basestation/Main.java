@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,9 +12,13 @@ import javax.swing.JFrame;
 
 public class Main {
 	
+	/** Constants */
+	public static final String SEPARATOR = ";";
+	public static final int DATA_LENGTH = 15;
+	
 	List<DataHandler> allData = new ArrayList<>();
 	
-	ArrayList<String> labels = new ArrayList<>();
+	String[] labels = new String[DATA_LENGTH];
 	
 	DataHandler currentData;
 	
@@ -29,14 +34,9 @@ public class Main {
 		//Load simulation data
 		loadSimulationData("data/data.txt");
 		
-//		currentData = new DataHandler();
-//		for (int i = 0; i < 15; i++) {
-//			currentData.set(i, 10 + "");
-//		}
+		//Load labels
+		loadLabels("data/labels.txt");
 		
-		for (int i = 0; i < 15; i++) {
-			labels.add("TESTING" + i);
-		}
 		
 		Window window = new Window();
 		
@@ -44,10 +44,10 @@ public class Main {
 		
 	}
 	
-	public void loadSimulationData(String file) {
+	public void loadSimulationData(String fileName) {
 		BufferedReader br = null;
 		try {
-			br = new BufferedReader(new FileReader(file));
+			br = new BufferedReader(new FileReader(fileName));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -57,7 +57,6 @@ public class Main {
 			    String line = null;
 
 			    while ((line = br.readLine()) != null) {
-			        
 			        //parse this line and add it as a data point
 			        allData.add(parseData(line));
 			    }
@@ -79,7 +78,7 @@ public class Main {
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
 		
 		//semi-colon separated
-		String[] splitData = data.split(";");
+		String[] splitData = data.split(SEPARATOR);
 		if (splitData.length != dataHandler.data.length) {
 			//invalid data
 			System.err.println("Line with invalid data (Not the correct amount of data)");
@@ -95,7 +94,28 @@ public class Main {
 		return dataHandler;
 	}
 	
-	public void loadLabels() {
+	public void loadLabels(String fileName) {
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(fileName));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 		
+		try {
+			try {
+			    String line = null;
+
+			    while ((line = br.readLine()) != null) {
+			    	//this line contains all of the labels
+			    	//this one is comma separated, not the same as the actual data
+			    	labels = line.split(",");
+			    }
+			} finally {
+			    br.close();
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
