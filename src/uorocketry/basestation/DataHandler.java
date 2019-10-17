@@ -1,5 +1,8 @@
 package uorocketry.basestation;
 
+import javax.swing.JTable;
+import javax.swing.table.TableModel;
+
 public class DataHandler {
 	
 	final int TIMESTAMP = 0;
@@ -28,6 +31,18 @@ public class DataHandler {
 		}
 		
 		return text + "</html>";
+	}
+	
+	public void updateTableUIWithData(JTable table, String[] labels) {
+		TableModel tableModel = table.getModel();
+		
+		for (int i = 0; i < data.length; i++) {
+			// Set label
+			tableModel.setValueAt(labels[i], i, 0);
+			
+			// Set data
+			tableModel.setValueAt(data[i].getFormattedString(), i, 1);
+		}
 	}
 	
 	public void set(int index, String currentData) {

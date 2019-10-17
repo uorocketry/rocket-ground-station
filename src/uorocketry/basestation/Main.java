@@ -48,7 +48,7 @@ public class Main {
 	}
 	
 	public void updateUI() {
-		window.dataLabel.setText(currentData.getFormattedData(labels));
+		currentData.updateTableUIWithData(window.dataTable, labels);
 	}
 	
 	/** 
