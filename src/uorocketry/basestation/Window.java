@@ -1,29 +1,27 @@
 package uorocketry.basestation;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.ScrollPaneLayout;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 
 public class Window extends JFrame {
 	
 	private static final long serialVersionUID = -5397816377154627951L;
+	
 	JTable dataTable;
 	private JPanel dataTablePanel;
 	private JScrollPane scrollPane;
-	private JPanel panel;
+	
+	JScrollBar scrollBar;
 	
 	public Window() {
 		// Set look and feel
@@ -48,24 +46,30 @@ public class Window extends JFrame {
 		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTable.setCellSelectionEnabled(true);
+		
 		// Make non editable
 		dataTable.setDefaultEditor(Object.class, null);
-		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
+		getContentPane().setLayout(new BorderLayout(0, 0));
+		
 		// Increase row height
 		dataTable.setRowHeight(30);
+		
+		// Adjust width
+		dataTable.getColumnModel().getColumn(0).setPreferredWidth(200);
+		dataTable.getColumnModel().getColumn(1).setPreferredWidth(150);
+
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 21));
 		dataTablePanel.add(dataTable);
 		
 		scrollPane = new JScrollPane(dataTablePanel);
-		getContentPane().add(scrollPane);
+		getContentPane().add(scrollPane, BorderLayout.WEST);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setViewportBorder(null);
 		
-		panel = new JPanel();
-		panel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		panel.setAlignmentY(Component.TOP_ALIGNMENT);
-		getContentPane().add(panel);
+		scrollBar = new JScrollBar();
+		scrollBar.setOrientation(JScrollBar.HORIZONTAL);
+		getContentPane().add(scrollBar, BorderLayout.SOUTH);
 		
 		setVisible(true);
 	}

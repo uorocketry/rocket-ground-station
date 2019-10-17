@@ -1,5 +1,7 @@
 package uorocketry.basestation;
 
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -7,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main {
+public class Main implements AdjustmentListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
@@ -25,8 +27,8 @@ public class Main {
 	
 	String[] labels = new String[DATA_LENGTH];
 	
-	//index of the current data point being looked at
-	int currentData;
+	// Index of the current data point being looked at
+	int currentDataIndex = 0;
 	
 	Window window;
 	
@@ -35,28 +37,35 @@ public class Main {
 	}
 	
 	public Main() {
-		//create window
+		// Create window
 		window = new Window();
 		
-		//load simulation data if necessary
+		// Add scroll bar listener
+		window.scrollBar.addAdjustmentListener(this);
+		
+		// Load simulation data if necessary
 		if (SIMULATION) loadSimulationData();
 		
-		//Update UI once
+		// Update UI once
 		updateUI();
 	}
 	
 	public void updateUI() {
-		allData.get(currentData).updateTableUIWithData(window.dataTable, labels);
+		DataHandler currentDataHandler = allData.get(currentDataIndex);
+		
+		if (currentDataHandler != null) {
+			currentDataHandler.updateTableUIWithData(window.dataTable, labels);
+		}
 	}
 	
 	/** 
 	 * Run once at the beginning of simulation mode
 	 */
 	public void loadSimulationData() {
-		//Load simulation data
+		// Load simulation data
 		loadSimulationData(SIM_DATA_LOCATION);
 		
-		//Load labels
+		// Load labels
 		loadLabels(LABELS_LOCATION);
 	}
 	
@@ -73,7 +82,7 @@ public class Main {
 			    String line = null;
 
 			    while ((line = br.readLine()) != null) {
-			        //parse this line and add it as a data point
+			        // Parse this line and add it as a data point
 			        allData.add(parseData(line));
 			    }
 			} finally {
@@ -82,18 +91,15 @@ public class Main {
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
-		
-		//setup the current data variable
-		currentData = 510;
 	}
 	
 	public DataHandler parseData(String data) {
 		DataHandler dataHandler = new DataHandler();
 		
-		//clear out the b' ' stuff added that is only meant for the radio to see
+		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
 		
-		//semi-colon separated
+		// Semi-colon separated
 		String[] splitData = data.split(SEPARATOR);
 		if (splitData.length != dataHandler.data.length) {
 			//invalid data
@@ -132,6 +138,20 @@ public class Main {
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Triggered every time the scroll bar changes
+	 */
+	@Override
+	public void adjustmentValueChanged(AdjustmentEvent e) {
+		if (e.getSource() == window.scrollBar) {
+			float scrollBarMaxValue = 100 - window.scrollBar.getVisibleAmount();
+			
+			currentDataIndex = Math.round((allData.size() - 1) * (window.scrollBar.getValue() / scrollBarMaxValue));
+			
+			updateUI();
 		}
 	}
 }
