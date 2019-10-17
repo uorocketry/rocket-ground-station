@@ -12,6 +12,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.JSlider;
 
 public class Window extends JFrame {
 	
@@ -21,7 +22,7 @@ public class Window extends JFrame {
 	private JPanel dataTablePanel;
 	private JScrollPane scrollPane;
 	
-	JScrollBar scrollBar;
+	JSlider slider;
 	
 	public Window() {
 		// Set look and feel
@@ -67,9 +68,10 @@ public class Window extends JFrame {
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setViewportBorder(null);
 		
-		scrollBar = new JScrollBar();
-		scrollBar.setOrientation(JScrollBar.HORIZONTAL);
-		getContentPane().add(scrollBar, BorderLayout.SOUTH);
+		slider = new JSlider();
+		slider.setPaintTicks(true);
+		slider.setValue(0);
+		getContentPane().add(slider, BorderLayout.SOUTH);
 		
 		setVisible(true);
 	}

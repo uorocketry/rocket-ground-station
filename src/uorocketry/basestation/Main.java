@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main implements AdjustmentListener {
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+public class Main implements ChangeListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
@@ -40,8 +43,8 @@ public class Main implements AdjustmentListener {
 		// Create window
 		window = new Window();
 		
-		// Add scroll bar listener
-		window.scrollBar.addAdjustmentListener(this);
+		// Add slider listener
+		window.slider.addChangeListener(this);
 		
 		// Load simulation data if necessary
 		if (SIMULATION) loadSimulationData();
@@ -54,6 +57,9 @@ public class Main implements AdjustmentListener {
 		DataHandler currentDataHandler = allData.get(currentDataIndex);
 		
 		if (currentDataHandler != null) {
+			//set max value of the slider
+			window.slider.setMaximum(allData.size());
+			
 			currentDataHandler.updateTableUIWithData(window.dataTable, labels);
 		}
 	}
@@ -141,15 +147,14 @@ public class Main implements AdjustmentListener {
 		}
 	}
 
+	
 	/**
-	 * Triggered every time the scroll bar changes
+	 * Triggered every time the slider changes
 	 */
 	@Override
-	public void adjustmentValueChanged(AdjustmentEvent e) {
-		if (e.getSource() == window.scrollBar) {
-			float scrollBarMaxValue = 100 - window.scrollBar.getVisibleAmount();
-			
-			currentDataIndex = Math.round((allData.size() - 1) * (window.scrollBar.getValue() / scrollBarMaxValue));
+	public void stateChanged(ChangeEvent e) {
+		if (e.getSource() == window.slider) {
+			currentDataIndex = window.slider.getValue();
 			
 			updateUI();
 		}
