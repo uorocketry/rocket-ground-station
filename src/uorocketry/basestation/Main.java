@@ -13,8 +13,16 @@ import javax.swing.JFrame;
 public class Main {
 	
 	/** Constants */
-	public static final String SEPARATOR = ";";
+	/** Is this running in simulation mode */
+	public static final boolean SIMULATION = true;
+	/** The location of the comma separated labels */
+	public static final String LABELS_LOCATION = "data/labels.txt";
+	/** How many data points are there */
 	public static final int DATA_LENGTH = 15;
+	/** Separator for the data */
+	public static final String SEPARATOR = ";";
+	/** Data file location for the simulation (new line separated for each event) */
+	public static final String SIM_DATA_LOCATION = "data/data.txt";
 	
 	List<DataHandler> allData = new ArrayList<>();
 	
@@ -22,26 +30,36 @@ public class Main {
 	
 	DataHandler currentData;
 	
-	JFrame frame;
+	Window window;
 	
 	public static void main(String[] args) {
 		new Main();
 	}
 	
 	public Main() {
-		//Add test data
+		//create window
+		window = new Window();
 		
+		//load simulation data if necessary
+		if (SIMULATION) loadSimulationData();
+		
+		//Update UI once
+		updateUI();
+	}
+	
+	public void updateUI() {
+		window.dataLabel.setText(currentData.getFormattedData(labels));
+	}
+	
+	/** 
+	 * Run once at the beginning of simulation mode
+	 */
+	public void loadSimulationData() {
 		//Load simulation data
-		loadSimulationData("data/data.txt");
+		loadSimulationData(SIM_DATA_LOCATION);
 		
 		//Load labels
-		loadLabels("data/labels.txt");
-		
-		
-		Window window = new Window();
-		
-		window.dataLabel.setText(currentData.getFormattedData(labels));
-		
+		loadLabels(LABELS_LOCATION);
 	}
 	
 	public void loadSimulationData(String fileName) {
