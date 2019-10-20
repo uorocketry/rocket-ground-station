@@ -1,11 +1,11 @@
 package uorocketry.basestation;
 
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,11 +14,15 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.TableModel;
 
-public class Main implements ChangeListener {
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortEvent;
+import com.fazecast.jSerialComm.SerialPortMessageListener;
+
+public class Main implements ChangeListener, SerialPortMessageListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
-	public static final boolean SIMULATION = true;
+	public static final boolean SIMULATION = false;
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
@@ -32,8 +36,14 @@ public class Main implements ChangeListener {
 	
 	String[] labels = new String[DATA_LENGTH];
 	
-	// Index of the current data point being looked at
+	/** Index of the current data point being looked at */
 	int currentDataIndex = 0;
+	
+	/** If {@link currentDataIndex} should be set to the latest message */
+	boolean latest = true;
+	
+	/** If not in a simulation, the serial port being listened to */
+	SerialPort activeSerialPort;
 	
 	Window window;
 	
@@ -49,13 +59,35 @@ public class Main implements ChangeListener {
 		window.slider.addChangeListener(this);
 		
 		// Load simulation data if necessary
-		if (SIMULATION) loadSimulationData();
+		if (SIMULATION) {
+			loadSimulationData();
+		}
+		
+		//Setup com ports if not a simulation
+		if (!SIMULATION) {
+			setupSerialComs();
+		}
 		
 		// Update UI once
 		updateUI();
 	}
 	
+	public void setupSerialComs() {
+		SerialPort[] ports = SerialPort.getCommPorts();
+		
+		// Grab just the first port for now
+		if (ports.length > 0) {
+			activeSerialPort = ports[0];
+			
+			// Setup listener
+			activeSerialPort.addDataListener(this);
+		}
+	}
+	
 	public void updateUI() {
+		// If not ready yet
+		if (allData.size() == 0) return;
+		
 		//set max value of the slider
 		window.slider.setMaximum(allData.size() - 1);
 		
@@ -178,5 +210,29 @@ public class Main implements ChangeListener {
 			
 			updateUI();
 		}
+	}
+
+	@Override
+	public int getListeningEvents() {
+		return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+	}
+	
+	@Override
+   public byte[] getMessageDelimiter() {
+		return "\n".getBytes(StandardCharsets.UTF_8);
+	}
+
+   @Override
+   public boolean delimiterIndicatesEndOfMessage() {
+	   return true; 
+   }
+
+	@Override
+	public void serialEvent(SerialPortEvent e) {
+		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
+		
+		allData.add(parseData(delimitedMessage));
+		
+		updateUI();
 	}
 }
