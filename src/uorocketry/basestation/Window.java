@@ -6,27 +6,18 @@ import java.awt.Font;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.JSlider;
-import javax.swing.JButton;
-import java.awt.FlowLayout;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerListModel;
-import javax.swing.JList;
-import javax.swing.AbstractListModel;
-import javax.swing.JLabel;
-import java.awt.Color;
-import javax.swing.SwingConstants;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
 
 public class Window extends JFrame {
 	
@@ -38,9 +29,11 @@ public class Window extends JFrame {
 	
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
+	private JPanel eastSliderButtons;
 	
 	JSlider slider;
 	JButton latestButton;
+	JButton pauseButton;
 	
 	private JPanel comPanel;
 	JList<String> comSelector;
@@ -97,6 +90,7 @@ public class Window extends JFrame {
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
 		slider = new JSlider();
+		slider.setSnapToTicks(true);
 		sliderSection.add(slider);
 		slider.setPaintTicks(true);
 		slider.setValue(0);
@@ -105,8 +99,14 @@ public class Window extends JFrame {
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);
 		sliderButtons.setLayout(new BorderLayout(0, 0));
 		
+		eastSliderButtons = new JPanel();
+		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
+		
+		pauseButton = new JButton("Pause");
+		eastSliderButtons.add(pauseButton);
+		
 		latestButton = new JButton("Latest");
-		sliderButtons.add(latestButton, BorderLayout.EAST);
+		eastSliderButtons.add(latestButton);
 		
 		comPanel = new JPanel();
 		getContentPane().add(comPanel, BorderLayout.EAST);

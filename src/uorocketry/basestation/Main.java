@@ -45,6 +45,8 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
+	/** If true, slider will temporarily stop growing */
+	boolean paused = false;
 	
 	/** If not in a simulation, the serial port being listened to */
 	SerialPort activeSerialPort;
@@ -122,7 +124,8 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 		// Add slider listener
 		window.slider.addChangeListener(this);
 		
-		// Latest button
+		// Buttons
+		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
 		
 		// Com selector
@@ -133,8 +136,11 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 		// If not ready yet
 		if (allData.size() == 0) return;
 		
-		//set max value of the slider
-		window.slider.setMaximum(allData.size() - 1);
+		// Don't change slider if paused
+		if (!paused) {
+			// Set max value of the slider
+			window.slider.setMaximum(allData.size() - 1);
+		}
 		
 		DataHandler currentDataHandler = allData.get(currentDataIndex);
 		
@@ -285,7 +291,16 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == window.latestButton) {
+		if (e.getSource() == window.pauseButton) {
+			paused = !paused;
+			
+			if (paused) {
+				window.pauseButton.setText("Resume");
+			} else {
+				window.pauseButton.setText("Pause");
+			}
+			
+		} else if (e.getSource() == window.latestButton) {
 			window.slider.setValue(allData.size() - 1);
 		}
 	}
