@@ -97,8 +97,14 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 		window.comSelector.setListData(comSelectorData);
 	}
 	
-	public void initialisePort() {
-		if (activeSerialPort.isOpen() || connectingToSerial) return;
+	public void initialisePort(SerialPort serialPort) {
+		if (serialPort.isOpen() || connectingToSerial) return;
+		
+		if (activeSerialPort != null && activeSerialPort.isOpen()) {
+			activeSerialPort.closePort();
+		}
+		
+		activeSerialPort = serialPort;
 		
 		connectingToSerial = true;
 		
@@ -318,12 +324,13 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 				for (int i = 0; i < allSerialPorts.length; i++) {
 					if (allSerialPorts[i].getDescriptivePortName().equals(window.comSelector.getSelectedValue())) {
 						// This is the one
-						activeSerialPort = allSerialPorts[i];
+						
+						final SerialPort newSerialPort = allSerialPorts[i];
 						
 						// Do it in an other thread
 						Thread thread = new Thread() {
 							public void run() {
-								initialisePort();
+								initialisePort(newSerialPort);
 							}
 						};
 						thread.start();
