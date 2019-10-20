@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.JTable;
 import javax.swing.event.ChangeEvent;
@@ -95,9 +94,7 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 		window.comSelector.setListData(comSelectorData);
 	}
 	
-	public void initialisePort(SerialPort serialPort) {
-		activeSerialPort = serialPort;
-		
+	public void initialisePort() {
 		boolean open = activeSerialPort.openPort();
 		
 		activeSerialPort.setBaudRate(57600);
@@ -299,7 +296,15 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 				for (int i = 0; i < allSerialPorts.length; i++) {
 					if (allSerialPorts[i].getDescriptivePortName().equals(window.comSelector.getSelectedValue())) {
 						// This is the one
-						initialisePort(allSerialPorts[i]);
+						activeSerialPort = allSerialPorts[i];
+						
+						// Do it in an other thread
+						Thread thread = new Thread() {
+							public void run() {
+								initialisePort();
+							}
+						};
+						thread.start();
 						
 						break;
 					}

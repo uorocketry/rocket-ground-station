@@ -110,17 +110,17 @@ public class Window extends JFrame {
 		
 		comPanel = new JPanel();
 		getContentPane().add(comPanel, BorderLayout.EAST);
-		comPanel.setLayout(new BorderLayout(0, 0));
+		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
 		
 		comSelector = new JList<String>();
 		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		comPanel.add(comSelector, BorderLayout.NORTH);
+		comPanel.add(comSelector);
 		
 		comConnectionSuccess = new JLabel();
 		comConnectionSuccess.setAlignmentX(Component.CENTER_ALIGNMENT);
 		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
 		comConnectionSuccess.setOpaque(true);
-		comPanel.add(comConnectionSuccess, BorderLayout.CENTER);
+		comPanel.add(comConnectionSuccess);
 		
 		setVisible(true);
 	}
