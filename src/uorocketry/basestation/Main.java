@@ -51,8 +51,9 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 	
 	Window window;
 	
-	// All the serial ports found
+	/** All the serial ports found */
 	SerialPort[] allSerialPorts;
+	boolean connectingToSerial = false;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -95,6 +96,10 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 	}
 	
 	public void initialisePort() {
+		if (activeSerialPort.isOpen() || connectingToSerial) return;
+		
+		connectingToSerial = true;
+		
 		boolean open = activeSerialPort.openPort();
 		
 		activeSerialPort.setBaudRate(57600);
@@ -109,6 +114,8 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 		
 		// Setup listener
 		activeSerialPort.addDataListener(this);
+		
+		connectingToSerial = false;
 	}
 	
 	public void setupUI() {
