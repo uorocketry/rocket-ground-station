@@ -3,6 +3,7 @@ package uorocketry.basestation;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
+import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -10,10 +11,22 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JSlider;
 import javax.swing.JButton;
+import java.awt.FlowLayout;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerListModel;
+import javax.swing.JList;
+import javax.swing.AbstractListModel;
+import javax.swing.JLabel;
+import java.awt.Color;
+import javax.swing.SwingConstants;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class Window extends JFrame {
 	
@@ -29,6 +42,12 @@ public class Window extends JFrame {
 	JSlider slider;
 	JButton latestButton;
 	
+	private JPanel comPanel;
+	JList<String> comSelector;
+	
+	Vector<String> comSelectorData = new Vector<String>();
+	JLabel comConnectionSuccess;
+	
 	public Window() {
 		// Set look and feel
 		try {
@@ -42,6 +61,7 @@ public class Window extends JFrame {
 		setTitle("Ground Station");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		dataTablePanel = new JPanel();
 		dataTablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -55,7 +75,6 @@ public class Window extends JFrame {
 		
 		// Make non editable
 		dataTable.setDefaultEditor(Object.class, null);
-		getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		// Increase row height
 		dataTable.setRowHeight(30);
@@ -63,7 +82,7 @@ public class Window extends JFrame {
 		// Adjust width
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(200);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(150);
-
+		
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 21));
 		dataTablePanel.add(dataTable);
 		
@@ -88,6 +107,20 @@ public class Window extends JFrame {
 		
 		latestButton = new JButton("Latest");
 		sliderButtons.add(latestButton, BorderLayout.EAST);
+		
+		comPanel = new JPanel();
+		getContentPane().add(comPanel, BorderLayout.EAST);
+		comPanel.setLayout(new BorderLayout(0, 0));
+		
+		comSelector = new JList<String>();
+		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		comPanel.add(comSelector, BorderLayout.NORTH);
+		
+		comConnectionSuccess = new JLabel();
+		comConnectionSuccess.setAlignmentX(Component.CENTER_ALIGNMENT);
+		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
+		comConnectionSuccess.setOpaque(true);
+		comPanel.add(comConnectionSuccess, BorderLayout.CENTER);
 		
 		setVisible(true);
 	}

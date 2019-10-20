@@ -1,5 +1,6 @@
 package uorocketry.basestation;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -9,17 +10,20 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.JTable;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ChangeListener, SerialPortMessageListener, ActionListener {
+public class Main implements ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
@@ -47,6 +51,9 @@ public class Main implements ChangeListener, SerialPortMessageListener, ActionLi
 	SerialPort activeSerialPort;
 	
 	Window window;
+	
+	// All the serial ports found
+	SerialPort[] allSerialPorts;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -76,25 +83,35 @@ public class Main implements ChangeListener, SerialPortMessageListener, ActionLi
 	}
 	
 	public void setupSerialComs() {
-		SerialPort[] ports = SerialPort.getCommPorts();
+		allSerialPorts = SerialPort.getCommPorts();
 		
-		System.out.println(ports.length);
+		// Make array for the selector
+		String[] comSelectorData = new String[allSerialPorts.length];
 		
-		// Grab just the first port for now
-		if (ports.length > 0) {
-			activeSerialPort = ports[ports.length - 1];
-			
-			boolean open = activeSerialPort.openPort();
-			activeSerialPort.setBaudRate(57600);
-			
-			System.out.println(open);
-			
-			System.out.println("Port found: " + activeSerialPort.getDescriptivePortName());
-			
-			// Setup listener
-			activeSerialPort.addDataListener(this);
+		for (int i = 0; i < allSerialPorts.length; i++) {
+			comSelectorData[i]=  allSerialPorts[i].getDescriptivePortName();
+		}
+
+		window.comSelector.setListData(comSelectorData);
+	}
+	
+	public void initialisePort(SerialPort serialPort) {
+		activeSerialPort = serialPort;
+		
+		boolean open = activeSerialPort.openPort();
+		
+		activeSerialPort.setBaudRate(57600);
+		
+		if (open) {
+			window.comConnectionSuccess.setText("Connected");
+			window.comConnectionSuccess.setBackground(Color.green);
+		} else {
+			window.comConnectionSuccess.setText("FAILED");
+			window.comConnectionSuccess.setBackground(Color.red);
 		}
 		
+		// Setup listener
+		activeSerialPort.addDataListener(this);
 	}
 	
 	public void setupUI() {
@@ -103,6 +120,9 @@ public class Main implements ChangeListener, SerialPortMessageListener, ActionLi
 		
 		// Latest button
 		window.latestButton.addActionListener(this);
+		
+		// Com selector
+		window.comSelector.addListSelectionListener(this);
 	}
 	
 	public void updateUI() {
@@ -263,6 +283,28 @@ public class Main implements ChangeListener, SerialPortMessageListener, ActionLi
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == window.latestButton) {
 			window.slider.setValue(allData.size() - 1);
+		}
+	}
+
+	/** For com selector JList */
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		if (e.getSource() == window.comSelector) {
+			// Set to loading
+			window.comConnectionSuccess.setText("Loading...");
+			window.comConnectionSuccess.setBackground(Color.yellow);
+			
+			// Find what port it was
+			if (allSerialPorts != null) {
+				for (int i = 0; i < allSerialPorts.length; i++) {
+					if (allSerialPorts[i].getDescriptivePortName().equals(window.comSelector.getSelectedValue())) {
+						// This is the one
+						initialisePort(allSerialPorts[i]);
+						
+						break;
+					}
+				}
+			}
 		}
 	}
 }
