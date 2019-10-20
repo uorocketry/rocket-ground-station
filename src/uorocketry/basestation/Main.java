@@ -1,10 +1,11 @@
 package uorocketry.basestation;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ChangeListener, SerialPortMessageListener {
+public class Main implements ChangeListener, SerialPortMessageListener, ActionListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
@@ -55,15 +56,17 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 		// Create window
 		window = new Window();
 		
-		// Add slider listener
-		window.slider.addChangeListener(this);
+		setupUI();
+		
+		// Load labels
+		loadLabels(LABELS_LOCATION);
 		
 		// Load simulation data if necessary
 		if (SIMULATION) {
 			loadSimulationData();
 		}
 		
-		//Setup com ports if not a simulation
+		// Setup com ports if not a simulation
 		if (!SIMULATION) {
 			setupSerialComs();
 		}
@@ -75,13 +78,31 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 	public void setupSerialComs() {
 		SerialPort[] ports = SerialPort.getCommPorts();
 		
+		System.out.println(ports.length);
+		
 		// Grab just the first port for now
 		if (ports.length > 0) {
-			activeSerialPort = ports[0];
+			activeSerialPort = ports[ports.length - 1];
+			
+			boolean open = activeSerialPort.openPort();
+			activeSerialPort.setBaudRate(57600);
+			
+			System.out.println(open);
+			
+			System.out.println("Port found: " + activeSerialPort.getDescriptivePortName());
 			
 			// Setup listener
 			activeSerialPort.addDataListener(this);
 		}
+		
+	}
+	
+	public void setupUI() {
+		// Add slider listener
+		window.slider.addChangeListener(this);
+		
+		// Latest button
+		window.latestButton.addActionListener(this);
 	}
 	
 	public void updateUI() {
@@ -122,9 +143,6 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 	public void loadSimulationData() {
 		// Load simulation data
 		loadSimulationData(SIM_DATA_LOCATION);
-		
-		// Load labels
-		loadLabels(LABELS_LOCATION);
 	}
 	
 	public void loadSimulationData(String fileName) {
@@ -183,22 +201,19 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 		}
 		
 		try {
-			try {
-			    String line = null;
+		    String line = null;
 
-			    while ((line = br.readLine()) != null) {
-			    	//this line contains all of the labels
-			    	//this one is comma separated, not the same as the actual data
-			    	labels = line.split(",");
-			    }
-			} finally {
-			    br.close();
-			}
+		    while ((line = br.readLine()) != null) {
+		    	//this line contains all of the labels
+		    	//this one is comma separated, not the same as the actual data
+		    	labels = line.split(",");
+		    }
+		    
+		    br.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
-
 	
 	/**
 	 * Triggered every time the slider changes
@@ -209,12 +224,15 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 			currentDataIndex = window.slider.getValue();
 			
 			updateUI();
+			
+			// Update the latest value
+			latest = currentDataIndex == window.slider.getMaximum() - 1;
 		}
 	}
 
 	@Override
 	public int getListeningEvents() {
-		return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+		return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
 	}
 	
 	@Override
@@ -234,5 +252,17 @@ public class Main implements ChangeListener, SerialPortMessageListener {
 		allData.add(parseData(delimitedMessage));
 		
 		updateUI();
+		
+		// Move position to end
+		if (latest) {
+			window.slider.setValue(allData.size() - 1);
+		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == window.latestButton) {
+			window.slider.setValue(allData.size() - 1);
+		}
 	}
 }

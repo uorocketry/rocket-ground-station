@@ -13,6 +13,7 @@ import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JSlider;
+import javax.swing.JButton;
 
 public class Window extends JFrame {
 	
@@ -22,7 +23,11 @@ public class Window extends JFrame {
 	private JPanel dataTablePanel;
 	private JScrollPane scrollPane;
 	
+	private JPanel sliderSection;
+	private JPanel sliderButtons;
+	
 	JSlider slider;
+	JButton latestButton;
 	
 	public Window() {
 		// Set look and feel
@@ -68,10 +73,21 @@ public class Window extends JFrame {
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setViewportBorder(null);
 		
+		sliderSection = new JPanel();
+		getContentPane().add(sliderSection, BorderLayout.SOUTH);
+		sliderSection.setLayout(new BorderLayout(0, 0));
+		
 		slider = new JSlider();
+		sliderSection.add(slider);
 		slider.setPaintTicks(true);
 		slider.setValue(0);
-		getContentPane().add(slider, BorderLayout.SOUTH);
+		
+		sliderButtons = new JPanel();
+		sliderSection.add(sliderButtons, BorderLayout.NORTH);
+		sliderButtons.setLayout(new BorderLayout(0, 0));
+		
+		latestButton = new JButton("Latest");
+		sliderButtons.add(latestButton, BorderLayout.EAST);
 		
 		setVisible(true);
 	}
