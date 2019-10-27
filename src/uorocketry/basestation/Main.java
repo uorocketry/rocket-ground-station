@@ -1,8 +1,11 @@
 package uorocketry.basestation;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -22,11 +25,11 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener {
+public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
-	public static final boolean SIMULATION = false;
+	public static final boolean SIMULATION = true;
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
@@ -64,6 +67,8 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 	public Main() {
 		// Create window
 		window = new Window();
+		
+		window.addComponentListener(this);
 		
 		setupUI();
 		
@@ -340,5 +345,25 @@ public class Main implements ChangeListener, ActionListener, ListSelectionListen
 				}
 			}
 		}
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+		
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		
+	}
+
+	@Override
+	public void componentResized(ComponentEvent e) {
+		window.mapPanel.setPreferredSize(new Dimension(window.getWidth() / 4, window.getWidth() / 4));
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e) {
+		
 	}
 }

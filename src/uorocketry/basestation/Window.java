@@ -18,6 +18,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 
 public class Window extends JFrame {
 	
@@ -40,6 +42,8 @@ public class Window extends JFrame {
 	
 	Vector<String> comSelectorData = new Vector<String>();
 	JLabel comConnectionSuccess;
+	private JPanel sidePanel;
+	MapPanel mapPanel;
 	
 	public Window() {
 		// Set look and feel
@@ -108,8 +112,12 @@ public class Window extends JFrame {
 		latestButton = new JButton("Latest");
 		eastSliderButtons.add(latestButton);
 		
+		sidePanel = new JPanel();
+		getContentPane().add(sidePanel, BorderLayout.EAST);
+		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
+		
 		comPanel = new JPanel();
-		getContentPane().add(comPanel, BorderLayout.EAST);
+		sidePanel.add(comPanel);
 		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
 		
 		comSelector = new JList<String>();
@@ -121,6 +129,9 @@ public class Window extends JFrame {
 		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
 		comConnectionSuccess.setOpaque(true);
 		comPanel.add(comConnectionSuccess);
+		
+		mapPanel = new MapPanel();
+		sidePanel.add(mapPanel);
 		
 		setVisible(true);
 	}
