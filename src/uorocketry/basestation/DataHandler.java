@@ -5,21 +5,21 @@ import javax.swing.table.TableModel;
 
 public class DataHandler {
 	
-	final int TIMESTAMP = 0;
-	final int ALTITUDE = 1;
-	final int LATITUDE = 2;
-	final int LONGITUDE = 3;
-	final int PITCH = 4;
-	final int ROLL = 5;
-	final int YAW = 6;
-	final int ACCELX = 7;
-	final int ACCELY = 8;
-	final int ACCELZ = 9;
+	static final int TIMESTAMP = 0;
+	static final int ALTITUDE = 1;
+	static final int LATITUDE = 2;
+	static final int LONGITUDE = 3;
+	static final int PITCH = 4;
+	static final int ROLL = 5;
+	static final int YAW = 6;
+	static final int ACCELX = 7;
+	static final int ACCELY = 8;
+	static final int ACCELZ = 9;
 	final int VELOCITY = 20;
-	final int BRAKE_PERCENTAGE = 11;
-	final int ACTUAL_BRAKE_VALUE = 12;
-	final int GPS_FIX = 13;
-	final int GPS_FIX_QUALITY = 14;
+	static final int BRAKE_PERCENTAGE = 11;
+	static final int ACTUAL_BRAKE_VALUE = 12;
+	static final int GPS_FIX = 13;
+	static final int GPS_FIX_QUALITY = 14;
 	
 	Data[] data = new Data[Main.DATA_LENGTH];
 	
