@@ -4,7 +4,7 @@
     <Link>
 	  <href>data/positions.kml</href>
       <refreshMode>onInterval</refreshMode>
-	  <refreshInterval>0.1</refreshInterval>
+	  <refreshInterval>1</refreshInterval>
 	</Link>
   </NetworkLink>
 </kml>

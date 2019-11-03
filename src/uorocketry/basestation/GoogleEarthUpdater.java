@@ -5,9 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.spi.CharsetProvider;
 import java.util.List;
 
 public class GoogleEarthUpdater {
@@ -23,18 +21,20 @@ public class GoogleEarthUpdater {
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
 				"<kml xmlns=\"http://www.opengis.net/kml/2.2\"><Document>");
 		
+		content.append("<Placemark>\r\n");
+		content.append("<name>Rocket Path</name>\r\n");
+		content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
+		
 		for (int i = 0; i <= currentDataIndex; i++) {
 			
 			DataHandler currentData = allData.get(i); 
 			if (currentData != null && currentData.data[DataHandler.LONGITUDE].data != 0 && currentData.data[DataHandler.LATITUDE].data != 0) {
-				content.append("<Placemark>\r\n");
-				content.append("<name>" + currentData.data[DataHandler.TIMESTAMP].data + "ms</name>\r\n");
-				
-				content.append("<Point><coordinates>-" + currentData.data[DataHandler.LONGITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.LATITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.ALTITUDE].data + "</coordinates></Point>\r\n ");
-				
-				content.append("</Placemark>\r\n");
+				content.append("-" + currentData.data[DataHandler.LONGITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.LATITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.ALTITUDE].data + "\r\n ");
 			}
 		}
+		
+		content.append("</coordinates></LineString>\r\n");
+		content.append("</Placemark>\r\n");
 		
 		content.append("</Document></kml>");
 		
