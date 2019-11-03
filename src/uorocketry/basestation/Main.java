@@ -374,7 +374,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void componentResized(ComponentEvent e) {
-		window.mapPanel.setPreferredSize(new Dimension(window.getWidth() / 4, window.getWidth() / 4));
+
 	}
 
 	@Override

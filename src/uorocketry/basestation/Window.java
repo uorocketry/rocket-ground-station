@@ -43,7 +43,6 @@ public class Window extends JFrame {
 	Vector<String> comSelectorData = new Vector<String>();
 	JLabel comConnectionSuccess;
 	private JPanel sidePanel;
-	MapPanel mapPanel;
 	
 	public Window() {
 		// Set look and feel
@@ -129,9 +128,6 @@ public class Window extends JFrame {
 		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
 		comConnectionSuccess.setOpaque(true);
 		comPanel.add(comConnectionSuccess);
-		
-		mapPanel = new MapPanel();
-		sidePanel.add(mapPanel);
 		
 		setVisible(true);
 	}
