@@ -1,5 +1,6 @@
 package uorocketry.basestation;
 
+import java.awt.MultipleGradientPaint.CycleMethod;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,15 +48,29 @@ public class GoogleEarthUpdater {
 		content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
 		
 		for (int i = 0; i <= currentDataIndex; i++) {
+			String currentString = getCoordinateString(allData.get(i));
 			
-			DataHandler currentData = allData.get(i); 
-			if (currentData != null && currentData.data[DataHandler.LONGITUDE].data != 0 && currentData.data[DataHandler.LATITUDE].data != 0) {
-				content.append("-" + currentData.data[DataHandler.LONGITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.LATITUDE].getDecimalCoordinate() + "," + currentData.data[DataHandler.ALTITUDE].data + "\r\n ");
+			if (currentString != null) {
+				content.append(currentString + "\r\n");
 			}
+			
 		}
 		
 		content.append("</coordinates></LineString>\r\n");
 		content.append("</Placemark>\r\n");
+		
+		//Add the latest coordinate as a placemark
+		String latestDataString = getCoordinateString(allData.get(currentDataIndex));
+		if (latestDataString != null) {
+			content.append("<Placemark>\r\n");
+			content.append("<name>Latest Position</name>\r\n");
+			content.append("<Point>\r\n<altitudeMode>absolute</altitudeMode>\r\n<coordinates>");
+			
+			content.append(latestDataString);
+			
+			content.append("</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+		}
+		
 		
 		content.append("</Document></kml>");
 		
@@ -83,5 +98,13 @@ public class GoogleEarthUpdater {
 			}
 		};
 		mapRefreshTimer.schedule(mapRefreshTaskTimer, 50);
+	}
+	
+	public String getCoordinateString(DataHandler dataPoint) {
+		if (dataPoint != null && dataPoint.data[DataHandler.LONGITUDE].data != 0 && dataPoint.data[DataHandler.LATITUDE].data != 0) {
+			return "-" + dataPoint.data[DataHandler.LONGITUDE].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.LATITUDE].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.ALTITUDE].data;
+		}
+		
+		return null;
 	}
 }
