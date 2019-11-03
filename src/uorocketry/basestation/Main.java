@@ -65,6 +65,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	SerialPort[] allSerialPorts;
 	boolean connectingToSerial = false;
 	
+	/** Used for the map view */
+	GoogleEarthUpdater googleEarthUpdater = new GoogleEarthUpdater();
+	
 	public static void main(String[] args) {
 		new Main();
 	}
@@ -88,6 +91,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup com ports if not a simulation
 		if (!SIMULATION) {
 			setupSerialComs();
+		}
+		
+		// Setup Google Earth map support
+		if (GOOGLE_EARTH) {
+			googleEarthUpdater = new GoogleEarthUpdater();
 		}
 		
 		// Update UI once
@@ -166,7 +174,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			setTableToError(window.dataTable);
 		}
 		
-		if (GOOGLE_EARTH) GoogleEarthUpdater.updateKMLFile(allData, currentDataIndex);
+		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
 	
 	public void setTableToError(JTable table) {

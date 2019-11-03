@@ -7,15 +7,27 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GoogleEarthUpdater {
+	
+	/**
+	 * Used to update the kml file again after a small amount of time to force Google Earth to refresh the kml file.
+	 */
+	Timer mapRefreshTimer;
+	TimerTask mapRefreshTaskTimer;
+	
+	public GoogleEarthUpdater() {
+		mapRefreshTimer = new Timer();
+	}
 	
 	/**
 	 * Generates a kml file from the data currentDataIndex
 	 * 
 	 * @param main
 	 */
-	public static String generateKMLFile(List<DataHandler> allData, int currentDataIndex) {
+	public String generateKMLFile(List<DataHandler> allData, int currentDataIndex) {
 		StringBuilder content = new StringBuilder();
 		
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
@@ -41,7 +53,7 @@ public class GoogleEarthUpdater {
 		return content.toString();
 	}
 	
-	public static void updateKMLFile(List<DataHandler> allData, int currentDataIndex) {
+	public void updateKMLFile(List<DataHandler> allData, int currentDataIndex) {
 		String fileContent = generateKMLFile(allData, currentDataIndex);
 		
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
@@ -49,5 +61,18 @@ public class GoogleEarthUpdater {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		if (mapRefreshTaskTimer != null) {
+			mapRefreshTaskTimer.cancel();
+		}
+		
+		// Start a new task
+		mapRefreshTaskTimer = new TimerTask() {
+			@Override
+			public void run() {
+				updateKMLFile(allData, currentDataIndex);
+			}
+		};
+		mapRefreshTimer.schedule(mapRefreshTaskTimer, 50);
 	}
 }
