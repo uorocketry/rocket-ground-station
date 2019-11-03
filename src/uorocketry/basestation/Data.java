@@ -42,4 +42,13 @@ public class Data {
 				return format.format(data);
 		}
 	}
+	
+	
+	/**
+	 * Only used by type COORDINATE
+	 * @return
+	 */
+	public double getDecimalCoordinate() {
+		return data + minutes/60;
+	}
 }

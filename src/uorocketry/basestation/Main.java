@@ -39,6 +39,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Data file location for the simulation (new line separated for each event) */
 	public static final String SIM_DATA_LOCATION = "data/data.txt";
 	
+	/** Whether to update Google Earth file */
+	public static final boolean GOOGLE_EARTH = true;
+	/** Where the updating Google Earth kml file is stored */
+	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
+	
 	List<DataHandler> allData = new ArrayList<>();
 	
 	String[] labels = new String[DATA_LENGTH];
@@ -160,6 +165,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else {
 			setTableToError(window.dataTable);
 		}
+		
+		if (GOOGLE_EARTH) GoogleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
 	
 	public void setTableToError(JTable table) {
