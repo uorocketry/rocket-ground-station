@@ -33,8 +33,17 @@ public class GoogleEarthUpdater {
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
 				"<kml xmlns=\"http://www.opengis.net/kml/2.2\"><Document>");
 		
+		// Add style
+		content.append("<Style id='blackLine'>\r\n" + 
+				"	<LineStyle>\r\n" + 
+				"      <color>FF000000</color>\r\n" + 
+				"      <width>5</width>\r\n" + 
+				"    </LineStyle>" +
+				"    </Style>");
+		
 		content.append("<Placemark>\r\n");
 		content.append("<name>Rocket Path</name>\r\n");
+		content.append("<styleUrl>#blackLine</styleUrl>");
 		content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
 		
 		for (int i = 0; i <= currentDataIndex; i++) {
