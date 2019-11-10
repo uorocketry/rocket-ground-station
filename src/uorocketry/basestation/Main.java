@@ -13,12 +13,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
+
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -172,6 +179,20 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else {
 			setTableToError(window.dataTable);
 		}
+		
+		// Update altitude chart
+		ArrayList<Float> altitudeDataX = new ArrayList<>();
+		ArrayList<Float> altitudeDataY = new ArrayList<>();
+		for (int i = 0; i <= currentDataIndex; i++) {
+			DataHandler data = allData.get(i);
+			
+			if (data != null) {
+				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].data);
+				altitudeDataY.add(data.data[DataHandler.ALTITUDE].data);
+			}
+		}
+		window.altitudeChart.updateXYSeries("altitude", altitudeDataX, altitudeDataY, null);
+		window.repaint();
 		
 		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}

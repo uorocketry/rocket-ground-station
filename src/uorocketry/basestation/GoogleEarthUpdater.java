@@ -1,6 +1,5 @@
 package uorocketry.basestation;
 
-import java.awt.MultipleGradientPaint.CycleMethod;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;

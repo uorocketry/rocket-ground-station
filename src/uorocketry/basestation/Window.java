@@ -3,6 +3,7 @@ package uorocketry.basestation;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
@@ -18,8 +19,12 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.Styler.LegendPosition;
 
 public class Window extends JFrame {
 	
@@ -43,6 +48,10 @@ public class Window extends JFrame {
 	Vector<String> comSelectorData = new Vector<String>();
 	JLabel comConnectionSuccess;
 	private JPanel sidePanel;
+	private JPanel centerPanel;
+	
+	XChartPanel<XYChart> altitudeChartPanel;
+	XYChart altitudeChart;
 	
 	public Window() {
 		// Set look and feel
@@ -128,6 +137,23 @@ public class Window extends JFrame {
 		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
 		comConnectionSuccess.setOpaque(true);
 		comPanel.add(comConnectionSuccess);
+		
+		centerPanel = new JPanel();
+		getContentPane().add(centerPanel, BorderLayout.CENTER);
+		centerPanel.setLayout(new GridLayout(1, 1, 0, 0));
+		
+		// Create Chart
+		altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp").xAxisTitle("Timestamp (ms)").yAxisTitle("Altitude (m)").build();
+
+		// Customize Chart
+		altitudeChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
+		altitudeChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Area);
+
+		// Series
+		altitudeChart.addSeries("altitude", new double[] { 0 }, new double[] { 0 });
+		
+		altitudeChartPanel = new XChartPanel<>(altitudeChart);
+		centerPanel.add(altitudeChartPanel);
 		
 		setVisible(true);
 	}
