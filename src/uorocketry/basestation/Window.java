@@ -143,7 +143,7 @@ public class Window extends JFrame {
 		centerPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
 		// Create Chart
-		XYChart altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp").xAxisTitle("Timestamp (ms)").yAxisTitle("Altitude (m)").build();
+		XYChart altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 		
 		mainChart = new DataChart(altitudeChart);
 

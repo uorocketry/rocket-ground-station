@@ -215,14 +215,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			DataHandler data = allData.get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue());
+				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue() / 1000);
 				altitudeDataY.add(data.data[chart.xType].getDecimalValue());
 			}
 		}
 		
 		// Set Labels
 		chart.xyChart.setTitle(labels[chart.xType] + " vs Timestamp");
-		chart.xyChart.setXAxisTitle(labels[chart.xType]);
+		chart.xyChart.setYAxisTitle(labels[chart.xType]);
 		
 		chart.xyChart.updateXYSeries("chart1", altitudeDataX, altitudeDataY, null);
 		window.repaint();
