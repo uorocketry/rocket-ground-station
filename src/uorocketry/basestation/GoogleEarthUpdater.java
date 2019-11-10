@@ -87,7 +87,11 @@ public class GoogleEarthUpdater {
 		}
 		
 		if (mapRefreshTaskTimer != null) {
-			mapRefreshTaskTimer.cancel();
+			try {
+				mapRefreshTaskTimer.cancel();
+			} catch (IllegalStateException e) {
+				// Ignore if it is already canceled
+			}
 		}
 		
 		// Start a new task
