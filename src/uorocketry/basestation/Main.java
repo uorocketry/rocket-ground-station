@@ -1,12 +1,11 @@
 package uorocketry.basestation;
 
 import java.awt.Color;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -22,7 +21,11 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
+import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -155,6 +158,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
 		
+		window.addChartButton.addActionListener(this);
+		
 		// Com selector
 		window.comSelector.addListSelectionListener(this);
 		
@@ -180,7 +185,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			setTableToError(window.dataTable);
 		}
 		
-		updateChart(window.mainChart);
+		for (DataChart chart : window.charts) {
+			updateChart(chart);
+		}
 		
 		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
@@ -363,7 +370,34 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 		} else if (e.getSource() == window.latestButton) {
 			window.slider.setValue(allData.size() - 1);
+		} else if (e.getSource() == window.addChartButton) {
+			addChart();
 		}
+	}
+	
+	public void addChart() {
+		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
+		
+		DataChart dataChart = new DataChart(xyChart);
+
+		// Customize Chart
+		xyChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
+		xyChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+
+		// Series
+		xyChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		
+		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
+		window.centerChartPanel.add(chartPanel);
+		
+		// Add these default charts to the list
+		window.charts.add(dataChart);
+		window.chartPanels.add(chartPanel);
+		
+		// Increase layout size
+		window.centerChartPanel.setLayout(new GridLayout(0, window.charts.size(), 0, 0));
+		window.validate();
+		window.repaint();
 	}
 
 	/** For com selector JList */
@@ -397,10 +431,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
 			int selectedRow = window.dataTable.getSelectedRow();
 			
-			System.out.println(selectedRow);
-			
 			// Set chart to be based on this row
-			window.mainChart.xType = selectedRow;
+			//TODO use selected chart
+			window.charts.get(0).xType = selectedRow;
 			updateUI();
 		}
 	}

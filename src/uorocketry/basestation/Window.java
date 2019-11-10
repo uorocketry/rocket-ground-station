@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
@@ -37,6 +38,7 @@ public class Window extends JFrame {
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
 	private JPanel eastSliderButtons;
+	private JPanel westSliderButtons;
 	
 	JSlider slider;
 	JButton latestButton;
@@ -48,10 +50,13 @@ public class Window extends JFrame {
 	Vector<String> comSelectorData = new Vector<String>();
 	JLabel comConnectionSuccess;
 	private JPanel sidePanel;
-	private JPanel centerPanel;
 	
-	XChartPanel<XYChart> chart1Panel;
-	DataChart mainChart;
+	JPanel centerChartPanel;
+	
+	ArrayList<XChartPanel<XYChart>> chartPanels = new ArrayList<>();
+	ArrayList<DataChart> charts = new ArrayList<>();
+	
+	JButton addChartButton;
 	
 	public Window() {
 		// Set look and feel
@@ -111,6 +116,12 @@ public class Window extends JFrame {
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);
 		sliderButtons.setLayout(new BorderLayout(0, 0));
 		
+		westSliderButtons = new JPanel();
+		sliderButtons.add(westSliderButtons, BorderLayout.WEST);
+		
+		addChartButton = new JButton("Add Chart");
+		westSliderButtons.add(addChartButton);
+		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
 		
@@ -138,24 +149,28 @@ public class Window extends JFrame {
 		comConnectionSuccess.setOpaque(true);
 		comPanel.add(comConnectionSuccess);
 		
-		centerPanel = new JPanel();
-		getContentPane().add(centerPanel, BorderLayout.CENTER);
-		centerPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		centerChartPanel = new JPanel();
+		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
+		centerChartPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
 		// Create Chart
-		XYChart altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
+		XYChart firstChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 		
-		mainChart = new DataChart(altitudeChart);
+		DataChart dataChart = new DataChart(firstChart);
 
 		// Customize Chart
-		altitudeChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		altitudeChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
+		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		altitudeChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		firstChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
 		
-		chart1Panel = new XChartPanel<>(altitudeChart);
-		centerPanel.add(chart1Panel);
+		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
+		centerChartPanel.add(chart1Panel);
+		
+		// Add these default charts to the list
+		charts.add(dataChart);
+		chartPanels.add(chart1Panel);
 		
 		setVisible(true);
 	}
