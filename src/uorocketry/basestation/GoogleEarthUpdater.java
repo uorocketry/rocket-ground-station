@@ -101,7 +101,11 @@ public class GoogleEarthUpdater {
 				updateKMLFile(allData, currentDataIndex);
 			}
 		};
-		mapRefreshTimer.schedule(mapRefreshTaskTimer, 50);
+		try {
+			mapRefreshTimer.schedule(mapRefreshTaskTimer, 50);
+		} catch (IllegalStateException e) {
+			// Ignore as another has already started
+		}
 	}
 	
 	public String getCoordinateString(DataHandler dataPoint) {
