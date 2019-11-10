@@ -395,7 +395,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.chartPanels.add(chartPanel);
 		
 		// Increase layout size
-		window.centerChartPanel.setLayout(new GridLayout(0, window.charts.size(), 0, 0));
+		window.centerChartPanel.setLayout(new GridLayout(0, (int) Math.ceil(Math.sqrt(window.charts.size())), 0, 0));
 		window.validate();
 		window.repaint();
 	}
