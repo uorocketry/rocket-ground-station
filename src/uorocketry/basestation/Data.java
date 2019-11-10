@@ -43,12 +43,20 @@ public class Data {
 		}
 	}
 	
+	public float getDecimalValue() {
+		switch (type) {
+			case COORDINATE:
+				return getDecimalCoordinate();
+			default:
+				return data;
+		}
+	}
 	
 	/**
 	 * Only used by type COORDINATE
 	 * @return
 	 */
-	public double getDecimalCoordinate() {
+	public float getDecimalCoordinate() {
 		return data + minutes/60;
 	}
 }

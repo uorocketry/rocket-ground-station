@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -13,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -21,11 +22,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
-import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
-import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -160,6 +157,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Com selector
 		window.comSelector.addListSelectionListener(this);
+		
+		// Setup listeners for table
+		window.dataTable.getSelectionModel().addListSelectionListener(this);
 	}
 	
 	public void updateUI() {
@@ -180,19 +180,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			setTableToError(window.dataTable);
 		}
 		
-		// Update altitude chart
-		ArrayList<Float> altitudeDataX = new ArrayList<>();
-		ArrayList<Float> altitudeDataY = new ArrayList<>();
-		for (int i = 0; i <= currentDataIndex; i++) {
-			DataHandler data = allData.get(i);
-			
-			if (data != null) {
-				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].data);
-				altitudeDataY.add(data.data[DataHandler.ALTITUDE].data);
-			}
-		}
-		window.altitudeChart.updateXYSeries("altitude", altitudeDataX, altitudeDataY, null);
-		window.repaint();
+		updateChart(window.mainChart);
 		
 		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
@@ -211,6 +199,33 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Set data
 			tableModel.setValueAt("", i, 1);
 		}
+	}
+
+	/**
+	 * Update the chart with data up to currentDataIndex, and then call window.repaint()
+	 * 
+	 * @param chart The chart to update
+	 */
+	public void updateChart(DataChart chart) {
+		// Update altitude chart
+		ArrayList<Float> altitudeDataX = new ArrayList<>();
+		ArrayList<Float> altitudeDataY = new ArrayList<>();
+		
+		for (int i = 0; i <= currentDataIndex; i++) {
+			DataHandler data = allData.get(i);
+			
+			if (data != null) {
+				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue());
+				altitudeDataY.add(data.data[chart.xType].getDecimalValue());
+			}
+		}
+		
+		// Set Labels
+		chart.xyChart.setTitle(labels[chart.xType] + " vs Timestamp");
+		chart.xyChart.setXAxisTitle(labels[chart.xType]);
+		
+		chart.xyChart.updateXYSeries("chart1", altitudeDataX, altitudeDataY, null);
+		window.repaint();
 	}
 	
 	/** 
@@ -379,6 +394,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					}
 				}
 			}
+		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
+			int selectedRow = window.dataTable.getSelectedRow();
+			
+			System.out.println(selectedRow);
+			
+			// Set chart to be based on this row
+			window.mainChart.xType = selectedRow;
+			updateUI();
 		}
 	}
 

@@ -69,7 +69,7 @@ public class DataHandler {
 				floatData = Float.parseFloat(currentData);
 			} catch (NumberFormatException e) {
 				if (currentData.equals("ovf")) {
-					//ovf means overflow
+					// ovf means overflow
 					floatData = Float.MAX_VALUE;
 				} else {
 					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");

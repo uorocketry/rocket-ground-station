@@ -50,8 +50,8 @@ public class Window extends JFrame {
 	private JPanel sidePanel;
 	private JPanel centerPanel;
 	
-	XChartPanel<XYChart> altitudeChartPanel;
-	XYChart altitudeChart;
+	XChartPanel<XYChart> chart1Panel;
+	DataChart mainChart;
 	
 	public Window() {
 		// Set look and feel
@@ -140,20 +140,22 @@ public class Window extends JFrame {
 		
 		centerPanel = new JPanel();
 		getContentPane().add(centerPanel, BorderLayout.CENTER);
-		centerPanel.setLayout(new GridLayout(1, 1, 0, 0));
+		centerPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
 		// Create Chart
-		altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp").xAxisTitle("Timestamp (ms)").yAxisTitle("Altitude (m)").build();
+		XYChart altitudeChart = new XYChartBuilder().title("Altitude vs Timestamp").xAxisTitle("Timestamp (ms)").yAxisTitle("Altitude (m)").build();
+		
+		mainChart = new DataChart(altitudeChart);
 
 		// Customize Chart
 		altitudeChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		altitudeChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Area);
+		altitudeChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		altitudeChart.addSeries("altitude", new double[] { 0 }, new double[] { 0 });
+		altitudeChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
 		
-		altitudeChartPanel = new XChartPanel<>(altitudeChart);
-		centerPanel.add(altitudeChartPanel);
+		chart1Panel = new XChartPanel<>(altitudeChart);
+		centerPanel.add(chart1Panel);
 		
 		setVisible(true);
 	}
