@@ -163,7 +163,6 @@ public class Window extends JFrame {
 		centerChartPanel.setLayout(null);
 		
 		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
-		chart1Panel.setBounds(0, 0, 600, 450);
 		centerChartPanel.add(chart1Panel);
 		
 		// Create the data chart container
@@ -173,6 +172,9 @@ public class Window extends JFrame {
 		charts.add(dataChart);
 		
 		setVisible(true);
+		
+		// Set default chart size
+		dataChart.snapPanel.setRelSize(600, 450);
 	}
 
 }

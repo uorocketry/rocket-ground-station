@@ -27,6 +27,12 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	boolean resizeLeft = false;
 	boolean resizeTop = false;
 	
+	/** Stores the bounds (x, y, width, height) in a relative way (less than 1) to be converted to the real screen bounds. */
+	double relX;
+	double relY;
+	double relWidth;
+	double relHeight;
+	
 	public SnapPanel(DataChart chart) {
 		this.chart = chart;
 		this.panel = chart.chartPanel;
@@ -81,15 +87,15 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 					yMovementFactor = 1;
 				}
 				
-				panel.setSize((int) currentBounds.getWidth() + xChangeFactor * (currentX - lastMouseX), (int) currentBounds.getHeight() + yChangeFactor * (currentY - lastMouseY));
+				setRelSize((int) currentBounds.getWidth() + xChangeFactor * (currentX - lastMouseX), (int) currentBounds.getHeight() + yChangeFactor * (currentY - lastMouseY));
 			
 				// Don't waste time moving it if it doesn't affect anything
 				if (xMovementFactor != 0 || yMovementFactor != 0) {
-					panel.setLocation((int) currentBounds.getX() + xMovementFactor * (currentX - lastMouseX), (int) currentBounds.getY() + yMovementFactor * (currentY - lastMouseY));
+					setRelPosition((int) currentBounds.getX() + xMovementFactor * (currentX - lastMouseX), (int) currentBounds.getY() + yMovementFactor * (currentY - lastMouseY));
 				}
 			} else {
 				// Move panel
-				panel.setLocation((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
+				setRelPosition((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
 			}
 			
 		} else {
@@ -111,16 +117,37 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		lastMouseY = currentY;
 	}
 	
+	public void setRelBounds(int absoluteX, int absoluteY, int absoluteWidth, int absoluteHeight) {
+		setRelPosition(absoluteX, absoluteY);
+		setRelSize(absoluteWidth, absoluteHeight);
+	}
+	
+	public void setRelPosition(int absoluteX, int absoluteY) {
+		Rectangle screenBounds = panel.getParent().getBounds();
+		
+		relX = absoluteX / screenBounds.getWidth();
+		relY = absoluteY / screenBounds.getHeight();
+		
+		panel.setLocation(absoluteX, absoluteY);
+	}
+
+	public void setRelSize(int absoluteWidth, int absoluteHeight) {
+		Rectangle screenBounds = panel.getParent().getBounds();
+		
+		relWidth = absoluteWidth / screenBounds.getWidth();
+		relHeight = absoluteHeight / screenBounds.getHeight();
+		
+		panel.setSize(absoluteWidth, absoluteHeight);
+	}
+	
 	/**
 	 * Called whenever the parent is resized to change the layout to the new size.
 	 * 
 	 * @param xFactor The factor the x is stretched by (new/old)
 	 * @param yFactor The factor the y is stretched by (new/old)
 	 */
-	public void containerResized(double xFactor, double yFactor) {
-		Rectangle currentBounds = panel.getBounds();
-		
-		panel.setBounds((int) (currentBounds.getX() * xFactor), (int) (currentBounds.getY() * yFactor), (int) (currentBounds.getWidth() * xFactor), (int) (currentBounds.getHeight() * yFactor));
+	public void containerResized(int newWidth, int newHeight) {
+		panel.setBounds((int) (relX * newWidth), (int) (relY * newHeight), (int) (relWidth * newWidth), (int) (relHeight * newHeight));
 	
 	}
 	

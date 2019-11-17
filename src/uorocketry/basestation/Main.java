@@ -402,10 +402,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
-		// Set default size
-		chartPanel.setBounds(0, 0, 600, 450);
-		
 		DataChart dataChart = new DataChart(xyChart, chartPanel);
+		
+		// Set default size
+		dataChart.snapPanel.setRelSize(600, 450);
 		
 		// Add these default charts to the list
 		window.charts.add(dataChart);
@@ -489,13 +489,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		int currentChartContainerWidth = window.centerChartPanel.getWidth();
 		int currentChartContainerHeight = window.centerChartPanel.getHeight();
 		
-		if (chartContainerWidth != -1 && chartContainerHeight != -1) {
-			double xFactor = (double) currentChartContainerWidth / chartContainerWidth;
-			double yFactor = (double) currentChartContainerHeight / chartContainerHeight;
-			
-			for (DataChart chart : window.charts) {
-				chart.snapPanel.containerResized(xFactor, yFactor);
-			}
+		for (DataChart chart : window.charts) {
+			chart.snapPanel.containerResized(currentChartContainerWidth, currentChartContainerHeight);
 		}
 		
 		chartContainerWidth = currentChartContainerWidth;
