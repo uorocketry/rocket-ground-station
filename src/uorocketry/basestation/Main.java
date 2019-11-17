@@ -31,7 +31,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener {
+public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
 	
 	/** Constants */
 	/** Is this running in simulation mode */
@@ -73,6 +73,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater = new GoogleEarthUpdater();
+	
+	/** The chart last clicked */
+	DataChart selectedChart;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -165,6 +168,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup listeners for table
 		window.dataTable.getSelectionModel().addListSelectionListener(this);
+		
+		// Setup Snap Panel system
+		selectedChart = window.charts.get(0);
+		selectedChart.snapPanel.setSnapPanelListener(this);
 	}
 	
 	public void updateUI() {
@@ -391,13 +398,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Set default size
 		chartPanel.setBounds(0, 0, 500, 500);
 		
-		// Set to be selected
-		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
-		
 		DataChart dataChart = new DataChart(xyChart, chartPanel);
 		
 		// Add these default charts to the list
 		window.charts.add(dataChart);
+		
+		// Set to be selected
+		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
+		dataChart.snapPanel.setSnapPanelListener(this);
+		selectedChart = dataChart;
 	}
 
 	/** For com selector JList */
@@ -432,9 +441,18 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			int selectedRow = window.dataTable.getSelectedRow();
 			
 			// Set chart to be based on this row
-			//TODO use selected chart
-			window.charts.get(0).xType = selectedRow;
+			selectedChart.xType = selectedRow;
 			updateUI();
+		}
+	}
+	
+	/**
+	 * Called when a new snap window is highlighted
+	 */
+	@Override
+	public void snapPanelSelected(SnapPanel snapPanel) {
+		if (snapPanel.chart != null) {
+			selectedChart = snapPanel.chart;
 		}
 	}
 

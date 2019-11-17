@@ -16,7 +16,9 @@ public class DataChart {
 		this.xyChart = xyChart;
 		this.chartPanel = chartPanel;
 		
-		this.snapPanel = new SnapPanel(chartPanel);
+		this.snapPanel = new SnapPanel(this);
+		
+//		panel.addMouseListener(this);
 	}
 	
 	public DataChart(XYChart xyChart, XChartPanel<XYChart> chartPanel, int xType) {

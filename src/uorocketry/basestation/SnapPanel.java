@@ -15,10 +15,14 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	int lastMouseX = -1;
 	int lastMouseY = -1;
 	
+	DataChart chart;
 	JPanel panel;
 	
-	public SnapPanel(JPanel panel) {
-		this.panel = panel;
+	SnapPanelListener snapPanelListener;
+	
+	public SnapPanel(DataChart chart) {
+		this.chart = chart;
+		this.panel = chart.chartPanel;
 		
 		panel.addMouseListener(this);
 		panel.addMouseMotionListener(this);
@@ -28,6 +32,12 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	public void mousePressed(MouseEvent e) {
 		panel.getParent().setComponentZOrder(panel, 0);
 		panel.getParent().repaint();
+		
+		snapPanelListener.snapPanelSelected(this);
+	}
+	
+	public void setSnapPanelListener(SnapPanelListener snapPanelListener) {
+		this.snapPanelListener = snapPanelListener;
 	}
 
 	@Override
