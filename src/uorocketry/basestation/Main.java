@@ -377,8 +377,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void addChart() {
 		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
-		
-		DataChart dataChart = new DataChart(xyChart);
 
 		// Customize Chart
 		xyChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
@@ -390,14 +388,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
+		// Set default size
+		chartPanel.setBounds(0, 0, 500, 500);
+		
+		// Set to be selected
+		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
+		
+		DataChart dataChart = new DataChart(xyChart, chartPanel);
+		
 		// Add these default charts to the list
 		window.charts.add(dataChart);
-		window.chartPanels.add(chartPanel);
-		
-		// Increase layout size
-		window.centerChartPanel.setLayout(new GridLayout(0, (int) Math.ceil(Math.sqrt(window.charts.size())), 0, 0));
-		window.validate();
-		window.repaint();
 	}
 
 	/** For com selector JList */

@@ -53,7 +53,6 @@ public class Window extends JFrame {
 	
 	JPanel centerChartPanel;
 	
-	ArrayList<XChartPanel<XYChart>> chartPanels = new ArrayList<>();
 	ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
@@ -107,7 +106,7 @@ public class Window extends JFrame {
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
 		slider = new JSlider();
-		slider.setSnapToTicks(true);
+//		slider.setSnapToTicks(true);
 		sliderSection.add(slider);
 		slider.setPaintTicks(true);
 		slider.setValue(0);
@@ -151,26 +150,27 @@ public class Window extends JFrame {
 		
 		centerChartPanel = new JPanel();
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
-		centerChartPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
 		// Create Chart
 		XYChart firstChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 		
-		DataChart dataChart = new DataChart(firstChart);
-
 		// Customize Chart
 		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
 		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
 		firstChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		centerChartPanel.setLayout(null);
 		
 		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
+		chart1Panel.setBounds(0, 0, 830, 482);
 		centerChartPanel.add(chart1Panel);
+		
+		// Create the data chart container
+		DataChart dataChart = new DataChart(firstChart, chart1Panel);
 		
 		// Add these default charts to the list
 		charts.add(dataChart);
-		chartPanels.add(chart1Panel);
 		
 		setVisible(true);
 	}
