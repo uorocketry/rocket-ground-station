@@ -24,6 +24,7 @@ import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.internal.chartpart.Chart;
 import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -75,6 +76,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
+	
+	/** The width and height of the chart container to resize elements inside on resize. */
+	int chartContainerWidth = -1;
+	int chartContainerHeight = -1;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -467,7 +472,21 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void componentResized(ComponentEvent e) {
-
+		// Chart Container resize management
+		int currentChartContainerWidth = window.centerChartPanel.getWidth();
+		int currentChartContainerHeight = window.centerChartPanel.getHeight();
+		
+		if (chartContainerWidth != -1 && chartContainerHeight != -1) {
+			double xFactor = (double) currentChartContainerWidth / chartContainerWidth;
+			double yFactor = (double) currentChartContainerHeight / chartContainerHeight;
+			
+			for (DataChart chart : window.charts) {
+				chart.snapPanel.containerResized(xFactor, yFactor);
+			}
+		}
+		
+		chartContainerWidth = currentChartContainerWidth;
+		chartContainerHeight = currentChartContainerHeight;
 	}
 
 	@Override

@@ -44,21 +44,6 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e) {
-		
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		
-	}
-
-	@Override
 	public void mouseReleased(MouseEvent e) {
 		lastMouseX = -1;
 		lastMouseY = -1;
@@ -92,6 +77,34 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 		lastMouseX = currentX;
 		lastMouseY = currentY;
+	}
+	
+	/**
+	 * Called whenever the parent is resized to change the layout to the new size.
+	 * 
+	 * @param xFactor The factor the x is stretched by (new/old)
+	 * @param yFactor The factor the y is stretched by (new/old)
+	 */
+	public void containerResized(double xFactor, double yFactor) {
+		Rectangle currentBounds = panel.getBounds();
+		
+		panel.setBounds((int) (currentBounds.getX() * xFactor), (int) (currentBounds.getY() * yFactor), (int) (currentBounds.getWidth() * xFactor), (int) (currentBounds.getHeight() * yFactor));
+	
+	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		
 	}
 
 	@Override
