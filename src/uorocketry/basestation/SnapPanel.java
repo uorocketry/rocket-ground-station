@@ -128,6 +128,22 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		relX = absoluteX / screenBounds.getWidth();
 		relY = absoluteY / screenBounds.getHeight();
 		
+		//don't let it go off screen
+		if (absoluteX < 0) {
+			absoluteX = 0;
+		} else if (absoluteX > screenBounds.getWidth() - panel.getWidth()) {
+			absoluteX = (int) (screenBounds.getWidth() - panel.getWidth());
+		}
+		
+		if (absoluteY < 0) {
+			absoluteY = 0;
+		} else if (absoluteY > screenBounds.getHeight() - panel.getHeight()) {
+			absoluteY = (int) (screenBounds.getHeight() - panel.getHeight());
+		}
+		
+		relX = absoluteX / screenBounds.getWidth();
+		relY = absoluteY / screenBounds.getHeight();
+		
 		panel.setLocation(absoluteX, absoluteY);
 	}
 
