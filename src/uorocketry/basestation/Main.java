@@ -13,7 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JTable;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -24,7 +26,6 @@ import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
-import org.knowm.xchart.internal.chartpart.Chart;
 import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -76,6 +77,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
+	Border selectionBorder = BorderFactory.createLineBorder(Color.blue);
 	
 	/** The width and height of the chart container to resize elements inside on resize. */
 	int chartContainerWidth = -1;
@@ -176,6 +178,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup Snap Panel system
 		selectedChart = window.charts.get(0);
 		selectedChart.snapPanel.setSnapPanelListener(this);
+		selectedChart.chartPanel.setBorder(selectionBorder);
 	}
 	
 	public void updateUI() {
@@ -410,7 +413,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Set to be selected
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
 		dataChart.snapPanel.setSnapPanelListener(this);
+		
+		selectedChart.chartPanel.setBorder(null);
 		selectedChart = dataChart;
+		selectedChart.chartPanel.setBorder(selectionBorder);
+		
 	}
 
 	/** For com selector JList */
@@ -456,7 +463,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	@Override
 	public void snapPanelSelected(SnapPanel snapPanel) {
 		if (snapPanel.chart != null) {
+			// Remove border on old object
+			selectedChart.chartPanel.setBorder(null);
+
 			selectedChart = snapPanel.chart;
+			
+			// Add border
+			selectedChart.chartPanel.setBorder(selectionBorder);
 		}
 	}
 
