@@ -20,6 +20,9 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	
 	SnapPanelListener snapPanelListener;
 	
+	/** Used to keep the action consistent and make resizing not stop mid-resize if the mouse moved fast. */
+	boolean resizing = false;
+	
 	public SnapPanel(DataChart chart) {
 		this.chart = chart;
 		this.panel = chart.chartPanel;
@@ -59,6 +62,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	public void mouseReleased(MouseEvent e) {
 		lastMouseX = -1;
 		lastMouseY = -1;
+		
+		resizing = false;
 	}
 
 	@Override
@@ -69,7 +74,20 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		if (lastMouseX != -1 && lastMouseY != -1) {
 			Rectangle currentBounds = panel.getBounds();
 			
-			panel.setLocation((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
+			if (resizing) {
+				panel.setSize((int) currentBounds.getWidth() + (currentX - lastMouseX), (int) currentBounds.getHeight() + (currentY - lastMouseY));
+			} else {
+				// Move panel
+				panel.setLocation((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
+			}
+			
+		} else {
+			int currentXRelative = e.getX();
+			int currentYRelative = e.getY();
+			
+			if (currentXRelative > panel.getWidth() - 20 && currentYRelative > panel.getHeight() - 20) {
+				resizing = true;
+			}
 		}
 		
 		lastMouseX = currentX;
