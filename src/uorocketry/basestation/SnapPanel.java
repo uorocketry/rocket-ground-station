@@ -23,6 +23,10 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	/** Used to keep the action consistent and make resizing not stop mid-resize if the mouse moved fast. */
 	boolean resizing = false;
 	
+	/** Used to tell if the location should be moved along with the scaling */
+	boolean resizeLeft = false;
+	boolean resizeTop = false;
+	
 	public SnapPanel(DataChart chart) {
 		this.chart = chart;
 		this.panel = chart.chartPanel;
@@ -60,7 +64,29 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			Rectangle currentBounds = panel.getBounds();
 			
 			if (resizing) {
-				panel.setSize((int) currentBounds.getWidth() + (currentX - lastMouseX), (int) currentBounds.getHeight() + (currentY - lastMouseY));
+				// Used to make growth go in the oposite direction depending on where the scale is from
+				int xChangeFactor = 1;
+				int yChangeFactor = 1;
+				
+				// How much should the window be moved (depends on where the window is resized from)
+				int xMovementFactor = 0;
+				int yMovementFactor = 0;
+				
+				if (resizeLeft) {
+					xChangeFactor = -1;
+					xMovementFactor = 1;
+				}
+				if (resizeTop) {
+					yChangeFactor = -1;
+					yMovementFactor = 1;
+				}
+				
+				panel.setSize((int) currentBounds.getWidth() + xChangeFactor * (currentX - lastMouseX), (int) currentBounds.getHeight() + yChangeFactor * (currentY - lastMouseY));
+			
+				// Don't waste time moving it if it doesn't affect anything
+				if (xMovementFactor != 0 || yMovementFactor != 0) {
+					panel.setLocation((int) currentBounds.getX() + xMovementFactor * (currentX - lastMouseX), (int) currentBounds.getY() + yMovementFactor * (currentY - lastMouseY));
+				}
 			} else {
 				// Move panel
 				panel.setLocation((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
@@ -70,8 +96,14 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			int currentXRelative = e.getX();
 			int currentYRelative = e.getY();
 			
-			if (currentXRelative > panel.getWidth() - 20 && currentYRelative > panel.getHeight() - 20) {
+			int cornerSize = 50;
+			
+			if ((currentXRelative < cornerSize || currentXRelative > panel.getWidth() - cornerSize) 
+					&& (currentYRelative > panel.getHeight() - cornerSize || currentYRelative < cornerSize)) {
+				
 				resizing = true;
+				resizeLeft = currentXRelative < cornerSize;
+				resizeTop = currentYRelative < cornerSize;
 			}
 		}
 		

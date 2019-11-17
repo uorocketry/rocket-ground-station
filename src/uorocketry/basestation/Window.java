@@ -163,7 +163,7 @@ public class Window extends JFrame {
 		centerChartPanel.setLayout(null);
 		
 		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
-		chart1Panel.setBounds(0, 0, 830, 482);
+		chart1Panel.setBounds(0, 0, 600, 450);
 		centerChartPanel.add(chart1Panel);
 		
 		// Create the data chart container

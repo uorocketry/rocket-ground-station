@@ -400,7 +400,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.centerChartPanel.add(chartPanel);
 		
 		// Set default size
-		chartPanel.setBounds(0, 0, 500, 500);
+		chartPanel.setBounds(0, 0, 600, 450);
 		
 		DataChart dataChart = new DataChart(xyChart, chartPanel);
 		
