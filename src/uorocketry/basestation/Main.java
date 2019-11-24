@@ -83,6 +83,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	int chartContainerWidth = -1;
 	int chartContainerHeight = -1;
 	
+	/** Set to true when automatically selecting or deselcting from the data table */
+	boolean ignoreSelections = false;
+	
 	public static void main(String[] args) {
 		new Main();
 	}
@@ -178,7 +181,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup Snap Panel system
 		selectedChart = window.charts.get(0);
 		selectedChart.snapPanel.setSnapPanelListener(this);
-		selectedChart.chartPanel.setBorder(selectionBorder);
+
+		snapPanelSelected(selectedChart.snapPanel);
 	}
 	
 	public void updateUI() {
@@ -449,6 +453,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				}
 			}
 		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
+			if (ignoreSelections) return;
+			
 			int selectedRow = window.dataTable.getSelectedRow();
 			
 			// Set chart to be based on this row
@@ -470,6 +476,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			// Add border
 			selectedChart.chartPanel.setBorder(selectionBorder);
+			
+			// Add selections
+			ignoreSelections = true;
+			window.dataTable.setRowSelectionInterval(selectedChart.xType, selectedChart.xType);
+			window.dataTable.setColumnSelectionInterval(0, 0);
+			ignoreSelections = false;
 		}
 	}
 
