@@ -14,6 +14,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	
 	int lastMouseX = -1;
 	int lastMouseY = -1;
+	Rectangle startBoundsRectangle = null;
 	
 	DataChart chart;
 	JPanel panel;
@@ -57,6 +58,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	public void mouseReleased(MouseEvent e) {
 		lastMouseX = -1;
 		lastMouseY = -1;
+		startBoundsRectangle = null;
 		
 		resizing = false;
 	}
@@ -67,8 +69,6 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		int currentY = e.getYOnScreen();
 		
 		if (lastMouseX != -1 && lastMouseY != -1) {
-			Rectangle currentBounds = panel.getBounds();
-			
 			if (resizing) {
 				// Used to make growth go in the opposite direction depending on where the scale is from
 				int xChangeFactor = 1;
@@ -87,15 +87,18 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 					yMovementFactor = 1;
 				}
 				
-				setRelSize((int) currentBounds.getWidth() + xChangeFactor * (currentX - lastMouseX), (int) currentBounds.getHeight() + yChangeFactor * (currentY - lastMouseY));
+				// If it reaches a cap, it is like the mouse was in a different position
+				int[] mousePosition = setRelSize((int) startBoundsRectangle.getWidth() + xChangeFactor * (currentX - lastMouseX), 
+						(int) startBoundsRectangle.getHeight() + yChangeFactor * (currentY - lastMouseY));
 			
 				// Don't waste time moving it if it doesn't affect anything
 				if (xMovementFactor != 0 || yMovementFactor != 0) {
-					setRelPosition((int) currentBounds.getX() + xMovementFactor * (currentX - lastMouseX), (int) currentBounds.getY() + yMovementFactor * (currentY - lastMouseY));
+					setRelPosition((int) startBoundsRectangle.getX() + xMovementFactor * (currentX - lastMouseX - mousePosition[0]), 
+							(int) startBoundsRectangle.getY() + yMovementFactor * (currentY - lastMouseY - mousePosition[1]));
 				}
 			} else {
 				// Move panel
-				setRelPosition((int) currentBounds.getX() + (currentX - lastMouseX), (int) currentBounds.getY() + (currentY - lastMouseY));
+				setRelPosition((int) startBoundsRectangle.getX() + (currentX - lastMouseX), (int) startBoundsRectangle.getY() + (currentY - lastMouseY));
 			}
 			
 		} else {
@@ -111,10 +114,14 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 				resizeLeft = currentXRelative < cornerSize;
 				resizeTop = currentYRelative < cornerSize;
 			}
+			
+			lastMouseX = currentX;
+			lastMouseY = currentY;
+			
+			startBoundsRectangle = panel.getBounds();
 		}
 		
-		lastMouseX = currentX;
-		lastMouseY = currentY;
+		
 	}
 	
 	public void setRelBounds(int absoluteX, int absoluteY, int absoluteWidth, int absoluteHeight) {
@@ -144,14 +151,28 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		panel.setLocation(absoluteX, absoluteY);
 	}
 
-	public void setRelSize(int absoluteWidth, int absoluteHeight) {
+	/**
+	 * Returns false if the minimum size has been hit.
+	 * 
+	 * @param absoluteWidth
+	 * @param absoluteHeight
+	 * @return
+	 */
+	public int[] setRelSize(int absoluteWidth, int absoluteHeight) {
+		// If a cap is reached, treat it as if the mouse was in a different position
+		int[] mousePosition = new int[]{0, 0};
+		
 		Rectangle screenBounds = panel.getParent().getBounds();
 		
 		// Don't get too small
 		if (absoluteWidth < 100) {
+			mousePosition[0] = 100 - absoluteWidth;
+			
 			absoluteWidth = 100;
 		}
 		if (absoluteHeight < 100) {
+			mousePosition[1] = 100 - absoluteHeight;
+
 			absoluteHeight = 100;
 		}
 		
@@ -159,6 +180,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		relHeight = absoluteHeight / screenBounds.getHeight();
 		
 		panel.setSize(absoluteWidth, absoluteHeight);
+		
+		return mousePosition;
 	}
 	
 	/**
