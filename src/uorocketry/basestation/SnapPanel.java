@@ -70,7 +70,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			Rectangle currentBounds = panel.getBounds();
 			
 			if (resizing) {
-				// Used to make growth go in the oposite direction depending on where the scale is from
+				// Used to make growth go in the opposite direction depending on where the scale is from
 				int xChangeFactor = 1;
 				int yChangeFactor = 1;
 				
