@@ -1,18 +1,13 @@
 package uorocketry.basestation;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-
-import org.knowm.xchart.internal.chartpart.Chart;
 
 /**
  * Makes JPanel have the ability to snap and move in an absolute layout
@@ -22,6 +17,9 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	int lastMouseX = -1;
 	int lastMouseY = -1;
 	Rectangle startBoundsRectangle = null;
+	
+	// Used to check for double clicks
+	long lastClickTime = 0;
 	
 	DataChart chart;
 	JPanel panel;
@@ -68,7 +66,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		int currentMouseX = e.getXOnScreen() - panelLocation.x;
 		int currentMouseY = e.getYOnScreen() - panelLocation.y;
 		
-		if (e.getButton() == MouseEvent.BUTTON2) {
+		// Check to see if a double click occurred
+		if (System.nanoTime() - lastClickTime < 1000000000 / 3) {
 			snapToMaxSize(currentMouseX, currentMouseY);
 		}
 		
@@ -77,6 +76,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		startBoundsRectangle = null;
 		
 		resizing = false;
+		
+		lastClickTime = System.nanoTime();
 	}
 	
 	/**
