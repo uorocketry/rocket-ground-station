@@ -1,5 +1,6 @@
 package uorocketry.basestation;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -8,6 +9,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
 import org.knowm.xchart.internal.chartpart.Chart;
@@ -66,7 +68,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		int currentMouseX = e.getXOnScreen() - panelLocation.x;
 		int currentMouseY = e.getYOnScreen() - panelLocation.y;
 		
-		if (currentMouseY <= 0) {
+		if (e.getButton() == MouseEvent.BUTTON2) {
 			snapToMaxSize(currentMouseX, currentMouseY);
 		}
 		
@@ -96,17 +98,14 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		int x = 0;
 		if (closestLeftChart != null) x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
 		
-		int width = (int) panelSize.getWidth();
+		int width = (int) panelSize.getWidth() - x;
 		if (closestRightChart != null) width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
 		
 		int y = 0;
 		if (closestTopChart != null) y = (int) (closestTopChart.chartPanel.getBounds().getY() + closestTopChart.chartPanel.getBounds().getHeight());
 		
-		int height = (int) panelSize.getHeight();
+		int height = (int) panelSize.getHeight() - y;
 		if (closestBottomChart != null) height = (int) (panelSize.getHeight() - y - (panelSize.getHeight() - closestBottomChart.chartPanel.getBounds().getY()));
-		
-		System.out.println(height);
-		System.out.println(closestBottomChart.chartPanel.getBounds().getX());
 		
 		setRelBounds(x, y, width, height);
 	}
@@ -123,24 +122,42 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 		// This is the variable that will be compared against
 		int pos = x;
-		if (coordinate == 1) pos = y;
+		// The other coordinate
+		int otherPos = y;
+		if (coordinate == 1) {
+			pos = y;
+			otherPos = x;
+		}
 		
 		for (DataChart chart : chart.window.charts) {
 			if (chart == this.chart) continue;
 			
-			int currentChartPos = chart.chartPanel.getX();
+			int currentChartPos = (int) chart.chartPanel.getBounds().getX();
+			int currentChartOtherPos = (int) chart.chartPanel.getBounds().getY();
+			int currentChartSize = (int) chart.chartPanel.getBounds().getWidth();
+			int currentChartOtherSize = (int) chart.chartPanel.getBounds().getHeight();
 			int closestChartPos = 0;
+			int closestChartSize = 0;
 			// To prevent null pointer exceptions
-			if (closestChart != null) closestChartPos = closestChart.chartPanel.getX();
+			if (closestChart != null) {
+				closestChartPos = (int) closestChart.chartPanel.getBounds().getX();
+				closestChartSize = (int) closestChart.chartPanel.getBounds().getWidth();
+			}
 			
 			// For Y coordinate
 			if (coordinate == 1) {
-				currentChartPos = chart.chartPanel.getY();
+				currentChartPos = (int) chart.chartPanel.getBounds().getY();
+				currentChartOtherPos = (int) chart.chartPanel.getBounds().getX();
+				currentChartSize = (int) chart.chartPanel.getBounds().getHeight();
+				currentChartOtherSize = (int) chart.chartPanel.getBounds().getWidth();
 				
-				if (closestChart != null) closestChartPos = closestChart.chartPanel.getY();
+				if (closestChart != null) {
+					closestChartPos = (int) closestChart.chartPanel.getBounds().getY();
+					closestChartSize = (int) closestChart.chartPanel.getBounds().getHeight();
+				}
 			}
 			
-			if (chart.chartPanel.getY() <= 0) {// TODO change this
+			if (currentChartOtherPos < otherPos && currentChartOtherPos + currentChartOtherSize > otherPos) {
 				// Check for direction == 0
 				boolean check = currentChartPos < pos && 
 						(closestChart == null || closestChartPos < currentChartPos);
