@@ -166,7 +166,7 @@ public class Window extends JFrame {
 		centerChartPanel.add(chart1Panel);
 		
 		// Create the data chart container
-		DataChart dataChart = new DataChart(firstChart, chart1Panel);
+		DataChart dataChart = new DataChart(this, firstChart, chart1Panel);
 		
 		// Add these default charts to the list
 		charts.add(dataChart);

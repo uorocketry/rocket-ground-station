@@ -402,7 +402,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
-		DataChart dataChart = new DataChart(xyChart, chartPanel);
+		DataChart dataChart = new DataChart(window, xyChart, chartPanel);
 		
 		// Set default size
 		dataChart.snapPanel.setRelSize(600, 450);

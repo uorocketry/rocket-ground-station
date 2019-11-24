@@ -1,11 +1,16 @@
 package uorocketry.basestation;
 
+import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
 
 import javax.swing.JPanel;
+
+import org.knowm.xchart.internal.chartpart.Chart;
 
 /**
  * Makes JPanel have the ability to snap and move in an absolute layout
@@ -56,6 +61,46 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		// See if a snap should happen
+		Point panelLocation =  panel.getParent().getLocationOnScreen();
+		int currentMouseX = e.getXOnScreen() - panelLocation.x;
+		int currentMouseY = e.getYOnScreen() - panelLocation.y;
+		
+		if (currentMouseY <= 0) {
+			// Snap
+			Dimension panelSize = panel.getParent().getSize();
+			
+			// Find all panels at the top
+			ArrayList<DataChart> charts = chart.window.charts;
+			
+			DataChart closestLeftChart = null;
+			DataChart closestRightChart = null;
+			
+			for (DataChart chart : charts) {
+				if (chart == this.chart) continue;
+				
+				if (chart.chartPanel.getY() <= 0) {
+					if (chart.chartPanel.getX() < currentMouseX && 
+							(closestLeftChart == null || closestLeftChart.chartPanel.getX() < chart.chartPanel.getX())) {
+						closestLeftChart = chart;
+					} else if (chart.chartPanel.getX() > currentMouseX && 
+							(closestRightChart == null || closestRightChart.chartPanel.getX() > chart.chartPanel.getX())) {
+						closestRightChart = chart;
+					}
+				}
+			}
+			
+			int x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
+			int y = 0;
+			int width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
+			int height = (int) (panelSize.getHeight() - y);
+			
+			System.out.println(x);
+			System.out.println(closestLeftChart.chartPanel.getBounds().getX());
+			
+			setRelBounds(x, y, width, height);
+		}
+		
 		lastMouseX = -1;
 		lastMouseY = -1;
 		startBoundsRectangle = null;
