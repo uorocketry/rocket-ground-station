@@ -53,6 +53,17 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		panel.getParent().repaint();
 		
 		snapPanelListener.snapPanelSelected(this);
+		
+		// Check to see if a double click occurred
+		if (System.nanoTime() - lastClickTime < 1000000000 / 3) {
+			Point panelLocation =  panel.getParent().getLocationOnScreen();
+			int currentMouseX = e.getXOnScreen() - panelLocation.x;
+			int currentMouseY = e.getYOnScreen() - panelLocation.y;
+			
+			snapToMaxSize(currentMouseX, currentMouseY);
+		}
+		
+		lastClickTime = System.nanoTime();
 	}
 	
 	public void setSnapPanelListener(SnapPanelListener snapPanelListener) {
@@ -61,23 +72,11 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// See if a snap should happen
-		Point panelLocation =  panel.getParent().getLocationOnScreen();
-		int currentMouseX = e.getXOnScreen() - panelLocation.x;
-		int currentMouseY = e.getYOnScreen() - panelLocation.y;
-		
-		// Check to see if a double click occurred
-		if (System.nanoTime() - lastClickTime < 1000000000 / 3) {
-			snapToMaxSize(currentMouseX, currentMouseY);
-		}
-		
 		lastMouseX = -1;
 		lastMouseY = -1;
 		startBoundsRectangle = null;
 		
 		resizing = false;
-		
-		lastClickTime = System.nanoTime();
 	}
 	
 	/**
