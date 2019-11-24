@@ -63,6 +63,12 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			snapToMaxSize(currentMouseX, currentMouseY);
 		}
 		
+		if (e.getButton() == MouseEvent.BUTTON2) {
+			// Close this
+			chart.window.charts.remove(chart);
+			chart.window.centerChartPanel.remove(panel);
+		}
+		
 		lastClickTime = System.nanoTime();
 	}
 	
