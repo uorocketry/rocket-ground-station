@@ -87,16 +87,26 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		// Snap
 		Dimension panelSize = panel.getParent().getSize();
 		
-		DataChart closestLeftChart = findClosestChart(mouseX, mouseY, 0);
-		DataChart closestRightChart = findClosestChart(mouseX, mouseY, 1);
+		DataChart closestLeftChart = findClosestChart(mouseX, mouseY, 0, 0);
+		DataChart closestRightChart = findClosestChart(mouseX, mouseY, 1, 0);
 		
-		int x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
+		DataChart closestTopChart = findClosestChart(mouseX, mouseY, 0, 1);
+		DataChart closestBottomChart = findClosestChart(mouseX, mouseY, 1, 1);
+		
+		int x = 0;
+		if (closestLeftChart != null) x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
+		
+		int width = (int) panelSize.getWidth();
+		if (closestRightChart != null) width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
+		
 		int y = 0;
-		int width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
-		int height = (int) (panelSize.getHeight() - y);
+		if (closestTopChart != null) y = (int) (closestTopChart.chartPanel.getBounds().getY() + closestTopChart.chartPanel.getBounds().getHeight());
 		
-		System.out.println(x);
-		System.out.println(closestLeftChart.chartPanel.getBounds().getX());
+		int height = (int) panelSize.getHeight();
+		if (closestBottomChart != null) height = (int) (panelSize.getHeight() - y - (panelSize.getHeight() - closestBottomChart.chartPanel.getBounds().getY()));
+		
+		System.out.println(height);
+		System.out.println(closestBottomChart.chartPanel.getBounds().getX());
 		
 		setRelBounds(x, y, width, height);
 	}
@@ -105,21 +115,39 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	 * @param x
 	 * @param y
 	 * @param direction 0 searches left, 1 searches right
+	 * @param coordinate 0 for x, 1 for y
 	 * @return
 	 */
-	public DataChart findClosestChart(int x, int y, int direction) {
+	public DataChart findClosestChart(int x, int y, int direction, int coordinate) {
 		DataChart closestChart = null;
+		
+		// This is the variable that will be compared against
+		int pos = x;
+		if (coordinate == 1) pos = y;
 		
 		for (DataChart chart : chart.window.charts) {
 			if (chart == this.chart) continue;
 			
+			int currentChartPos = chart.chartPanel.getX();
+			int closestChartPos = 0;
+			// To prevent null pointer exceptions
+			if (closestChart != null) closestChartPos = closestChart.chartPanel.getX();
+			
+			// For Y coordinate
+			if (coordinate == 1) {
+				currentChartPos = chart.chartPanel.getY();
+				
+				if (closestChart != null) closestChartPos = closestChart.chartPanel.getY();
+			}
+			
 			if (chart.chartPanel.getY() <= 0) {// TODO change this
-				boolean check = chart.chartPanel.getX() < x && 
-						(closestChart == null || closestChart.chartPanel.getX() < chart.chartPanel.getX());
+				// Check for direction == 0
+				boolean check = currentChartPos < pos && 
+						(closestChart == null || closestChartPos < currentChartPos);
 				
 				if (direction == 1) {
-					check = chart.chartPanel.getX() > x && 
-							(closestChart == null || closestChart.chartPanel.getX() > chart.chartPanel.getX());
+					check = currentChartPos > pos && 
+							(closestChart == null || closestChartPos > currentChartPos);
 				}
 				
 				if (check) {
