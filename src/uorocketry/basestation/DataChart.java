@@ -12,7 +12,10 @@ public class DataChart {
 	
 	Window window;
 	
-	int xType = DataHandler.ALTITUDE;
+	// The active chart series on this chart
+	String[] activeSeries = new String[0];
+	
+	int[] xTypes = {DataHandler.ALTITUDE};
 	
 	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
 		this.window = window;
@@ -21,11 +24,16 @@ public class DataChart {
 		this.chartPanel = chartPanel;
 		
 		this.snapPanel = new SnapPanel(this);
+		
+		activeSeries = new String[xTypes.length];
+		for (int i = 0; i < xTypes.length; i++) {
+			activeSeries[i] = "series" + i;
+		}
 	}
 	
-	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, int xType) {
+	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, int[] xType) {
 		this(window, xyChart, chartPanel);
 
-		this.xType = xType;
+		this.xTypes = xType;
 	}
 }

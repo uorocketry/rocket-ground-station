@@ -234,22 +234,49 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void updateChart(DataChart chart) {
 		// Update altitude chart
 		ArrayList<Float> altitudeDataX = new ArrayList<>();
-		ArrayList<Float> altitudeDataY = new ArrayList<>();
+		ArrayList<ArrayList<Float>> altitudeDataY = new ArrayList<ArrayList<Float>>();
+		
+		// Add all array lists
+		for (int i = 0; i < chart.xTypes.length; i++) {
+			altitudeDataY.add(new ArrayList<Float>());
+		}
 		
 		for (int i = 0; i <= currentDataIndex; i++) {
 			DataHandler data = allData.get(i);
 			
 			if (data != null) {
 				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue() / 1000);
-				altitudeDataY.add(data.data[chart.xType].getDecimalValue());
+				
+				for (int j = 0; j < chart.xTypes.length; j++) {
+					altitudeDataY.get(j).add(data.data[chart.xTypes[j]].getDecimalValue());
+				}
 			}
 		}
 		
-		// Set Labels
-		chart.xyChart.setTitle(labels[chart.xType] + " vs Timestamp");
-		chart.xyChart.setYAxisTitle(labels[chart.xType]);
+		String[] newActiveSeries = new String[chart.xTypes.length];
 		
-		chart.xyChart.updateXYSeries("chart1", altitudeDataX, altitudeDataY, null);
+		// Set Labels
+		for (int i = 0; i < chart.xTypes.length; i++) {
+			chart.xyChart.setTitle(labels[chart.xTypes[i]] + " vs Timestamp");
+			chart.xyChart.setYAxisTitle(labels[chart.xTypes[i]]);
+			
+			if (chart.activeSeries.length > i) {
+				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+
+			} else {
+				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+			}
+			
+			newActiveSeries[i]= "series" + i;
+		}
+		
+		// Remove extra series
+		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
+			chart.xyChart.removeSeries("series" + i);
+		}
+		
+		chart.activeSeries = newActiveSeries;
+		
 		window.repaint();
 	}
 	
@@ -455,10 +482,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
 			if (ignoreSelections) return;
 			
-			int selectedRow = window.dataTable.getSelectedRow();
-			
 			// Set chart to be based on this row
-			selectedChart.xType = selectedRow;
+			selectedChart.xTypes = window.dataTable.getSelectedRows();
 			updateUI();
 		}
 	}
@@ -479,7 +504,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			// Add selections
 			ignoreSelections = true;
-			window.dataTable.setRowSelectionInterval(selectedChart.xType, selectedChart.xType);
+			window.dataTable.setRowSelectionInterval(selectedChart.xTypes[0], selectedChart.xTypes[selectedChart.xTypes.length - 1]);
 			window.dataTable.setColumnSelectionInterval(0, 0);
 			ignoreSelections = false;
 		}

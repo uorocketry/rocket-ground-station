@@ -159,7 +159,7 @@ public class Window extends JFrame {
 		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		firstChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		firstChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
 		centerChartPanel.setLayout(null);
 		
 		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
