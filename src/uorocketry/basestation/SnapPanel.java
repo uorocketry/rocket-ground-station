@@ -67,38 +67,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		int currentMouseY = e.getYOnScreen() - panelLocation.y;
 		
 		if (currentMouseY <= 0) {
-			// Snap
-			Dimension panelSize = panel.getParent().getSize();
-			
-			// Find all panels at the top
-			ArrayList<DataChart> charts = chart.window.charts;
-			
-			DataChart closestLeftChart = null;
-			DataChart closestRightChart = null;
-			
-			for (DataChart chart : charts) {
-				if (chart == this.chart) continue;
-				
-				if (chart.chartPanel.getY() <= 0) {
-					if (chart.chartPanel.getX() < currentMouseX && 
-							(closestLeftChart == null || closestLeftChart.chartPanel.getX() < chart.chartPanel.getX())) {
-						closestLeftChart = chart;
-					} else if (chart.chartPanel.getX() > currentMouseX && 
-							(closestRightChart == null || closestRightChart.chartPanel.getX() > chart.chartPanel.getX())) {
-						closestRightChart = chart;
-					}
-				}
-			}
-			
-			int x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
-			int y = 0;
-			int width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
-			int height = (int) (panelSize.getHeight() - y);
-			
-			System.out.println(x);
-			System.out.println(closestLeftChart.chartPanel.getBounds().getX());
-			
-			setRelBounds(x, y, width, height);
+			snapToMaxSize(currentMouseX, currentMouseY);
 		}
 		
 		lastMouseX = -1;
@@ -106,6 +75,60 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		startBoundsRectangle = null;
 		
 		resizing = false;
+	}
+	
+	/**
+	 * Will snap window to the largest possible window starting at mouseX and mouseY
+	 * 
+	 * @param mouseX
+	 * @param mouseY
+	 */
+	public void snapToMaxSize(int mouseX, int mouseY) {
+		// Snap
+		Dimension panelSize = panel.getParent().getSize();
+		
+		DataChart closestLeftChart = findClosestChart(mouseX, mouseY, 0);
+		DataChart closestRightChart = findClosestChart(mouseX, mouseY, 1);
+		
+		int x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
+		int y = 0;
+		int width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
+		int height = (int) (panelSize.getHeight() - y);
+		
+		System.out.println(x);
+		System.out.println(closestLeftChart.chartPanel.getBounds().getX());
+		
+		setRelBounds(x, y, width, height);
+	}
+	
+	/**
+	 * @param x
+	 * @param y
+	 * @param direction 0 searches left, 1 searches right
+	 * @return
+	 */
+	public DataChart findClosestChart(int x, int y, int direction) {
+		DataChart closestChart = null;
+		
+		for (DataChart chart : chart.window.charts) {
+			if (chart == this.chart) continue;
+			
+			if (chart.chartPanel.getY() <= 0) {// TODO change this
+				boolean check = chart.chartPanel.getX() < x && 
+						(closestChart == null || closestChart.chartPanel.getX() < chart.chartPanel.getX());
+				
+				if (direction == 1) {
+					check = chart.chartPanel.getX() > x && 
+							(closestChart == null || closestChart.chartPanel.getX() > chart.chartPanel.getX());
+				}
+				
+				if (check) {
+					closestChart = chart;
+				}
+			}
+		}
+		
+		return closestChart;
 	}
 
 	@Override
