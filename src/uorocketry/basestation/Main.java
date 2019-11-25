@@ -447,8 +447,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		selectedChart.chartPanel.setBorder(null);
 		selectedChart = dataChart;
-		selectedChart.chartPanel.setBorder(selectionBorder);
 		
+		snapPanelSelected(selectedChart.snapPanel);
 	}
 
 	/** For com selector JList */
