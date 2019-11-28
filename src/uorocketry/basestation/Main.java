@@ -6,9 +6,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +55,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 	
+	/** Where to save the log file */
+	public static final String LOG_FILE_SAVE_LOCATION = "data/log.txt";
+	
 	List<DataHandler> allData = new ArrayList<>();
 	
 	String[] labels = new String[DATA_LENGTH];
@@ -85,6 +92,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Set to true when automatically selecting or deselcting from the data table */
 	boolean ignoreSelections = false;
+	
+	/** What will be written to the log file */
+	StringBuilder logFileStringBuilder = new StringBuilder();
+	/** Is the log file being currently updated */
+	boolean currentlyWriting;
 	
 	public static void main(String[] args) {
 		new Main();
@@ -400,6 +412,27 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (latest) {
 			window.slider.setValue(allData.size() - 1);
 		}
+		
+		// Add this message to the log file
+		logFileStringBuilder.append(delimitedMessage);
+		logFileStringBuilder.append("\n");
+		
+		// Get string
+		String logFileString = logFileStringBuilder.toString();
+		
+		if (!currentlyWriting) {
+			currentlyWriting = true;
+
+			// Write to file
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION), StandardCharsets.UTF_8))) {
+			   writer.write(logFileString);
+			} catch (IOException err) {
+				err.printStackTrace();
+			}
+			
+			currentlyWriting = false;
+		}
+		
 	}
 
 	@Override
