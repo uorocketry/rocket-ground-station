@@ -428,7 +428,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		xyChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		xyChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
 		
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
