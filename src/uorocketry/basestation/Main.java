@@ -7,6 +7,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -15,7 +16,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JTable;
@@ -40,7 +43,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Constants */
 	/** Is this running in simulation mode */
-	public static final boolean SIMULATION = true;
+	public static final boolean SIMULATION = false;
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
@@ -56,7 +59,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 	
 	/** Where to save the log file */
-	public static final String LOG_FILE_SAVE_LOCATION = "data/log.txt";
+	public static final String LOG_FILE_SAVE_LOCATION = "data/";
+	/** Will have a number appended to the end to not overwrite old logs */
+	String currentLogFileName = "log.txt";
 	
 	List<DataHandler> allData = new ArrayList<>();
 	
@@ -121,6 +126,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup com ports if not a simulation
 		if (!SIMULATION) {
 			setupSerialComs();
+			
+			setupLogFileName();
 		}
 		
 		// Setup Google Earth map support
@@ -143,6 +150,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 
 		window.comSelector.setListData(comSelectorData);
+	}
+	
+	public void setupLogFileName() {
+		// Figure out file name for logging
+		File folder = new File(LOG_FILE_SAVE_LOCATION);
+		File[] listOfLogFiles = folder.listFiles();
+		Set<String> usedFileNames = new HashSet<String>();
+		
+		for (File file: listOfLogFiles) {
+			if (file.isFile() && file.getName().contains(currentLogFileName)) {
+				usedFileNames.add(file.getName());
+			}
+		}
+		
+		// Find a suitable filename
+		int logIndex = 0;
+		while (usedFileNames.contains(logIndex + "_" + currentLogFileName)) {
+			logIndex++;
+		}
+		
+		// Set the name
+		currentLogFileName = logIndex + currentLogFileName;
 	}
 	
 	public void initialisePort(SerialPort serialPort) {
@@ -424,7 +453,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			currentlyWriting = true;
 
 			// Write to file
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION), StandardCharsets.UTF_8))) {
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName), StandardCharsets.UTF_8))) {
 			   writer.write(logFileString);
 			} catch (IOException err) {
 				err.printStackTrace();
