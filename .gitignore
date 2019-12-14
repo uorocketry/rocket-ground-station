@@ -106,5 +106,8 @@ local.properties
 
 # End of https://www.gitignore.io/api/eclipse
 
-# Data
+# Project Specific
 data
+build
+builds
+
