@@ -42,8 +42,8 @@ import com.fazecast.jSerialComm.SerialPortMessageListener;
 public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
 	
 	/** Constants */
-	/** Is this running in simulation mode */
-	public static final boolean SIMULATION = false;
+	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
+	public static boolean SIMULATION = false;
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
@@ -104,6 +104,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean currentlyWriting;
 	
 	public static void main(String[] args) {
+		if (args.length >= 1 && args[0].equals("sim")) {
+			SIMULATION = true;
+		}
+		
 		new Main();
 	}
 	
