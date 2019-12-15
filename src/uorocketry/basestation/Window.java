@@ -81,7 +81,7 @@ public class Window extends JFrame {
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.Y_AXIS));
 		
-		dataTable = new JTable(Main.DATA_LENGTH, 2);
+		dataTable = new JTable(Main.dataLength, 2);
 		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTable.setCellSelectionEnabled(true);

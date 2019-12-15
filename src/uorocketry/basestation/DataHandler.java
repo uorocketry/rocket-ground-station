@@ -21,7 +21,7 @@ public class DataHandler {
 	static final int GPS_FIX = 13;
 	static final int GPS_FIX_QUALITY = 14;
 	
-	Data[] data = new Data[Main.DATA_LENGTH];
+	Data[] data = new Data[Main.dataLength];
 	
 	public String getFormattedData(String[] labels) {
 		String text = "<html>";

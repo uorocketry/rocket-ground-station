@@ -46,7 +46,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
-	public static final int DATA_LENGTH = 15;
+	public static int dataLength = 15;
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
 	/** Data file location for the simulation (new line separated for each event) */
@@ -68,7 +68,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	List<DataHandler> allData = new ArrayList<>();
 	
-	String[] labels = new String[DATA_LENGTH];
+	String[] labels = new String[dataLength];
 	
 	/** Index of the current data point being looked at */
 	int currentDataIndex = 0;
@@ -109,8 +109,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean currentlyWriting;
 	
 	public static void main(String[] args) {
-		if (args.length >= 1 && args[0].equals("sim")) {
-			simulation = true;
+		// Find different possible commands
+		for (int i = 0; i + 1 < args.length; i++) {
+			switch(args[i]) {
+			case "--sim":
+				simulation = Boolean.parseBoolean(args[i + 1]);
+				
+				break;
+			case "--dataLength":
+				try {
+					dataLength = Integer.parseInt(args[i + 1]);
+				} catch (NumberFormatException e) {
+					System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
+				}
+				
+				break;
+			}
 		}
 		
 		new Main();
@@ -291,7 +305,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		tableModel.setValueAt("Parsing Error", 0, 0);
 		tableModel.setValueAt(currentDataIndex, 0, 1);
 		
-		for (int i = 1; i < DATA_LENGTH; i++) {
+		for (int i = 1; i < dataLength; i++) {
 			// Set label
 			tableModel.setValueAt("", i, 0);
 			
