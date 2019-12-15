@@ -27,6 +27,8 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
 import javax.swing.JCheckBox;
+import javax.swing.JTextField;
+import java.awt.FlowLayout;
 
 public class Window extends JFrame {
 	
@@ -47,6 +49,10 @@ public class Window extends JFrame {
 	JSlider minSlider;
 	JButton latestButton;
 	JButton pauseButton;
+	private JPanel dataLengthPanel;
+	JTextField dataLengthTextBox;
+	JButton dataLengthButton;
+	private JLabel dataLengthLabel;
 	
 	private JPanel comPanel;
 	JList<String> comSelector;
@@ -106,6 +112,23 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		dataTablePanel.add(simulationCheckBox);
+		
+		dataLengthPanel = new JPanel();
+		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataTablePanel.add(dataLengthPanel);
+		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		
+		dataLengthLabel = new JLabel("Data Length:");
+		dataLengthPanel.add(dataLengthLabel);
+		
+		dataLengthTextBox = new JTextField();
+		dataLengthTextBox.setText("0");
+		dataLengthPanel.add(dataLengthTextBox);
+		dataLengthTextBox.setColumns(10);
+		
+		dataLengthButton = new JButton("Save");
+		dataLengthPanel.add(dataLengthButton);
 		getContentPane().add(scrollPane, BorderLayout.WEST);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);

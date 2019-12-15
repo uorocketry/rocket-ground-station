@@ -252,6 +252,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		window.dataLengthButton.addActionListener(this);
+		window.dataLengthTextBox.setText(dataLength + "");
+		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
@@ -571,13 +574,38 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				warningMessage = "Are you sure you would like to disable simulation mode?";
 			}
 			
-			if (JOptionPane.showConfirmDialog(null, warningMessage) == 0) {
+			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
 				simulation = window.simulationCheckBox.isSelected();
 				
 				setupData();
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
+		} else if (e.getSource() == window.dataLengthButton) {
+			String warningMessage = "";
+			if (!simulation) {
+				warningMessage = "Are you sure you would like to change the data length?\n\n"
+						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+			} else {
+				warningMessage = "Are you sure you would like to change the data length? The data will be reloaded.";
+			}
+			
+			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
+				// Set data length
+				try {
+					dataLength = Integer.parseInt(window.dataLengthTextBox.getText());
+				} catch (NumberFormatException error) {
+					JOptionPane.showMessageDialog(window, "'" + window.dataLengthTextBox.getText() + "' is not a number");
+				}
+				
+				// Load labels
+				loadLabels(LABELS_LOCATION);
+				
+				// Different setups depending on if simulation or not
+				setupData();
+				
+				updateUI();
+			} 
 		}
 	}
 	
