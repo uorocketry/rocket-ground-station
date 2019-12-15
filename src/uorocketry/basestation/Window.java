@@ -26,6 +26,7 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import javax.swing.JCheckBox;
 
 public class Window extends JFrame {
 	
@@ -34,6 +35,8 @@ public class Window extends JFrame {
 	JTable dataTable;
 	private JPanel dataTablePanel;
 	private JScrollPane scrollPane;
+	JCheckBox googleEarthCheckBox;
+	JCheckBox simulationCheckBox;
 	
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
@@ -76,7 +79,7 @@ public class Window extends JFrame {
 		dataTablePanel = new JPanel();
 		dataTablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
+		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.Y_AXIS));
 		
 		dataTable = new JTable(Main.DATA_LENGTH, 2);
 		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -97,6 +100,12 @@ public class Window extends JFrame {
 		dataTablePanel.add(dataTable);
 		
 		scrollPane = new JScrollPane(dataTablePanel);
+		
+		googleEarthCheckBox = new JCheckBox("Google Earth");
+		dataTablePanel.add(googleEarthCheckBox);
+		
+		simulationCheckBox = new JCheckBox("Simulation");
+		dataTablePanel.add(simulationCheckBox);
 		getContentPane().add(scrollPane, BorderLayout.WEST);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);

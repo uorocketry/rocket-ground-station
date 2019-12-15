@@ -52,7 +52,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public static final String SIM_DATA_LOCATION = "data/data.txt";
 	
 	/** Whether to update Google Earth file */
-	public static final boolean GOOGLE_EARTH = true;
+	public static boolean googleEarth = false;
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 	
@@ -138,7 +138,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Setup Google Earth map support
-		if (GOOGLE_EARTH) {
+		if (googleEarth) {
 			googleEarthUpdater = new GoogleEarthUpdater();
 		}
 		
@@ -221,6 +221,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		// Checkboxes
+		window.googleEarthCheckBox.addActionListener(this);
+		window.simulationCheckBox.addActionListener(this);
+		
 		// Com selector
 		window.comSelector.addListSelectionListener(this);
 		
@@ -257,7 +261,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			updateChart(chart);
 		}
 		
-		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
+		if (googleEarth) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
 	
 	public void setTableToError(JTable table) {
@@ -524,7 +528,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			window.maxSlider.setValue(allData.size() - 1);
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
-		}
+		} else if (e.getSource() == window.googleEarthCheckBox) {
+			googleEarth = window.googleEarthCheckBox.isSelected();
+		} 
 	}
 	
 	public void addChart() {
