@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
@@ -547,10 +548,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
 			googleEarth = window.googleEarthCheckBox.isSelected();
-		} else if (e.getSource() == window.simulationCheckBox) {
-			simulation = window.simulationCheckBox.isSelected();
+		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
+			String warningMessage = "";
+			if (window.simulationCheckBox.isSelected()) {
+				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
+						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+			} else {
+				warningMessage = "Are you sure you would like to disable simulation mode?";
+			}
 			
-			setupData();
+			if (JOptionPane.showConfirmDialog(null, warningMessage) == 0) {
+				simulation = window.simulationCheckBox.isSelected();
+				
+				setupData();
+			} else {
+				window.simulationCheckBox.setSelected(simulation);
+			}
 		}
 	}
 	
