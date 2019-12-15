@@ -303,6 +303,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
+		if (altitudeDataX.size() == 0) {
+			// Add default data
+			altitudeDataX.add(0f);
+			
+			for (int j = 0; j < chart.xTypes.length; j++) {
+				altitudeDataY.get(j).add(0f);
+			};
+		}
+		
 		String[] newActiveSeries = new String[chart.xTypes.length];
 		StringBuilder title = new StringBuilder();
 		
