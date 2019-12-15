@@ -165,6 +165,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load simulation data if necessary
 		if (simulation) {
 			loadSimulationData();
+			
+			window.savingToLabel.setText("");
 		}
 		
 		// Setup com ports if not a simulation
@@ -210,6 +212,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set the name
 		currentLogFileName = logIndex + DEFAULT_LOG_FILE_NAME;
+		
+		window.savingToLabel.setText("Saving to " + LOG_FILE_SAVE_LOCATION + currentLogFileName);
 	}
 	
 	public void initialisePort(SerialPort serialPort) {

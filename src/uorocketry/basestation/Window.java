@@ -53,6 +53,7 @@ public class Window extends JFrame {
 	JTextField dataLengthTextBox;
 	JButton dataLengthButton;
 	private JLabel dataLengthLabel;
+	JLabel savingToLabel;
 	
 	private JPanel comPanel;
 	JList<String> comSelector;
@@ -66,6 +67,7 @@ public class Window extends JFrame {
 	ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
+	private JPanel savingToPanel;
 	
 	public Window() {
 		// Set look and feel
@@ -76,7 +78,7 @@ public class Window extends JFrame {
             e.printStackTrace();
         }
 		
-		setSize(1000, 600);
+		setSize(1000, 782);
 		setTitle("Ground Station");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -115,8 +117,8 @@ public class Window extends JFrame {
 		dataTablePanel.add(simulationCheckBox);
 		
 		dataLengthPanel = new JPanel();
-		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTablePanel.add(dataLengthPanel);
 		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 		
@@ -124,12 +126,20 @@ public class Window extends JFrame {
 		dataLengthPanel.add(dataLengthLabel);
 		
 		dataLengthTextBox = new JTextField();
-		dataLengthTextBox.setText("0");
 		dataLengthPanel.add(dataLengthTextBox);
-		dataLengthTextBox.setColumns(10);
+		dataLengthTextBox.setText("0");
+		dataLengthTextBox.setColumns(5);
 		
 		dataLengthButton = new JButton("Save");
 		dataLengthPanel.add(dataLengthButton);
+		
+		savingToPanel = new JPanel();
+		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataTablePanel.add(savingToPanel);
+		savingToPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		
+		savingToLabel = new JLabel("Saving to data/log.txt");
+		savingToPanel.add(savingToLabel);
 		getContentPane().add(scrollPane, BorderLayout.WEST);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
