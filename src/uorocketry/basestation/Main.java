@@ -300,10 +300,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		String[] newActiveSeries = new String[chart.xTypes.length];
+		StringBuilder title = new StringBuilder();
 		
 		// Set Labels
 		for (int i = 0; i < chart.xTypes.length; i++) {
-			chart.xyChart.setTitle(labels[chart.xTypes[i]] + " vs Timestamp");
+			if (title.length() != 0) title.append(", ");
+			title.append(labels[chart.xTypes[i]]);
+			
 			chart.xyChart.setYAxisTitle(labels[chart.xTypes[i]]);
 			
 			if (chart.activeSeries.length > i) {
@@ -313,7 +316,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			}
 			
-			newActiveSeries[i]= "series" + i;
+			newActiveSeries[i] = "series" + i;
+		}
+		
+		chart.xyChart.setTitle(title + " vs Timestamp");
+		
+		if (chart.xTypes.length > 1) {
+			chart.xyChart.setYAxisTitle("Value");
 		}
 		
 		// Remove extra series
