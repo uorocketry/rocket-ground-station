@@ -40,7 +40,8 @@ public class Window extends JFrame {
 	private JPanel eastSliderButtons;
 	private JPanel westSliderButtons;
 	
-	JSlider slider;
+	JSlider maxSlider;
+	JSlider minSlider;
 	JButton latestButton;
 	JButton pauseButton;
 	
@@ -105,11 +106,16 @@ public class Window extends JFrame {
 		getContentPane().add(sliderSection, BorderLayout.SOUTH);
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
-		slider = new JSlider();
+		maxSlider = new JSlider();
 //		slider.setSnapToTicks(true);
-		sliderSection.add(slider);
-		slider.setPaintTicks(true);
-		slider.setValue(0);
+		sliderSection.add(maxSlider);
+		maxSlider.setPaintTicks(true);
+		maxSlider.setValue(0);
+		
+		minSlider = new JSlider();
+		minSlider.setValue(0);
+		minSlider.setPaintTicks(true);
+		sliderSection.add(minSlider, BorderLayout.SOUTH);
 		
 		sliderButtons = new JPanel();
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);

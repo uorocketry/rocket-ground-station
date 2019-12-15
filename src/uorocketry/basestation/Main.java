@@ -70,6 +70,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Index of the current data point being looked at */
 	int currentDataIndex = 0;
+	/** Index of the minimum data point being looked at */
+	int minDataIndex = 0;
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -209,8 +211,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupUI() {
-		// Add slider listener
-		window.slider.addChangeListener(this);
+		// Add slider listeners
+		window.maxSlider.addChangeListener(this);
+		window.minSlider.addChangeListener(this);
 		
 		// Buttons
 		window.pauseButton.addActionListener(this);
@@ -237,8 +240,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Don't change slider if paused
 		if (!paused) {
-			// Set max value of the slider
-			window.slider.setMaximum(allData.size() - 1);
+			// Set max value of the sliders
+			window.maxSlider.setMaximum(allData.size() - 1);
+			window.minSlider.setMaximum(allData.size() - 1);
 		}
 		
 		DataHandler currentDataHandler = allData.get(currentDataIndex);
@@ -287,7 +291,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			altitudeDataY.add(new ArrayList<Float>());
 		}
 		
-		for (int i = 0; i <= currentDataIndex; i++) {
+		for (int i = minDataIndex; i <= currentDataIndex; i++) {
 			DataHandler data = allData.get(i);
 			
 			if (data != null) {
@@ -418,14 +422,32 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (e.getSource() == window.slider) {
-			currentDataIndex = window.slider.getValue();
+		if (e.getSource() == window.maxSlider) {
+			currentDataIndex = window.maxSlider.getValue();
+			
+			// Check if min is too high
+			if (minDataIndex > currentDataIndex) {
+				minDataIndex = currentDataIndex;
+				window.minSlider.setValue(minDataIndex);
+			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndex == window.slider.getMaximum() - 1;
+			latest = currentDataIndex == window.maxSlider.getMaximum() - 1;
+		} else if (e.getSource() == window.minSlider) {
+			minDataIndex = window.minSlider.getValue();
+			
+			// Check if min is too high
+			if (minDataIndex > currentDataIndex) {
+				minDataIndex = currentDataIndex;
+				window.minSlider.setValue(minDataIndex);
+			}
+			
+			updateUI();
 		}
+		
+		
 	}
 
 	@Override
@@ -453,7 +475,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.slider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.size() - 1);
 		}
 		
 		// Add this message to the log file
@@ -490,7 +512,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			window.slider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.size() - 1);
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		}
