@@ -58,8 +58,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Where to save the log file */
 	public static final String LOG_FILE_SAVE_LOCATION = "data/";
+	public static final String DEFAULT_LOG_FILE_NAME = "log.txt";
 	/** Will have a number appended to the end to not overwrite old logs */
-	String currentLogFileName = "log.txt";
+	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
 	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
@@ -125,6 +126,27 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load labels
 		loadLabels(LABELS_LOCATION);
 		
+		// Different setups depending on if simulation or not
+		setupData();
+		
+		// Setup Google Earth map support
+		if (googleEarth) {
+			googleEarthUpdater = new GoogleEarthUpdater();
+		}
+		
+		// Update UI once
+		updateUI();
+	}
+	
+	public void setupData() {
+		allData = new ArrayList<DataHandler>();
+		minDataIndex = 0;
+		currentDataIndex = 0;
+		
+		// Reset sliders
+		window.maxSlider.setValue(0);
+		window.minSlider.setValue(0);
+		
 		// Load simulation data if necessary
 		if (simulation) {
 			loadSimulationData();
@@ -137,12 +159,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			setupLogFileName();
 		}
 		
-		// Setup Google Earth map support
-		if (googleEarth) {
-			googleEarthUpdater = new GoogleEarthUpdater();
-		}
-		
-		// Update UI once
 		updateUI();
 	}
 	
@@ -166,19 +182,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		Set<String> usedFileNames = new HashSet<String>();
 		
 		for (File file: listOfLogFiles) {
-			if (file.isFile() && file.getName().contains(currentLogFileName)) {
+			if (file.isFile() && file.getName().contains(DEFAULT_LOG_FILE_NAME)) {
 				usedFileNames.add(file.getName());
 			}
 		}
 		
 		// Find a suitable filename
 		int logIndex = 0;
-		while (usedFileNames.contains(logIndex + "_" + currentLogFileName)) {
+		while (usedFileNames.contains(logIndex + "_" + DEFAULT_LOG_FILE_NAME)) {
 			logIndex++;
 		}
 		
 		// Set the name
-		currentLogFileName = logIndex + currentLogFileName;
+		currentLogFileName = logIndex + DEFAULT_LOG_FILE_NAME;
 	}
 	
 	public void initialisePort(SerialPort serialPort) {
@@ -224,6 +240,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
+		
+		// Set simulation checkbox to be default
+		window.simulationCheckBox.setSelected(simulation);
 		
 		// Com selector
 		window.comSelector.addListSelectionListener(this);
@@ -459,8 +478,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			updateUI();
 		}
-		
-		
 	}
 
 	@Override
@@ -530,7 +547,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
 			googleEarth = window.googleEarthCheckBox.isSelected();
-		} 
+		} else if (e.getSource() == window.simulationCheckBox) {
+			simulation = window.simulationCheckBox.isSelected();
+			
+			setupData();
+		}
 	}
 	
 	public void addChart() {
