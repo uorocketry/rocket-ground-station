@@ -693,7 +693,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			// Add selections
 			ignoreSelections = true;
-			window.dataTable.setRowSelectionInterval(selectedChart.xTypes[0], selectedChart.xTypes[selectedChart.xTypes.length - 1]);
+			
+			window.dataTable.clearSelection();
+			for (int i = 0; i < selectedChart.xTypes.length; i++) {
+				window.dataTable.addRowSelectionInterval(selectedChart.xTypes[i], selectedChart.xTypes[i]);
+			}
+			
 			window.dataTable.setColumnSelectionInterval(0, 0);
 			ignoreSelections = false;
 		}
