@@ -2,7 +2,7 @@
 
 Work in progress UI for data coming from the rocket.
 
-![Demo](https://user-images.githubusercontent.com/12688112/67060715-edfa4380-f12b-11e9-9892-92a2f02094ee.gif)
+![Demo](https://user-images.githubusercontent.com/12688112/71053199-be5fbb80-211b-11ea-9bd0-936da904a2ce.gif)
 
 # Add labels
 
