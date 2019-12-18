@@ -647,6 +647,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		selectedChart = dataChart;
 		
 		snapPanelSelected(selectedChart.snapPanel);
+		
+		updateUI();
 	}
 
 	/** For com selector JList */
