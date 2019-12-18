@@ -1,20 +1,31 @@
 package uorocketry.basestation;
 
 import java.awt.Color;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -31,31 +42,40 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener {
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
 	
 	/** Constants */
-	/** Is this running in simulation mode */
-	public static final boolean SIMULATION = true;
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there */
-	public static final int DATA_LENGTH = 15;
+	public static int dataLength = 15;
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
 	/** Data file location for the simulation (new line separated for each event) */
 	public static final String SIM_DATA_LOCATION = "data/data.txt";
 	
 	/** Whether to update Google Earth file */
-	public static final boolean GOOGLE_EARTH = true;
+	public static boolean googleEarth = false;
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 	
+	/** Where to save the log file */
+	public static final String LOG_FILE_SAVE_LOCATION = "data/";
+	public static final String DEFAULT_LOG_FILE_NAME = "log.txt";
+	/** Will have a number appended to the end to not overwrite old logs */
+	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
+	
+	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
+	public static boolean simulation = false;
+	
 	List<DataHandler> allData = new ArrayList<>();
 	
-	String[] labels = new String[DATA_LENGTH];
+	String[] labels = new String[dataLength];
 	
 	/** Index of the current data point being looked at */
 	int currentDataIndex = 0;
+	/** Index of the minimum data point being looked at */
+	int minDataIndex = 0;
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -74,7 +94,41 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater = new GoogleEarthUpdater();
 	
+	/** The chart last clicked */
+	DataChart selectedChart;
+	Border selectionBorder = BorderFactory.createLineBorder(Color.blue);
+	
+	/** The width and height of the chart container to resize elements inside on resize. */
+	int chartContainerWidth = -1;
+	int chartContainerHeight = -1;
+	
+	/** Set to true when automatically selecting or deselcting from the data table */
+	boolean ignoreSelections = false;
+	
+	/** What will be written to the log file */
+	StringBuilder logFileStringBuilder = new StringBuilder();
+	/** Is the log file being currently updated */
+	boolean currentlyWriting;
+	
 	public static void main(String[] args) {
+		// Find different possible commands
+		for (int i = 0; i + 1 < args.length; i++) {
+			switch(args[i]) {
+			case "--sim":
+				simulation = Boolean.parseBoolean(args[i + 1]);
+				
+				break;
+			case "--dataLength":
+				try {
+					dataLength = Integer.parseInt(args[i + 1]);
+				} catch (NumberFormatException e) {
+					System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
+				}
+				
+				break;
+			}
+		}
+		
 		new Main();
 	}
 	
@@ -89,22 +143,41 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load labels
 		loadLabels(LABELS_LOCATION);
 		
-		// Load simulation data if necessary
-		if (SIMULATION) {
-			loadSimulationData();
-		}
-		
-		// Setup com ports if not a simulation
-		if (!SIMULATION) {
-			setupSerialComs();
-		}
+		// Different setups depending on if simulation or not
+		setupData();
 		
 		// Setup Google Earth map support
-		if (GOOGLE_EARTH) {
+		if (googleEarth) {
 			googleEarthUpdater = new GoogleEarthUpdater();
 		}
 		
 		// Update UI once
+		updateUI();
+	}
+	
+	public void setupData() {
+		allData = new ArrayList<DataHandler>();
+		minDataIndex = 0;
+		currentDataIndex = 0;
+		
+		// Reset sliders
+		window.maxSlider.setValue(0);
+		window.minSlider.setValue(0);
+		
+		// Load simulation data if necessary
+		if (simulation) {
+			loadSimulationData();
+			
+			window.savingToLabel.setText("");
+		}
+		
+		// Setup com ports if not a simulation
+		if (!simulation) {
+			setupSerialComs();
+			
+			setupLogFileName();
+		}
+		
 		updateUI();
 	}
 	
@@ -119,6 +192,30 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 
 		window.comSelector.setListData(comSelectorData);
+	}
+	
+	public void setupLogFileName() {
+		// Figure out file name for logging
+		File folder = new File(LOG_FILE_SAVE_LOCATION);
+		File[] listOfLogFiles = folder.listFiles();
+		Set<String> usedFileNames = new HashSet<String>();
+		
+		for (File file: listOfLogFiles) {
+			if (file.isFile() && file.getName().contains(DEFAULT_LOG_FILE_NAME)) {
+				usedFileNames.add(file.getName());
+			}
+		}
+		
+		// Find a suitable filename
+		int logIndex = 0;
+		while (usedFileNames.contains(logIndex + "_" + DEFAULT_LOG_FILE_NAME)) {
+			logIndex++;
+		}
+		
+		// Set the name
+		currentLogFileName = logIndex + DEFAULT_LOG_FILE_NAME;
+		
+		window.savingToLabel.setText("Saving to " + LOG_FILE_SAVE_LOCATION + currentLogFileName);
 	}
 	
 	public void initialisePort(SerialPort serialPort) {
@@ -151,8 +248,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupUI() {
-		// Add slider listener
-		window.slider.addChangeListener(this);
+		// Add slider listeners
+		window.maxSlider.addChangeListener(this);
+		window.minSlider.addChangeListener(this);
 		
 		// Buttons
 		window.pauseButton.addActionListener(this);
@@ -160,11 +258,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		window.dataLengthButton.addActionListener(this);
+		window.dataLengthTextBox.setText(dataLength + "");
+		
+		// Checkboxes
+		window.googleEarthCheckBox.addActionListener(this);
+		window.simulationCheckBox.addActionListener(this);
+		
+		// Set simulation checkbox to be default
+		window.simulationCheckBox.setSelected(simulation);
+		
 		// Com selector
 		window.comSelector.addListSelectionListener(this);
 		
 		// Setup listeners for table
 		window.dataTable.getSelectionModel().addListSelectionListener(this);
+		window.dataTable.addMouseListener(this);
+		
+		// Setup Snap Panel system
+		selectedChart = window.charts.get(0);
+		selectedChart.snapPanel.setSnapPanelListener(this);
+
+		snapPanelSelected(selectedChart.snapPanel);
 	}
 	
 	public void updateUI() {
@@ -173,8 +288,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Don't change slider if paused
 		if (!paused) {
-			// Set max value of the slider
-			window.slider.setMaximum(allData.size() - 1);
+			// Set max value of the sliders
+			window.maxSlider.setMaximum(allData.size() - 1);
+			window.minSlider.setMaximum(allData.size() - 1);
 		}
 		
 		DataHandler currentDataHandler = allData.get(currentDataIndex);
@@ -189,7 +305,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			updateChart(chart);
 		}
 		
-		if (GOOGLE_EARTH) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
+		if (googleEarth) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
 	
 	public void setTableToError(JTable table) {
@@ -199,7 +315,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		tableModel.setValueAt("Parsing Error", 0, 0);
 		tableModel.setValueAt(currentDataIndex, 0, 1);
 		
-		for (int i = 1; i < DATA_LENGTH; i++) {
+		for (int i = 1; i < dataLength; i++) {
 			// Set label
 			tableModel.setValueAt("", i, 0);
 			
@@ -216,22 +332,69 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void updateChart(DataChart chart) {
 		// Update altitude chart
 		ArrayList<Float> altitudeDataX = new ArrayList<>();
-		ArrayList<Float> altitudeDataY = new ArrayList<>();
+		ArrayList<ArrayList<Float>> altitudeDataY = new ArrayList<ArrayList<Float>>();
 		
-		for (int i = 0; i <= currentDataIndex; i++) {
+		// Add all array lists
+		for (int i = 0; i < chart.xTypes.length; i++) {
+			altitudeDataY.add(new ArrayList<Float>());
+		}
+		
+		for (int i = minDataIndex; i <= currentDataIndex; i++) {
 			DataHandler data = allData.get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue() / 1000);
-				altitudeDataY.add(data.data[chart.xType].getDecimalValue());
+				altitudeDataX.add(data.data[chart.yType].getDecimalValue() / 1000);
+				
+				for (int j = 0; j < chart.xTypes.length; j++) {
+					altitudeDataY.get(j).add(data.data[chart.xTypes[j]].getDecimalValue());
+				}
 			}
 		}
 		
-		// Set Labels
-		chart.xyChart.setTitle(labels[chart.xType] + " vs Timestamp");
-		chart.xyChart.setYAxisTitle(labels[chart.xType]);
+		if (altitudeDataX.size() == 0) {
+			// Add default data
+			altitudeDataX.add(0f);
+			
+			for (int j = 0; j < chart.xTypes.length; j++) {
+				altitudeDataY.get(j).add(0f);
+			};
+		}
 		
-		chart.xyChart.updateXYSeries("chart1", altitudeDataX, altitudeDataY, null);
+		String[] newActiveSeries = new String[chart.xTypes.length];
+		StringBuilder title = new StringBuilder();
+		
+		// Set Labels
+		for (int i = 0; i < chart.xTypes.length; i++) {
+			if (title.length() != 0) title.append(", ");
+			title.append(labels[chart.xTypes[i]]);
+			
+			chart.xyChart.setYAxisTitle(labels[chart.xTypes[i]]);
+			
+			if (chart.activeSeries.length > i) {
+				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+
+			} else {
+				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+			}
+			
+			newActiveSeries[i] = "series" + i;
+		}
+		
+		chart.xyChart.setTitle(title + " vs " + labels[chart.yType]);
+		
+		if (chart.xTypes.length > 1) {
+			chart.xyChart.setYAxisTitle("Value");
+		}
+		
+		chart.xyChart.setXAxisTitle(labels[chart.yType]);
+		
+		// Remove extra series
+		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
+			chart.xyChart.removeSeries("series" + i);
+		}
+		
+		chart.activeSeries = newActiveSeries;
+		
 		window.repaint();
 	}
 	
@@ -318,13 +481,29 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (e.getSource() == window.slider) {
-			currentDataIndex = window.slider.getValue();
+		if (e.getSource() == window.maxSlider) {
+			currentDataIndex = window.maxSlider.getValue();
+			
+			// Check if min is too high
+			if (minDataIndex > currentDataIndex) {
+				minDataIndex = currentDataIndex;
+				window.minSlider.setValue(minDataIndex);
+			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndex == window.slider.getMaximum() - 1;
+			latest = currentDataIndex == window.maxSlider.getMaximum() - 1;
+		} else if (e.getSource() == window.minSlider) {
+			minDataIndex = window.minSlider.getValue();
+			
+			// Check if min is too high
+			if (minDataIndex > currentDataIndex) {
+				minDataIndex = currentDataIndex;
+				window.minSlider.setValue(minDataIndex);
+			}
+			
+			updateUI();
 		}
 	}
 
@@ -353,8 +532,29 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.slider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.size() - 1);
 		}
+		
+		// Add this message to the log file
+		logFileStringBuilder.append(delimitedMessage);
+		logFileStringBuilder.append("\n");
+		
+		// Get string
+		String logFileString = logFileStringBuilder.toString();
+		
+		if (!currentlyWriting) {
+			currentlyWriting = true;
+
+			// Write to file
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName), StandardCharsets.UTF_8))) {
+			   writer.write(logFileString);
+			} catch (IOException err) {
+				err.printStackTrace();
+			}
+			
+			currentlyWriting = false;
+		}
+		
 	}
 
 	@Override
@@ -369,35 +569,84 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			window.slider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.size() - 1);
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
+		} else if (e.getSource() == window.googleEarthCheckBox) {
+			googleEarth = window.googleEarthCheckBox.isSelected();
+		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
+			String warningMessage = "";
+			if (window.simulationCheckBox.isSelected()) {
+				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
+						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+			} else {
+				warningMessage = "Are you sure you would like to disable simulation mode?";
+			}
+			
+			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
+				simulation = window.simulationCheckBox.isSelected();
+				
+				setupData();
+			} else {
+				window.simulationCheckBox.setSelected(simulation);
+			}
+		} else if (e.getSource() == window.dataLengthButton) {
+			String warningMessage = "";
+			if (!simulation) {
+				warningMessage = "Are you sure you would like to change the data length?\n\n"
+						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+			} else {
+				warningMessage = "Are you sure you would like to change the data length? The data will be reloaded.";
+			}
+			
+			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
+				// Set data length
+				try {
+					dataLength = Integer.parseInt(window.dataLengthTextBox.getText());
+				} catch (NumberFormatException error) {
+					JOptionPane.showMessageDialog(window, "'" + window.dataLengthTextBox.getText() + "' is not a number");
+				}
+				
+				// Load labels
+				loadLabels(LABELS_LOCATION);
+				
+				// Different setups depending on if simulation or not
+				setupData();
+				
+				updateUI();
+			} 
 		}
 	}
 	
 	public void addChart() {
 		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
-		
-		DataChart dataChart = new DataChart(xyChart);
 
 		// Customize Chart
 		xyChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
 		xyChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		xyChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
 		
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
+		DataChart dataChart = new DataChart(window, xyChart, chartPanel);
+		
+		// Set default size
+		dataChart.snapPanel.setRelSize(600, 450);
+		
 		// Add these default charts to the list
 		window.charts.add(dataChart);
-		window.chartPanels.add(chartPanel);
 		
-		// Increase layout size
-		window.centerChartPanel.setLayout(new GridLayout(0, (int) Math.ceil(Math.sqrt(window.charts.size())), 0, 0));
-		window.validate();
-		window.repaint();
+		// Set to be selected
+		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
+		dataChart.snapPanel.setSnapPanelListener(this);
+		
+		selectedChart.chartPanel.setBorder(null);
+		selectedChart = dataChart;
+		
+		snapPanelSelected(selectedChart.snapPanel);
 	}
 
 	/** For com selector JList */
@@ -429,12 +678,57 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				}
 			}
 		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
-			int selectedRow = window.dataTable.getSelectedRow();
+			if (ignoreSelections) return;
 			
 			// Set chart to be based on this row
-			//TODO use selected chart
-			window.charts.get(0).xType = selectedRow;
+			selectedChart.xTypes = window.dataTable.getSelectedRows();
 			updateUI();
+		}
+	}
+	
+	@Override
+	public void mousePressed(MouseEvent e) {
+		if (e.getSource() == window.dataTable && e.getButton() == MouseEvent.BUTTON3) {
+			// Left clicking the dataTable
+			int row = window.dataTable.rowAtPoint(e.getPoint());
+			
+			selectedChart.yType = row;
+			
+			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
+			window.dataTable.repaint();
+			
+			updateUI();
+		}
+	}
+	
+	/**
+	 * Called when a new snap window is highlighted
+	 */
+	@Override
+	public void snapPanelSelected(SnapPanel snapPanel) {
+		if (snapPanel.chart != null) {
+			// Remove border on old object
+			selectedChart.chartPanel.setBorder(null);
+
+			selectedChart = snapPanel.chart;
+			
+			// Add border
+			selectedChart.chartPanel.setBorder(selectionBorder);
+			
+			// Add selections
+			ignoreSelections = true;
+			
+			window.dataTable.clearSelection();
+			for (int i = 0; i < selectedChart.xTypes.length; i++) {
+				window.dataTable.addRowSelectionInterval(selectedChart.xTypes[i], selectedChart.xTypes[i]);
+			}
+			
+			// Update yType
+			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.yType;
+			window.repaint();
+			
+			window.dataTable.setColumnSelectionInterval(0, 0);
+			ignoreSelections = false;
 		}
 	}
 
@@ -450,11 +744,40 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void componentResized(ComponentEvent e) {
-
+		// Chart Container resize management
+		int currentChartContainerWidth = window.centerChartPanel.getWidth();
+		int currentChartContainerHeight = window.centerChartPanel.getHeight();
+		
+		for (DataChart chart : window.charts) {
+			chart.snapPanel.containerResized(currentChartContainerWidth, currentChartContainerHeight);
+		}
+		
+		chartContainerWidth = currentChartContainerWidth;
+		chartContainerHeight = currentChartContainerHeight;
 	}
 
 	@Override
 	public void componentShown(ComponentEvent e) {
+		
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
 		
 	}
 }

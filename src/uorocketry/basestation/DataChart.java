@@ -1,19 +1,40 @@
 package uorocketry.basestation;
 
+import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 
 public class DataChart {
 	XYChart xyChart;
 	
-	int xType = DataHandler.ALTITUDE;
+	XChartPanel<XYChart> chartPanel;
+	/** The snap panel for this chart */
+	SnapPanel snapPanel;
 	
-	public DataChart(XYChart xyChart) {
+	Window window;
+	
+	// The active chart series on this chart
+	String[] activeSeries = new String[0];
+	
+	int[] xTypes = {DataHandler.ALTITUDE};
+	int yType = DataHandler.TIMESTAMP;
+	
+	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
+		this.window = window;
+		
 		this.xyChart = xyChart;
+		this.chartPanel = chartPanel;
+		
+		this.snapPanel = new SnapPanel(this);
+		
+		activeSeries = new String[xTypes.length];
+		for (int i = 0; i < xTypes.length; i++) {
+			activeSeries[i] = "series" + i;
+		}
 	}
 	
-	public DataChart(XYChart xyChart, int xType) {
-		this(xyChart);
+	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, int[] xType) {
+		this(window, xyChart, chartPanel);
 
-		this.xType = xType;
+		this.xTypes = xType;
 	}
 }

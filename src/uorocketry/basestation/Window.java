@@ -26,6 +26,9 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import javax.swing.JCheckBox;
+import javax.swing.JTextField;
+import java.awt.FlowLayout;
 
 public class Window extends JFrame {
 	
@@ -34,15 +37,23 @@ public class Window extends JFrame {
 	JTable dataTable;
 	private JPanel dataTablePanel;
 	private JScrollPane scrollPane;
+	JCheckBox googleEarthCheckBox;
+	JCheckBox simulationCheckBox;
 	
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
 	private JPanel eastSliderButtons;
 	private JPanel westSliderButtons;
 	
-	JSlider slider;
+	JSlider maxSlider;
+	JSlider minSlider;
 	JButton latestButton;
 	JButton pauseButton;
+	private JPanel dataLengthPanel;
+	JTextField dataLengthTextBox;
+	JButton dataLengthButton;
+	private JLabel dataLengthLabel;
+	JLabel savingToLabel;
 	
 	private JPanel comPanel;
 	JList<String> comSelector;
@@ -53,10 +64,10 @@ public class Window extends JFrame {
 	
 	JPanel centerChartPanel;
 	
-	ArrayList<XChartPanel<XYChart>> chartPanels = new ArrayList<>();
 	ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
+	private JPanel savingToPanel;
 	
 	public Window() {
 		// Set look and feel
@@ -67,7 +78,7 @@ public class Window extends JFrame {
             e.printStackTrace();
         }
 		
-		setSize(1000, 600);
+		setSize(1000, 782);
 		setTitle("Ground Station");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -76,9 +87,11 @@ public class Window extends JFrame {
 		dataTablePanel = new JPanel();
 		dataTablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
+		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.Y_AXIS));
 		
-		dataTable = new JTable(Main.DATA_LENGTH, 2);
+		dataTable = new JTable(Main.dataLength, 2);
+		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
+		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTable.setCellSelectionEnabled(true);
@@ -97,6 +110,37 @@ public class Window extends JFrame {
 		dataTablePanel.add(dataTable);
 		
 		scrollPane = new JScrollPane(dataTablePanel);
+		
+		googleEarthCheckBox = new JCheckBox("Google Earth");
+		dataTablePanel.add(googleEarthCheckBox);
+		
+		simulationCheckBox = new JCheckBox("Simulation");
+		dataTablePanel.add(simulationCheckBox);
+		
+		dataLengthPanel = new JPanel();
+		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+		dataTablePanel.add(dataLengthPanel);
+		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		
+		dataLengthLabel = new JLabel("Data Length:");
+		dataLengthPanel.add(dataLengthLabel);
+		
+		dataLengthTextBox = new JTextField();
+		dataLengthPanel.add(dataLengthTextBox);
+		dataLengthTextBox.setText("0");
+		dataLengthTextBox.setColumns(5);
+		
+		dataLengthButton = new JButton("Save");
+		dataLengthPanel.add(dataLengthButton);
+		
+		savingToPanel = new JPanel();
+		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataTablePanel.add(savingToPanel);
+		savingToPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		
+		savingToLabel = new JLabel("Saving to data/log.txt");
+		savingToPanel.add(savingToLabel);
 		getContentPane().add(scrollPane, BorderLayout.WEST);
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -106,11 +150,16 @@ public class Window extends JFrame {
 		getContentPane().add(sliderSection, BorderLayout.SOUTH);
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
-		slider = new JSlider();
-		slider.setSnapToTicks(true);
-		sliderSection.add(slider);
-		slider.setPaintTicks(true);
-		slider.setValue(0);
+		maxSlider = new JSlider();
+//		slider.setSnapToTicks(true);
+		sliderSection.add(maxSlider);
+		maxSlider.setPaintTicks(true);
+		maxSlider.setValue(0);
+		
+		minSlider = new JSlider();
+		minSlider.setValue(0);
+		minSlider.setPaintTicks(true);
+		sliderSection.add(minSlider, BorderLayout.SOUTH);
 		
 		sliderButtons = new JPanel();
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);
@@ -151,28 +200,31 @@ public class Window extends JFrame {
 		
 		centerChartPanel = new JPanel();
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
-		centerChartPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		
 		// Create Chart
 		XYChart firstChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 		
-		DataChart dataChart = new DataChart(firstChart);
-
 		// Customize Chart
 		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
 		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
-		firstChart.addSeries("chart1", new double[] { 0 }, new double[] { 0 });
+		firstChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
+		centerChartPanel.setLayout(null);
 		
 		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
 		centerChartPanel.add(chart1Panel);
 		
+		// Create the data chart container
+		DataChart dataChart = new DataChart(this, firstChart, chart1Panel);
+		
 		// Add these default charts to the list
 		charts.add(dataChart);
-		chartPanels.add(chart1Panel);
 		
 		setVisible(true);
+		
+		// Set default chart size
+		dataChart.snapPanel.setRelSize(600, 450);
 	}
 
 }

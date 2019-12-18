@@ -15,13 +15,13 @@ public class DataHandler {
 	static final int ACCELX = 7;
 	static final int ACCELY = 8;
 	static final int ACCELZ = 9;
-	final int VELOCITY = 20;
+	static final int VELOCITY = 10;
 	static final int BRAKE_PERCENTAGE = 11;
 	static final int ACTUAL_BRAKE_VALUE = 12;
 	static final int GPS_FIX = 13;
 	static final int GPS_FIX_QUALITY = 14;
 	
-	Data[] data = new Data[Main.DATA_LENGTH];
+	Data[] data = new Data[Main.dataLength];
 	
 	public String getFormattedData(String[] labels) {
 		String text = "<html>";
