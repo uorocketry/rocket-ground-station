@@ -20,4 +20,8 @@ Run `Main.java`
 
 # Window Management
 
-Drag charts by dragging them around. Resize charts by dragging at the corners. Snap panels by double clicking on them. They will snap to the largest possible window from the position you clicked.
+Drag charts by dragging them around. Resize charts by dragging at the corners. Snap panels by double clicking on them. They will snap to the largest possible window from the position you clicked. Use the middle mouse button to delete charts.
+
+# How to use
+
+Select a chart, then select any data row to show in the chart. To change the x-axis, use right click.
