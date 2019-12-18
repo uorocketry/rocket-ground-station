@@ -90,6 +90,7 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.Y_AXIS));
 		
 		dataTable = new JTable(Main.dataLength, 2);
+		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
 		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);

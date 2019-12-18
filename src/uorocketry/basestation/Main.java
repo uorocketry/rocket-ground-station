@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -40,7 +42,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
 	
 	/** Constants */
 	/** The location of the comma separated labels */
@@ -271,6 +273,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup listeners for table
 		window.dataTable.getSelectionModel().addListSelectionListener(this);
+		window.dataTable.addMouseListener(this);
 		
 		// Setup Snap Panel system
 		selectedChart = window.charts.get(0);
@@ -340,7 +343,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			DataHandler data = allData.get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[DataHandler.TIMESTAMP].getDecimalValue() / 1000);
+				altitudeDataX.add(data.data[chart.yType].getDecimalValue() / 1000);
 				
 				for (int j = 0; j < chart.xTypes.length; j++) {
 					altitudeDataY.get(j).add(data.data[chart.xTypes[j]].getDecimalValue());
@@ -377,11 +380,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			newActiveSeries[i] = "series" + i;
 		}
 		
-		chart.xyChart.setTitle(title + " vs Timestamp");
+		chart.xyChart.setTitle(title + " vs " + labels[chart.yType]);
 		
 		if (chart.xTypes.length > 1) {
 			chart.xyChart.setYAxisTitle("Value");
 		}
+		
+		chart.xyChart.setXAxisTitle(labels[chart.yType]);
 		
 		// Remove extra series
 		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
@@ -681,6 +686,21 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 	}
 	
+	@Override
+	public void mousePressed(MouseEvent e) {
+		if (e.getSource() == window.dataTable && e.getButton() == MouseEvent.BUTTON3) {
+			// Left clicking the dataTable
+			int row = window.dataTable.rowAtPoint(e.getPoint());
+			
+			selectedChart.yType = row;
+			
+			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
+			window.dataTable.repaint();
+			
+			updateUI();
+		}
+	}
+	
 	/**
 	 * Called when a new snap window is highlighted
 	 */
@@ -702,6 +722,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			for (int i = 0; i < selectedChart.xTypes.length; i++) {
 				window.dataTable.addRowSelectionInterval(selectedChart.xTypes[i], selectedChart.xTypes[i]);
 			}
+			
+			// Update yType
+			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.yType;
+			window.repaint();
 			
 			window.dataTable.setColumnSelectionInterval(0, 0);
 			ignoreSelections = false;
@@ -734,6 +758,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void componentShown(ComponentEvent e) {
+		
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
 		
 	}
 }

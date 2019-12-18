@@ -16,6 +16,7 @@ public class DataChart {
 	String[] activeSeries = new String[0];
 	
 	int[] xTypes = {DataHandler.ALTITUDE};
+	int yType = DataHandler.TIMESTAMP;
 	
 	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
 		this.window = window;
