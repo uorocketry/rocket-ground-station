@@ -537,7 +537,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Add this message to the log file
 		logFileStringBuilder.append(delimitedMessage);
-		logFileStringBuilder.append("\n");
 		
 		// Get string
 		String logFileString = logFileStringBuilder.toString();
