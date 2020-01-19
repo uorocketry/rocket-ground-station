@@ -23,16 +23,6 @@ public class DataHandler {
 	
 	Data[] data = new Data[Main.dataLength];
 	
-	public String getFormattedData(String[] labels) {
-		String text = "<html>";
-		
-		for (int i = 0; i < data.length; i++) {
-			text += labels[i] + ": " + data[i].getFormattedString() + "<br>";
-		}
-		
-		return text + "</html>";
-	}
-	
 	public void updateTableUIWithData(JTable table, String[] labels) {
 		TableModel tableModel = table.getModel();
 		
