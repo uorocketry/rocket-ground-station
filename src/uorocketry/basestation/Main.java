@@ -47,7 +47,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Constants */
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
-	/** How many data points are there */
+	/** How many data points are there. By default, it is the number of labels */
 	public static int dataLength = 15;
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
@@ -143,6 +143,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load labels
 		loadLabels(LABELS_LOCATION);
 		
+		// Set a default data length
+		dataLength = labels.length;
+		
 		// Different setups depending on if simulation or not
 		setupData();
 		
@@ -188,7 +191,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		String[] comSelectorData = new String[allSerialPorts.length];
 		
 		for (int i = 0; i < allSerialPorts.length; i++) {
-			comSelectorData[i]=  allSerialPorts[i].getDescriptivePortName();
+			comSelectorData[i] = allSerialPorts[i].getDescriptivePortName();
 		}
 
 		window.comSelector.setListData(comSelectorData);
