@@ -15,8 +15,8 @@ public class DataChart {
 	// The active chart series on this chart
 	String[] activeSeries = new String[0];
 	
-	int[] xTypes = {DataHandler.ALTITUDE};
-	int yType = DataHandler.TIMESTAMP;
+	DataType[] xTypes = {DataHandler.ALTITUDE};
+	DataType yType = DataHandler.TIMESTAMP;
 	
 	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
 		this.window = window;
@@ -32,9 +32,9 @@ public class DataChart {
 		}
 	}
 	
-	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, int[] xType) {
+	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, DataType[] xTypes) {
 		this(window, xyChart, chartPanel);
 
-		this.xTypes = xType;
+		this.xTypes = xTypes;
 	}
 }

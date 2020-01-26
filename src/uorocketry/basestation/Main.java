@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -48,7 +49,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** The location of the comma separated labels */
 	public static final String LABELS_LOCATION = "data/labels.txt";
 	/** How many data points are there. By default, it is the number of labels */
-	public static int dataLength = 15;
+	public static List<Integer> dataLength = new ArrayList<>();
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
 	/** Data file location for the simulation (new line separated for each event) */
@@ -65,17 +66,20 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Will have a number appended to the end to not overwrite old logs */
 	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
 	
+	/** How many data sources to record data from. For now, it much be set at launch time */
+	public static final int DATA_SOURCE_COUNT = 1;
+	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	List<DataHandler> allData = new ArrayList<>();
+	List<List<DataHandler>> allData = new ArrayList<>();
 	
-	String[] labels = new String[dataLength];
+	List<String[]> labels = new ArrayList<>();
 	
 	/** Index of the current data point being looked at */
-	int currentDataIndex = 0;
+	ArrayList<Integer> currentDataIndex = new ArrayList<>();
 	/** Index of the minimum data point being looked at */
-	int minDataIndex = 0;
+	ArrayList<Integer> minDataIndex = new ArrayList<>();
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -119,14 +123,25 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				break;
 			case "--dataLength":
-				try {
-					dataLength = Integer.parseInt(args[i + 1]);
-				} catch (NumberFormatException e) {
-					System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
+				
+				// See how many data lengths were specified
+				for (int j = i; j + 1 < args.length; j++) {
+					if (args[j].startsWith("--")) break;
+					
+					try {
+						dataLength.add(Integer.parseInt(args[i + j + 1]));
+					} catch (NumberFormatException e) {
+						System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
+					}
 				}
 				
 				break;
 			}
+		}
+		
+		if (dataLength.size() == 0) {
+			// Add default
+			dataLength.add(15);
 		}
 		
 		new Main();
@@ -144,7 +159,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		loadLabels(LABELS_LOCATION);
 		
 		// Set a default data length
-		dataLength = labels.length;
+		for (int i = 0; i < dataLength.size(); i++) {
+			dataLength.set(i, labels.get(i).length);
+		}
 		
 		// Different setups depending on if simulation or not
 		setupData();
@@ -159,9 +176,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupData() {
-		allData = new ArrayList<DataHandler>();
-		minDataIndex = 0;
-		currentDataIndex = 0;
+		allData = new ArrayList<>();
 		
 		// Reset sliders
 		window.maxSlider.setValue(0);
@@ -170,6 +185,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load simulation data if necessary
 		if (simulation) {
 			loadSimulationData();
+			
+			// Add data indexes
+			for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+				currentDataIndex.add(0);
+				minDataIndex.add(0);
+			}
 			
 			window.savingToLabel.setText("");
 		}
@@ -275,8 +296,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.comSelector.addListSelectionListener(this);
 		
 		// Setup listeners for table
-		window.dataTable.getSelectionModel().addListSelectionListener(this);
-		window.dataTable.addMouseListener(this);
+		for (JTable dataTable : window.dataTables) {
+			dataTable.getSelectionModel().addListSelectionListener(this);
+			dataTable.addMouseListener(this);
+		}
+		
 		
 		// Setup Snap Panel system
 		selectedChart = window.charts.get(0);
@@ -289,36 +313,45 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// If not ready yet
 		if (allData.size() == 0) return;
 		
-		// Don't change slider if paused
-		if (!paused) {
-			// Set max value of the sliders
-			window.maxSlider.setMaximum(allData.size() - 1);
-			window.minSlider.setMaximum(allData.size() - 1);
+		// Update every table's data
+		for (int i = 0; i < allData.size(); i++) {
+			// If not ready yet
+			if (allData.get(i).size() == 0) continue;
+			
+			// Don't change slider if paused
+			if (!paused) {
+				// Set max value of the sliders
+				window.maxSlider.setMaximum(allData.get(i).size() - 1);
+				window.minSlider.setMaximum(allData.get(i).size() - 1);
+			}
+			
+			DataHandler currentDataHandler = allData.get(i).get(currentDataIndex.get(i));
+			
+			if (currentDataHandler != null) {
+				currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
+			} else {
+				setTableToError(i, window.dataTables.get(i));
+			}
 		}
 		
-		DataHandler currentDataHandler = allData.get(currentDataIndex);
+		// Only record google earth data for the first one for now 
+		// There is no way to change the filename yet
+		if (googleEarth) googleEarthUpdater.updateKMLFile(0, allData.get(0), currentDataIndex.get(0));
 		
-		if (currentDataHandler != null) {
-			currentDataHandler.updateTableUIWithData(window.dataTable, labels);
-		} else {
-			setTableToError(window.dataTable);
-		}
-		
+		// Update every chart
 		for (DataChart chart : window.charts) {
 			updateChart(chart);
 		}
-		
-		if (googleEarth) googleEarthUpdater.updateKMLFile(allData, currentDataIndex);
 	}
 	
-	public void setTableToError(JTable table) {
+	public void setTableToError(int index, JTable table) {
 		TableModel tableModel = table.getModel();
 		
 		// Set first item to "Error"
 		tableModel.setValueAt("Parsing Error", 0, 0);
 		tableModel.setValueAt(currentDataIndex, 0, 1);
 		
-		for (int i = 1; i < dataLength; i++) {
+		for (int i = 1; i < dataLength.get(index); i++) {
 			// Set label
 			tableModel.setValueAt("", i, 0);
 			
@@ -342,14 +375,24 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			altitudeDataY.add(new ArrayList<Float>());
 		}
 		
-		for (int i = minDataIndex; i <= currentDataIndex; i++) {
-			DataHandler data = allData.get(i);
+		// Add y axis
+		for (int i = minDataIndex.get(chart.yType.tableIndex); i <= currentDataIndex.get(chart.yType.tableIndex); i++) {
+			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[chart.yType].getDecimalValue() / 1000);
+				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue() / 1000);
+			}
+		}
+		
+		// Add x axis
+		for (int i = 0; i < chart.xTypes.length; i++) {
+			for (int j = minDataIndex.get(chart.xTypes[i].tableIndex); j <= currentDataIndex.get(chart.xTypes[i].tableIndex); j++) {
+				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
-				for (int j = 0; j < chart.xTypes.length; j++) {
-					altitudeDataY.get(j).add(data.data[chart.xTypes[j]].getDecimalValue());
+				if (data != null) {
+					for (int k = 0; k < chart.xTypes.length; k++) {
+						altitudeDataY.get(chart.xTypes[i].tableIndex).add(data.data[chart.xTypes[k].index].getDecimalValue());
+					}
 				}
 			}
 		}
@@ -368,10 +411,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set Labels
 		for (int i = 0; i < chart.xTypes.length; i++) {
-			if (title.length() != 0) title.append(", ");
-			title.append(labels[chart.xTypes[i]]);
+			String xTypeTitle = labels.get(chart.xTypes[i].tableIndex)[chart.xTypes[i].index];
 			
-			chart.xyChart.setYAxisTitle(labels[chart.xTypes[i]]);
+			if (title.length() != 0) title.append(", ");
+			title.append(xTypeTitle);
+			
+			chart.xyChart.setYAxisTitle(xTypeTitle);
 			
 			if (chart.activeSeries.length > i) {
 				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
@@ -383,13 +428,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			newActiveSeries[i] = "series" + i;
 		}
 		
-		chart.xyChart.setTitle(title + " vs " + labels[chart.yType]);
+		String yTypeTitle =  labels.get(chart.yType.tableIndex)[chart.yType.index];
+		
+		chart.xyChart.setTitle(title + " vs " + yTypeTitle);
 		
 		if (chart.xTypes.length > 1) {
 			chart.xyChart.setYAxisTitle("Value");
 		}
 		
-		chart.xyChart.setXAxisTitle(labels[chart.yType]);
+		chart.xyChart.setXAxisTitle(yTypeTitle);
 		
 		// Remove extra series
 		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
@@ -417,13 +464,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 		}
 		
+		ArrayList<DataHandler> dataHandlers = new ArrayList<DataHandler>();
+		int tableIndex = allData.size();
+		
 		try {
 			try {
 			    String line = null;
 
 			    while ((line = br.readLine()) != null) {
 			        // Parse this line and add it as a data point
-			        allData.add(parseData(line));
+			    	dataHandlers.add(parseData(line, tableIndex));
 			    }
 			} finally {
 			    br.close();
@@ -431,10 +481,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
+		
+		allData.add(dataHandlers);
 	}
 	
-	public DataHandler parseData(String data) {
-		DataHandler dataHandler = new DataHandler();
+	public DataHandler parseData(String data, int tableIndex) {
+		DataHandler dataHandler = new DataHandler(tableIndex);
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
@@ -464,19 +516,23 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 		}
 		
+		String[] currentLabelStrings = new String[dataLength.get(labels.size())];
+		
 		try {
 		    String line = null;
 
-		    while ((line = br.readLine()) != null) {
+		    if ((line = br.readLine()) != null) {
 		    	//this line contains all of the labels
 		    	//this one is comma separated, not the same as the actual data
-		    	labels = line.split(",");
+		    	currentLabelStrings = line.split(",");
 		    }
 		    
 		    br.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
+		
+		labels.add(currentLabelStrings);
 	}
 	
 	/**
@@ -485,25 +541,37 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource() == window.maxSlider) {
-			currentDataIndex = window.maxSlider.getValue();
-			
-			// Check if min is too high
-			if (minDataIndex > currentDataIndex) {
-				minDataIndex = currentDataIndex;
-				window.minSlider.setValue(minDataIndex);
+			// For now, just use a fraction of the slider value
+			for (int i = 0; i < currentDataIndex.size(); i++) {
+				int value = window.maxSlider.getValue();
+				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
+				
+				currentDataIndex.set(i, value);
+				
+				// Check if min is too high
+				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
+					minDataIndex.set(i, currentDataIndex.get(i));
+					window.minSlider.setValue(minDataIndex.get(i));
+				}
 			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndex == window.maxSlider.getMaximum() - 1;
+			latest = currentDataIndex.get(0) == window.maxSlider.getMaximum() - 1;
 		} else if (e.getSource() == window.minSlider) {
-			minDataIndex = window.minSlider.getValue();
-			
-			// Check if min is too high
-			if (minDataIndex > currentDataIndex) {
-				minDataIndex = currentDataIndex;
-				window.minSlider.setValue(minDataIndex);
+			// For now, just use a fraction of the slider value
+			for (int i = 0; i < currentDataIndex.size(); i++) {
+				int value = window.maxSlider.getValue();
+				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
+				
+				minDataIndex.set(i, value);
+				
+				// Check if min is too high
+				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
+					minDataIndex.set(i, currentDataIndex.get(i));
+					window.minSlider.setValue(minDataIndex.get(i));
+				}
 			}
 			
 			updateUI();
@@ -529,7 +597,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void serialEvent(SerialPortEvent e) {
 		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
 		
-		allData.add(parseData(delimitedMessage));
+		// TODO: Support multiple serial events
+		// For now, just use the first index always
+		int tableIndex = 0;
+		
+		allData.get(tableIndex).add(parseData(delimitedMessage, tableIndex));
 		
 		updateUI();
 		
@@ -604,7 +676,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
 				// Set data length
 				try {
-					dataLength = Integer.parseInt(window.dataLengthTextBox.getText());
+					dataLength.set(0, Integer.parseInt(window.dataLengthTextBox.getText()));
 				} catch (NumberFormatException error) {
 					JOptionPane.showMessageDialog(window, "'" + window.dataLengthTextBox.getText() + "' is not a number");
 				}
@@ -681,27 +753,43 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					}
 				}
 			}
-		} else if (e.getSource() == window.dataTable.getSelectionModel()) {
-			if (ignoreSelections) return;
-			
-			// Set chart to be based on this row
-			selectedChart.xTypes = window.dataTable.getSelectedRows();
-			updateUI();
+		} else if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
+			for (int i = 0; i < window.dataTables.size(); i++) {
+				JTable dataTable = window.dataTables.get(i);
+				
+				if (e.getSource() == dataTable.getSelectionModel()) {
+					int[] selections = dataTable.getSelectedRows();
+					DataType[] formattedSelections = new DataType[selections.length];
+					
+					for (int j = 0; j < formattedSelections.length; j++) {
+						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(dataTable));
+					}
+					
+					// Set chart to be based on this row
+					selectedChart.xTypes = formattedSelections;
+					
+					updateUI();
+				}
+			}
 		}
 	}
 	
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (e.getSource() == window.dataTable && e.getButton() == MouseEvent.BUTTON3) {
-			// Left clicking the dataTable
-			int row = window.dataTable.rowAtPoint(e.getPoint());
+		for (int i = 0; i < window.dataTables.size(); i++) {
+			JTable dataTable = window.dataTables.get(i);
 			
-			selectedChart.yType = row;
-			
-			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
-			window.dataTable.repaint();
-			
-			updateUI();
+			if (e.getSource() == dataTable && e.getButton() == MouseEvent.BUTTON3) {
+				// Left clicking the dataTable
+				int row = dataTable.rowAtPoint(e.getPoint());
+				
+				selectedChart.yType = new DataType(row, i);
+				
+				((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
+				dataTable.repaint();
+				
+				updateUI();
+			}
 		}
 	}
 	
@@ -722,16 +810,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Add selections
 			ignoreSelections = true;
 			
-			window.dataTable.clearSelection();
-			for (int i = 0; i < selectedChart.xTypes.length; i++) {
-				window.dataTable.addRowSelectionInterval(selectedChart.xTypes[i], selectedChart.xTypes[i]);
+			for (int i = 0; i < window.dataTables.size(); i++) {
+				JTable dataTable = window.dataTables.get(i);
+				
+				dataTable.clearSelection();
+				for (int j = 0; j < selectedChart.xTypes.length; j++) {
+					if (selectedChart.xTypes[j].tableIndex == i) {
+						dataTable.addRowSelectionInterval(selectedChart.xTypes[j].index, selectedChart.xTypes[j].index);
+					}
+				}
+				
+				// Update yType
+				if (selectedChart.yType.tableIndex == i) {
+					((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.yType.index;
+				}
+				
+				window.repaint();
+				
+				dataTable.setColumnSelectionInterval(0, 0);
 			}
 			
-			// Update yType
-			((DataTableCellRenderer) window.dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.yType;
-			window.repaint();
-			
-			window.dataTable.setColumnSelectionInterval(0, 0);
 			ignoreSelections = false;
 		}
 	}

@@ -1,7 +1,9 @@
 package uorocketry.basestation;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -16,26 +19,27 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.LineBorder;
 
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
-import javax.swing.JCheckBox;
-import javax.swing.JTextField;
-import java.awt.FlowLayout;
 
 public class Window extends JFrame {
 	
 	private static final long serialVersionUID = -5397816377154627951L;
 	
-	JTable dataTable;
 	private JPanel dataTablePanel;
+	ArrayList<JTable> dataTables = new ArrayList<>();
+	
+	private JPanel leftPanel;
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
@@ -84,43 +88,32 @@ public class Window extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout(0, 0));
 		
+		leftPanel = new JPanel();
+		leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+		leftPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+		
 		dataTablePanel = new JPanel();
 		dataTablePanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.Y_AXIS));
+		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
+		leftPanel.add(dataTablePanel);
 		
-		dataTable = new JTable(Main.dataLength, 2);
-		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
-		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
-		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTable.setCellSelectionEnabled(true);
+		addJTable(0);
+//		addJTable(1);
 		
-		// Make non editable
-		dataTable.setDefaultEditor(Object.class, null);
-		
-		// Increase row height
-		dataTable.setRowHeight(30);
-		
-		// Adjust width
-		dataTable.getColumnModel().getColumn(0).setPreferredWidth(200);
-		dataTable.getColumnModel().getColumn(1).setPreferredWidth(150);
-		
-		dataTable.setFont(new Font("Arial", Font.PLAIN, 21));
-		dataTablePanel.add(dataTable);
-		
-		scrollPane = new JScrollPane(dataTablePanel);
+		scrollPane = new JScrollPane(leftPanel);
 		
 		googleEarthCheckBox = new JCheckBox("Google Earth");
-		dataTablePanel.add(googleEarthCheckBox);
+		leftPanel.add(googleEarthCheckBox);
 		
 		simulationCheckBox = new JCheckBox("Simulation");
-		dataTablePanel.add(simulationCheckBox);
+		leftPanel.add(simulationCheckBox);
 		
 		dataLengthPanel = new JPanel();
 		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-		dataTablePanel.add(dataLengthPanel);
+		leftPanel.add(dataLengthPanel);
 		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 		
 		dataLengthLabel = new JLabel("Data Length:");
@@ -136,7 +129,7 @@ public class Window extends JFrame {
 		
 		savingToPanel = new JPanel();
 		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTablePanel.add(savingToPanel);
+		leftPanel.add(savingToPanel);
 		savingToPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 		
 		savingToLabel = new JLabel("Saving to data/log.txt");
@@ -225,6 +218,31 @@ public class Window extends JFrame {
 		
 		// Set default chart size
 		dataChart.snapPanel.setRelSize(600, 450);
+	}
+	
+	public void addJTable(int tableIndex) {
+		JTable dataTable = new JTable(Main.dataLength.get(tableIndex), 2);
+		dataTable.setBorder(new LineBorder(new Color(0, 0, 0)));
+		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
+		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
+		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
+		dataTable.setCellSelectionEnabled(true);
+		
+		// Make non editable
+		dataTable.setDefaultEditor(Object.class, null);
+		
+		// Increase row height
+		dataTable.setRowHeight(30);
+		
+		// Adjust width
+		dataTable.getColumnModel().getColumn(0).setPreferredWidth(130);
+		dataTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+		
+		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
+		
+		dataTablePanel.add(dataTable);
+		dataTables.add(dataTable);
 	}
 
 }
