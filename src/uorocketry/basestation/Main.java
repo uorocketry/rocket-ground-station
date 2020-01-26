@@ -148,8 +148,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Load labels
 		loadLabels();
 		
-		System.out.println(labels.size());
-		
 		// Set a default data length
 		for (int i = 0; i < labels.size(); i++) {
 			dataLength.add(labels.get(i).length);
@@ -390,9 +388,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
-					for (int k = 0; k < chart.xTypes.length; k++) {
-						altitudeDataY.get(chart.xTypes[i].tableIndex).add(data.data[chart.xTypes[k].index].getDecimalValue());
-					}
+					altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
 				}
 			}
 		}
@@ -420,7 +416,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			if (chart.activeSeries.length > i) {
 				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
-
 			} else {
 				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			}
