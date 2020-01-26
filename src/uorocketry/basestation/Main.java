@@ -46,14 +46,16 @@ import com.fazecast.jSerialComm.SerialPortMessageListener;
 public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
 	
 	/** Constants */
-	/** The location of the comma separated labels */
-	public static final String LABELS_LOCATION = "data/labels.txt";
+	/** The location of the comma separated labels without the extension. */
+	public static final String LABELS_LOCATION = "data/labels";
+	public static final String LABELS_EXTENSION = ".txt";
 	/** How many data points are there. By default, it is the number of labels */
 	public static List<Integer> dataLength = new ArrayList<>();
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
-	/** Data file location for the simulation (new line separated for each event) */
-	public static final String SIM_DATA_LOCATION = "data/data.txt";
+	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
+	public static final String SIM_DATA_LOCATION = "data/data";
+	public static final String SIM_DATA_EXTENSION = ".txt";
 	
 	/** Whether to update Google Earth file */
 	public static boolean googleEarth = false;
@@ -67,7 +69,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
 	
 	/** How many data sources to record data from. For now, it much be set at launch time */
-	public static final int DATA_SOURCE_COUNT = 1;
+	public static final int DATA_SOURCE_COUNT = 2;
 	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
@@ -139,29 +141,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
-		if (dataLength.size() == 0) {
-			// Add default
-			dataLength.add(15);
-		}
-		
 		new Main();
 	}
 	
 	public Main() {
+		// Load labels
+		loadLabels();
+		
+		System.out.println(labels.size());
+		
+		// Set a default data length
+		for (int i = 0; i < labels.size(); i++) {
+			dataLength.add(labels.get(i).length);
+		}
+		
 		// Create window
 		window = new Window();
 		
 		window.addComponentListener(this);
 		
 		setupUI();
-		
-		// Load labels
-		loadLabels(LABELS_LOCATION);
-		
-		// Set a default data length
-		for (int i = 0; i < dataLength.size(); i++) {
-			dataLength.set(i, labels.get(i).length);
-		}
 		
 		// Different setups depending on if simulation or not
 		setupData();
@@ -319,7 +318,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (allData.get(i).size() == 0) continue;
 			
 			// Don't change slider if paused
-			if (!paused) {
+			// Only do this once
+			if (!paused && i == 0) {
 				// Set max value of the sliders
 				window.maxSlider.setMaximum(allData.get(i).size() - 1);
 				window.minSlider.setMaximum(allData.get(i).size() - 1);
@@ -453,7 +453,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	public void loadSimulationData() {
 		// Load simulation data
-		loadSimulationData(SIM_DATA_LOCATION);
+		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+			loadSimulationData(SIM_DATA_LOCATION + i + SIM_DATA_EXTENSION);
+		}
 	}
 	
 	public void loadSimulationData(String fileName) {
@@ -508,6 +510,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		return dataHandler;
 	}
 	
+	/** 
+	 * Run once at the beginning of simulation mode
+	 */
+	public void loadLabels() {
+		// Load simulation data
+		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+			loadLabels(LABELS_LOCATION + i + LABELS_EXTENSION);
+		}
+	}
+	
 	public void loadLabels(String fileName) {
 		BufferedReader br = null;
 		try {
@@ -516,7 +528,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 		}
 		
-		String[] currentLabelStrings = new String[dataLength.get(labels.size())];
+		String[] currentLabelStrings = null;
 		
 		try {
 		    String line = null;

@@ -99,8 +99,10 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
 		
-		addJTable(0);
-//		addJTable(1);
+		
+		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+			addJTable(i);
+		}
 		
 		scrollPane = new JScrollPane(leftPanel);
 		
