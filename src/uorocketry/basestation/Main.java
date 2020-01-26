@@ -569,7 +569,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.minSlider) {
 			// For now, just use a fraction of the slider value
 			for (int i = 0; i < currentDataIndex.size(); i++) {
-				int value = window.maxSlider.getValue();
+				int value = window.minSlider.getValue();
 				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
 				
 				minDataIndex.set(i, value);
