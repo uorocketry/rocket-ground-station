@@ -390,6 +390,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Add y axis
 		for (int i = minDataIndex.get(chart.yType.tableIndex); i <= currentDataIndex.get(chart.yType.tableIndex); i++) {
+			if (allData.get(chart.yType.tableIndex).size() == 0) continue;
+			
 			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
 			
 			if (data != null) {
@@ -400,6 +402,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
 			for (int j = minDataIndex.get(chart.xTypes[i].tableIndex); j <= currentDataIndex.get(chart.xTypes[i].tableIndex); j++) {
+				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
+
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
