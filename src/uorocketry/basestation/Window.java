@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BoxLayout;
@@ -59,11 +60,11 @@ public class Window extends JFrame {
 	private JLabel dataLengthLabel;
 	JLabel savingToLabel;
 	
-	private JPanel comPanel;
-	JList<String> comSelector;
-	
+	private List<JPanel> comPanels = new ArrayList<>();
+	List<JList<String>> comSelectors = new ArrayList<>();
+	List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
+
 	Vector<String> comSelectorData = new Vector<String>();
-	JLabel comConnectionSuccess;
 	private JPanel sidePanel;
 	
 	JPanel centerChartPanel;
@@ -179,19 +180,9 @@ public class Window extends JFrame {
 		getContentPane().add(sidePanel, BorderLayout.EAST);
 		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
 		
-		comPanel = new JPanel();
-		sidePanel.add(comPanel);
-		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
-		
-		comSelector = new JList<String>();
-		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		comPanel.add(comSelector);
-		
-		comConnectionSuccess = new JLabel();
-		comConnectionSuccess.setAlignmentX(Component.CENTER_ALIGNMENT);
-		comConnectionSuccess.setHorizontalAlignment(SwingConstants.CENTER);
-		comConnectionSuccess.setOpaque(true);
-		comPanel.add(comConnectionSuccess);
+		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+			addComSelectorPanel();
+		}
 		
 		centerChartPanel = new JPanel();
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
@@ -245,6 +236,27 @@ public class Window extends JFrame {
 		
 		dataTablePanel.add(dataTable);
 		dataTables.add(dataTable);
+	}
+	
+	public void addComSelectorPanel() {
+		JPanel comPanel = new JPanel();
+		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
+		
+		JList<String> comSelector = new JList<String>();
+		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		comPanel.add(comSelector);
+		
+		JLabel comConnectionSuccessLabel = new JLabel();
+		comConnectionSuccessLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		comConnectionSuccessLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		comConnectionSuccessLabel.setOpaque(true);
+		comPanel.add(comConnectionSuccessLabel);
+		
+		sidePanel.add(comPanel);
+		
+		comPanels.add(comPanel);
+		comSelectors.add(comSelector);
+		comConnectionSuccessLabels.add(comConnectionSuccessLabel);
 	}
 
 }
