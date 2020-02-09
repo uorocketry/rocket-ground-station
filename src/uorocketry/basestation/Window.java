@@ -83,7 +83,7 @@ public class Window extends JFrame {
             e.printStackTrace();
         }
 		
-		setSize(1000, 782);
+		setSize(1200, 782);
 		setTitle("Ground Station");
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
