@@ -6,7 +6,7 @@ Work in progress UI for data coming from the rocket.
 
 # Add labels
 
-Make a folder called `data` and a file called `labels.txt` in data. This should be a comma separated file of all the labels in the dataset. The number of labels should be the same as the `DATA_LENGTH` variable.
+Make a folder called `data` and a file called `labels[NUMBER]txt` in data. The number represents the data source index, starting at `0`. This should be a comma separated file of all the labels in the dataset. The number of labels should be the same as the `DATA_LENGTH` variable.
 
 For convenience, you can rename the `data-example` folder to `data` to get the labels.
 
@@ -17,6 +17,10 @@ For convenience, you can rename the `data-example` folder to `data` to get the l
 Load this folder in your preferred Java IDE (ex. Eclipse).
 
 Run `Main.java`
+
+# Simulation
+
+Save your file in the `data` folder with the name `data[NUMBER].txt`. Replace `number` with an index of the data source starting at `0`.
 
 # Window Management
 

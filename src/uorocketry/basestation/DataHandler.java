@@ -5,32 +5,33 @@ import javax.swing.table.TableModel;
 
 public class DataHandler {
 	
-	static final int TIMESTAMP = 0;
-	static final int ALTITUDE = 1;
-	static final int LATITUDE = 2;
-	static final int LONGITUDE = 3;
-	static final int PITCH = 4;
-	static final int ROLL = 5;
-	static final int YAW = 6;
-	static final int ACCELX = 7;
-	static final int ACCELY = 8;
-	static final int ACCELZ = 9;
-	static final int VELOCITY = 10;
-	static final int BRAKE_PERCENTAGE = 11;
-	static final int ACTUAL_BRAKE_VALUE = 12;
-	static final int GPS_FIX = 13;
-	static final int GPS_FIX_QUALITY = 14;
+	static final DataType TIMESTAMP = new DataType(0, 0);
+	static final DataType ALTITUDE = new DataType(1, 0);
+	static final DataType LATITUDE = new DataType(2, 0);
+	static final DataType LONGITUDE = new DataType(3, 0);
+	static final DataType PITCH = new DataType(4, 0);
+	static final DataType ROLL = new DataType(5, 0);
+	static final DataType YAW = new DataType(6, 0);
+	static final DataType ACCELX = new DataType(7, 0);
+	static final DataType ACCELY = new DataType(8, 0);
+	static final DataType ACCELZ = new DataType(9, 0);
+	static final DataType VELOCITY = new DataType(10, 0);
+	static final DataType BRAKE_PERCENTAGE = new DataType(10, 0);
+	static final DataType ACTUAL_BRAKE_VALUE = new DataType(12, 0);
+	static final DataType GPS_FIX = new DataType(13, 0);
+	static final DataType GPS_FIX_QUALITY = new DataType(14, 0);
 	
-	Data[] data = new Data[Main.dataLength];
+	Data[] data;
 	
-	public String getFormattedData(String[] labels) {
-		String text = "<html>";
+	/**
+	 * This chooses which table this data is displayed in
+	 */
+	int tableIndex = 0;
+	
+	public DataHandler(int tableIndex) {
+		this.tableIndex = tableIndex;
 		
-		for (int i = 0; i < data.length; i++) {
-			text += labels[i] + ": " + data[i].getFormattedString() + "<br>";
-		}
-		
-		return text + "</html>";
+		this.data = new Data[Main.dataLength.get(tableIndex)];
 	}
 	
 	public void updateTableUIWithData(JTable table, String[] labels) {
@@ -46,9 +47,8 @@ public class DataHandler {
 	}
 	
 	public void set(int index, String currentData) {
-		
 		// Check for special cases first
-		if (index == LATITUDE || index == LONGITUDE) {
+		if (LATITUDE.equals(index, tableIndex) || LONGITUDE.equals(index, tableIndex)) {
 			float degrees = 0;
 			float minutes = 0;
 			

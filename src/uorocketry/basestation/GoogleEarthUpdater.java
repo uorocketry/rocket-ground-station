@@ -76,7 +76,7 @@ public class GoogleEarthUpdater {
 		return content.toString();
 	}
 	
-	public void updateKMLFile(List<DataHandler> allData, int currentDataIndex) {
+	public void updateKMLFile(int tableIndex, List<DataHandler> allData, int currentDataIndex) {
 		String fileContent = generateKMLFile(allData, currentDataIndex);
 		
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
@@ -97,7 +97,7 @@ public class GoogleEarthUpdater {
 		mapRefreshTaskTimer = new TimerTask() {
 			@Override
 			public void run() {
-				updateKMLFile(allData, currentDataIndex);
+				updateKMLFile(tableIndex, allData, currentDataIndex);
 			}
 		};
 		try {
@@ -108,8 +108,8 @@ public class GoogleEarthUpdater {
 	}
 	
 	public String getCoordinateString(DataHandler dataPoint) {
-		if (dataPoint != null && dataPoint.data[DataHandler.LONGITUDE].data != 0 && dataPoint.data[DataHandler.LATITUDE].data != 0) {
-			return "-" + dataPoint.data[DataHandler.LONGITUDE].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.LATITUDE].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.ALTITUDE].data;
+		if (dataPoint != null && dataPoint.data[DataHandler.LONGITUDE.index].data != 0 && dataPoint.data[DataHandler.LATITUDE.index].data != 0) {
+			return "-" + dataPoint.data[DataHandler.LONGITUDE.index].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.LATITUDE.index].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.ALTITUDE.index].data;
 		}
 		
 		return null;
