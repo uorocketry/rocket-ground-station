@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +36,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -48,8 +52,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Constants */
 	/** The location of the comma separated labels without the extension. */
-	public static final String LABELS_LOCATION = "data/labels";
-	public static final String LABELS_EXTENSION = ".txt";
+	public static final String CONFIG_LOCATION = "data/config.json";
 	/** How many data points are there. By default, it is the number of labels */
 	public static List<Integer> dataLength = new ArrayList<>();
 	/** Separator for the data */
@@ -69,8 +72,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Will have a number appended to the end to not overwrite old logs */
 	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
 	
-	/** How many data sources to record data from. For now, it much be set at launch time */
-	public static final int DATA_SOURCE_COUNT = 2;
+	/** How many data sources to record data from. It is set when the config is loaded. */
+	public static int dataSourceCount = 1;
 	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
@@ -147,12 +150,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public Main() {
 		// Load labels
-		loadLabels();
-		
-		// Set a default data length
-		for (int i = 0; i < labels.size(); i++) {
-			dataLength.add(labels.get(i).length);
-		}
+		loadConfig();
 		
 		// Create window
 		window = new Window();
@@ -175,7 +173,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void setupData() {
 		allData = new ArrayList<>();
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			allData.add(new ArrayList<>());
 
 			// Add data indexes
@@ -219,10 +217,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Create required lists
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			activeSerialPort.add(null);
 		}
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			connectingToSerial.add(false);
 		}
 	}
@@ -467,7 +465,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	public void loadSimulationData() {
 		// Load simulation data
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			loadSimulationData(i, SIM_DATA_LOCATION + i + SIM_DATA_EXTENSION);
 		}
 	}
@@ -526,38 +524,42 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** 
 	 * Run once at the beginning of simulation mode
 	 */
-	public void loadLabels() {
-		// Load simulation data
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
-			loadLabels(LABELS_LOCATION + i + LABELS_EXTENSION);
-		}
+	public void loadConfig() {
+		loadConfig(CONFIG_LOCATION);
 	}
 	
-	public void loadLabels(String fileName) {
-		BufferedReader br = null;
+	public void loadConfig(String fileName) {
+		String configString = null;
 		try {
-			br = new BufferedReader(new FileReader(fileName));
-		} catch (FileNotFoundException e) {
+			configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
+		} catch (IOException e) {
 			e.printStackTrace();
+			
+			return;
 		}
 		
-		String[] currentLabelStrings = null;
+		JSONObject config = new JSONObject(configString);
 		
-		try {
-		    String line = null;
-
-		    if ((line = br.readLine()) != null) {
-		    	//this line contains all of the labels
-		    	//this one is comma separated, not the same as the actual data
-		    	currentLabelStrings = line.split(",");
-		    }
-		    
-		    br.close();
-		} catch(IOException e) {
-			e.printStackTrace();
+		// Add all labels
+		for (int i = 0; i < config.getJSONArray("labels").length(); i++) {
+			JSONArray labelsJSONArray = config.getJSONArray("labels").getJSONArray(i);
+			String[] labelsArray = new String[labelsJSONArray.length()];
+			
+			for (int j = 0; j < labelsArray.length; j++) {
+				labelsArray[j] = labelsJSONArray.getString(j);
+			}
+			
+			labels.add(labelsArray);
 		}
 		
-		labels.add(currentLabelStrings);
+		// Setup variables based on labels length
+		
+		dataSourceCount = labels.size();
+		
+		// Set a default data length
+		for (int i = 0; i < labels.size(); i++) {
+			dataLength.add(labels.get(i).length);
+		}
 	}
 	
 	/**
@@ -705,7 +707,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				}
 				
 				// Load labels
-				loadLabels(LABELS_LOCATION);
+				loadConfig();
 				
 				// Different setups depending on if simulation or not
 				setupData();

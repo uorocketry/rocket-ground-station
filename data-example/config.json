@@ -1,0 +1,24 @@
+{
+    "labels": [
+        [
+            "Timestamp (ms)",
+            "Altitude (m)",
+            "Latitude",
+            "Longitude",
+            "Pitch",
+            "Roll",
+            "Yaw",
+            "Acceleration X (g)",
+            "Acceleration Y (g)",
+            "Acceleration Z (g)",
+            "Velocity (m/s)",
+            "Brake Percentage",
+            "Actual Brake Value",
+            "GPS Fix",
+            "GPS Fix Quality"
+        ]
+    ],
+    "googleEarthIndexes": [
+        [1, 2, 3]
+    ]
+}

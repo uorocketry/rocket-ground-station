@@ -101,7 +101,7 @@ public class Window extends JFrame {
 		leftPanel.add(dataTablePanel);
 		
 		
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addJTable(i);
 		}
 		
@@ -180,7 +180,7 @@ public class Window extends JFrame {
 		getContentPane().add(sidePanel, BorderLayout.EAST);
 		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
 		
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addComSelectorPanel();
 		}
 		
