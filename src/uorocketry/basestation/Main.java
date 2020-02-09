@@ -788,6 +788,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					int[] selections = dataTable.getSelectedRows();
 					DataType[] formattedSelections = new DataType[selections.length];
 					
+					moveSelectionsToNewTable(i, true);
+					
 					for (int j = 0; j < formattedSelections.length; j++) {
 						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(dataTable));
 					}
@@ -796,6 +798,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					selectedChart.xTypes = formattedSelections;
 					
 					updateUI();
+					
+					break;
 				}
 			}
 		}
@@ -809,6 +813,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (e.getSource() == dataTable && e.getButton() == MouseEvent.BUTTON3) {
 				// Left clicking the dataTable
 				int row = dataTable.rowAtPoint(e.getPoint());
+
+				ignoreSelections = true;
+				
+				moveSelectionsToNewTable(i, false);
 				
 				selectedChart.yType = new DataType(row, i);
 				
@@ -816,7 +824,52 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				dataTable.repaint();
 				
 				updateUI();
+				
+				ignoreSelections = false;
 			}
+		}
+	}
+	
+	public void moveSelectionsToNewTable(int newTableIndex, boolean changingX) {
+		boolean movingXType = false;
+		
+		// Clear previous selections
+		for (int j = 0; j < selectedChart.xTypes.length; j++) {
+			if (selectedChart.xTypes[j].tableIndex != newTableIndex) {
+				int currentTableIndex = selectedChart.xTypes[j].tableIndex;
+				
+				// Clear that table's selection
+				window.dataTables.get(currentTableIndex).clearSelection();
+				window.dataTables.get(currentTableIndex).repaint();
+				
+				movingXType = true;
+			}
+		}
+		
+		if (movingXType && !changingX) {
+			selectedChart.xTypes = new DataType[1];
+			selectedChart.xTypes[0] = new DataType(1, newTableIndex);
+			
+			window.dataTables.get(newTableIndex).setRowSelectionInterval(1, 1);
+			window.dataTables.get(newTableIndex).setColumnSelectionInterval(0, 0);
+			window.dataTables.get(newTableIndex).repaint();
+			
+			updateUI();
+		}
+		
+		// Move yType selection if needed
+		if (selectedChart.yType.tableIndex != newTableIndex) {
+			// Deselect the old one
+			JTable oldDataTable = window.dataTables.get(selectedChart.yType.tableIndex);
+			((DataTableCellRenderer) oldDataTable.getDefaultRenderer(Object.class)).coloredRow = -1;
+			oldDataTable.repaint();
+			
+			// Select this default selection
+			JTable dataTable = window.dataTables.get(newTableIndex);
+			((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = 0;
+			dataTable.repaint();
+			
+			selectedChart.yType = new DataType(0, newTableIndex);
 		}
 	}
 	
