@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class GoogleEarthUpdater {
 	
 	/**
@@ -27,7 +30,7 @@ public class GoogleEarthUpdater {
 	 * 
 	 * @param main
 	 */
-	public String generateKMLFile(List<DataHandler> allData, int currentDataIndex) {
+	public String generateKMLFile(List<List<DataHandler>> allData, List<Integer> currentDataIndex, JSONArray coordinateIndexes) {
 		StringBuilder content = new StringBuilder();
 		
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
@@ -41,75 +44,99 @@ public class GoogleEarthUpdater {
 				"    </LineStyle>" +
 				"    </Style>");
 		
-		content.append("<Placemark>\r\n");
-		content.append("<name>Rocket Path</name>\r\n");
-		content.append("<styleUrl>#blackLine</styleUrl>");
-		content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
-		
-		for (int i = 0; i <= currentDataIndex; i++) {
-			String currentString = getCoordinateString(allData.get(i));
+		for (int i = 0; i < allData.size(); i++) {
+			content.append("<Placemark>\r\n");
+			content.append("<name>Rocket Path ");
+			content.append(i);
+			content.append("</name>\r\n");
+			content.append("<styleUrl>#blackLine</styleUrl>");
+			content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
 			
-			if (currentString != null) {
-				content.append(currentString + "\r\n");
+			for (int j = 0; j <= currentDataIndex.get(i); j++) {
+				String currentString = getCoordinateString(allData.get(i).get(j), coordinateIndexes.getJSONObject(i));
+				
+				if (currentString != null) {
+					content.append(currentString + "\r\n");
+				}
+				
 			}
 			
-		}
-		
-		content.append("</coordinates></LineString>\r\n");
-		content.append("</Placemark>\r\n");
-		
-		//Add the latest coordinate as a placemark
-		String latestDataString = getCoordinateString(allData.get(currentDataIndex));
-		if (latestDataString != null) {
-			content.append("<Placemark>\r\n");
-			content.append("<name>Latest Position</name>\r\n");
-			content.append("<Point>\r\n<altitudeMode>absolute</altitudeMode>\r\n<coordinates>");
+			content.append("</coordinates></LineString>\r\n");
+			content.append("</Placemark>\r\n");
 			
-			content.append(latestDataString);
-			
-			content.append("</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+			//Add the latest coordinate as a placemark
+			String latestDataString = getCoordinateString(allData.get(i).get(currentDataIndex.get(i)), coordinateIndexes.getJSONObject(i));
+			if (latestDataString != null) {
+				content.append("<Placemark>\r\n");
+				content.append("<name>Latest Position ");
+				content.append(i);
+				content.append("</name>\r\n");
+				content.append("<Point>\r\n<altitudeMode>absolute</altitudeMode>\r\n<coordinates>");
+				
+				content.append(latestDataString);
+				
+				content.append("</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+			}
 		}
-		
 		
 		content.append("</Document></kml>");
 		
 		return content.toString();
 	}
 	
-	public void updateKMLFile(int tableIndex, List<DataHandler> allData, int currentDataIndex) {
-		String fileContent = generateKMLFile(allData, currentDataIndex);
+	/**
+	 * Updates the KML file with the data up to currentDataIndex.
+	 * 
+	 * @param tableIndex
+	 * @param allData
+	 * @param currentDataIndex
+	 * @param coordinateIndexes
+	 * @param secondRun Is this a second run? This is true if it is being run from a task called by this function.
+	 * 		  The task is run to force Google Earth to update the display.
+	 */
+	public void updateKMLFile(List<List<DataHandler>> allData, List<Integer> currentDataIndex, JSONArray coordinateIndexes, boolean secondRun) {
+		String fileContent = generateKMLFile(allData, currentDataIndex, coordinateIndexes);
 		
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
 		   writer.write(fileContent);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		if (mapRefreshTaskTimer != null) {
+		if (!secondRun) {
+			if (mapRefreshTaskTimer != null) {
+				try {
+					mapRefreshTaskTimer.cancel();
+				} catch (IllegalStateException e) {
+					// Ignore if it is already canceled
+				}
+			}
+			
+			// Start a new task
+			mapRefreshTaskTimer = new TimerTask() {
+				@Override
+				public void run() {
+					updateKMLFile(allData, currentDataIndex, coordinateIndexes, true);
+				}
+			};
 			try {
-				mapRefreshTaskTimer.cancel();
+				mapRefreshTimer.schedule(mapRefreshTaskTimer, 1000);
 			} catch (IllegalStateException e) {
-				// Ignore if it is already canceled
+				// Ignore as another has already started
 			}
-		}
-		
-		// Start a new task
-		mapRefreshTaskTimer = new TimerTask() {
-			@Override
-			public void run() {
-				updateKMLFile(tableIndex, allData, currentDataIndex);
-			}
-		};
-		try {
-			mapRefreshTimer.schedule(mapRefreshTaskTimer, 50);
-		} catch (IllegalStateException e) {
-			// Ignore as another has already started
 		}
 	}
 	
-	public String getCoordinateString(DataHandler dataPoint) {
-		if (dataPoint != null && dataPoint.data[DataHandler.LONGITUDE.index].data != 0 && dataPoint.data[DataHandler.LATITUDE.index].data != 0) {
-			return "-" + dataPoint.data[DataHandler.LONGITUDE.index].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.LATITUDE.index].getDecimalCoordinate() + "," + dataPoint.data[DataHandler.ALTITUDE.index].data;
+	public String getCoordinateString(DataHandler dataPoint, JSONObject coordinateIndexes) {
+		if (dataPoint == null) return null;
+		
+		Data altitudeData = dataPoint.data[coordinateIndexes.getInt("altitude")];
+		Data longitudeData = dataPoint.data[coordinateIndexes.getInt("longitude")];
+		Data latitudeData = dataPoint.data[coordinateIndexes.getInt("latitude")];
+
+		if (longitudeData.data != 0 && latitudeData.data != 0) {
+			return "-" + longitudeData.getDecimalCoordinate() + "," + latitudeData.getDecimalCoordinate() + "," + altitudeData.data;
 		}
 		
 		return null;

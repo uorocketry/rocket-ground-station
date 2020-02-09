@@ -3,6 +3,8 @@ package uorocketry.basestation;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
+import org.json.JSONObject;
+
 public class DataHandler {
 	
 	static final DataType TIMESTAMP = new DataType(0, 0);
@@ -46,9 +48,9 @@ public class DataHandler {
 		}
 	}
 	
-	public void set(int index, String currentData) {
+	public void set(int index, String currentData, JSONObject coordinateIndexes) {
 		// Check for special cases first
-		if (LATITUDE.equals(index, tableIndex) || LONGITUDE.equals(index, tableIndex)) {
+		if (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index) {
 			float degrees = 0;
 			float minutes = 0;
 			

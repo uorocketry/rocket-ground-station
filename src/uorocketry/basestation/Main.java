@@ -81,6 +81,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	List<List<DataHandler>> allData = new ArrayList<>();
 	
 	List<String[]> labels = new ArrayList<>();
+	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
 	ArrayList<Integer> currentDataIndex = new ArrayList<>();
@@ -102,7 +103,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	List<Boolean> connectingToSerial = new ArrayList<Boolean>();
 	
 	/** Used for the map view */
-	GoogleEarthUpdater googleEarthUpdater = new GoogleEarthUpdater();
+	GoogleEarthUpdater googleEarthUpdater;
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -164,7 +165,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup Google Earth map support
 		if (googleEarth) {
-			googleEarthUpdater = new GoogleEarthUpdater();
+			setupGoogleEarth();
 		}
 		
 		// Update UI once
@@ -319,6 +320,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		snapPanelSelected(selectedChart.snapPanel);
 	}
 	
+	public void setupGoogleEarth() {
+		googleEarthUpdater = new GoogleEarthUpdater();
+		
+		// Setup updater file
+//		googleEarthUpdater.createKMLUpdaterFile();
+	}
+	
 	public void updateUI() {
 		// If not ready yet
 		if (allData.size() == 0) return;
@@ -347,7 +355,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Only record google earth data for the first one for now 
 		// There is no way to change the filename yet
-		if (googleEarth) googleEarthUpdater.updateKMLFile(0, allData.get(0), currentDataIndex.get(0));
+		if (googleEarth) {
+			JSONArray coordinateIndexes = config.getJSONArray("coordinateIndexes");
+			
+			googleEarthUpdater.updateKMLFile(allData, currentDataIndex, coordinateIndexes, false);
+		}
 		
 		// Update every chart
 		for (DataChart chart : window.charts) {
@@ -513,9 +525,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return null;
 		}
 		
-		
+		JSONArray coordinateIndexes = config.getJSONArray("coordinateIndexes");
 		for (int i = 0; i < splitData.length; i++) {
-			dataHandler.set(i, splitData[i]);
+			dataHandler.set(i, splitData[i], coordinateIndexes.getJSONObject(0));
 		}
 		
 		return dataHandler;
@@ -538,7 +550,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return;
 		}
 		
-		JSONObject config = new JSONObject(configString);
+		config = new JSONObject(configString);
 		
 		// Add all labels
 		for (int i = 0; i < config.getJSONArray("labels").length(); i++) {
@@ -673,6 +685,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
 			googleEarth = window.googleEarthCheckBox.isSelected();
+			
+			if (googleEarth) setupGoogleEarth();
 		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
