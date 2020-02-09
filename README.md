@@ -16,6 +16,8 @@ For convenience, you can rename the `data-example` folder to `data` to get the l
 
 Load this folder in your preferred Java IDE (ex. Eclipse).
 
+Add the libraries from `libs`
+
 Run `Main.java`
 
 # Simulation
