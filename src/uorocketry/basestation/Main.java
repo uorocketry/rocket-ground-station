@@ -358,7 +358,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (googleEarth) {
 			JSONArray coordinateIndexes = config.getJSONArray("coordinateIndexes");
 			
-			googleEarthUpdater.updateKMLFile(allData, currentDataIndex, coordinateIndexes, false);
+			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, coordinateIndexes, false);
 		}
 		
 		// Update every chart
