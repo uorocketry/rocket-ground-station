@@ -30,7 +30,7 @@ public class GoogleEarthUpdater {
 	 * 
 	 * @param main
 	 */
-	public String generateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray coordinateIndexes) {
+	public String generateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
 		StringBuilder content = new StringBuilder();
 		
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
@@ -53,7 +53,7 @@ public class GoogleEarthUpdater {
 			content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
 			
 			for (int j = minDataIndex.get(i); j <= currentDataIndex.get(i); j++) {
-				String currentString = getCoordinateString(allData.get(i).get(j), coordinateIndexes.getJSONObject(i));
+				String currentString = getCoordinateString(allData.get(i).get(j), dataSets.getJSONObject(i).getJSONObject("coordinateIndexes"));
 				
 				if (currentString != null) {
 					content.append(currentString + "\r\n");
@@ -65,7 +65,7 @@ public class GoogleEarthUpdater {
 			content.append("</Placemark>\r\n");
 			
 			//Add the latest coordinate as a placemark
-			String latestDataString = getCoordinateString(allData.get(i).get(currentDataIndex.get(i)), coordinateIndexes.getJSONObject(i));
+			String latestDataString = getCoordinateString(allData.get(i).get(currentDataIndex.get(i)), dataSets.getJSONObject(i).getJSONObject("coordinateIndexes"));
 			if (latestDataString != null) {
 				content.append("<Placemark>\r\n");
 				content.append("<name>Latest Position ");
@@ -90,12 +90,12 @@ public class GoogleEarthUpdater {
 	 * @param tableIndex
 	 * @param allData
 	 * @param currentDataIndex
-	 * @param coordinateIndexes
+	 * @param dataSets
 	 * @param secondRun Is this a second run? This is true if it is being run from a task called by this function.
 	 * 		  The task is run to force Google Earth to update the display.
 	 */
-	public void updateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray coordinateIndexes, boolean secondRun) {
-		String fileContent = generateKMLFile(allData, minDataIndex, currentDataIndex, coordinateIndexes);
+	public void updateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets, boolean secondRun) {
+		String fileContent = generateKMLFile(allData, minDataIndex, currentDataIndex, dataSets);
 		
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
 				new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
@@ -117,7 +117,7 @@ public class GoogleEarthUpdater {
 			mapRefreshTaskTimer = new TimerTask() {
 				@Override
 				public void run() {
-					updateKMLFile(allData, minDataIndex, currentDataIndex, coordinateIndexes, true);
+					updateKMLFile(allData, minDataIndex, currentDataIndex, dataSets, true);
 				}
 			};
 			try {

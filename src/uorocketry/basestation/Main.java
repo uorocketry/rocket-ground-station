@@ -339,9 +339,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Only record google earth data for the first one for now 
 		// There is no way to change the filename yet
 		if (googleEarth) {
-			JSONArray coordinateIndexes = config.getJSONArray("coordinateIndexes");
-			
-			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, coordinateIndexes, false);
+			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, config.getJSONArray("datasets"), false);
 		}
 		
 		// Update every chart
@@ -508,9 +506,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return null;
 		}
 		
-		JSONArray coordinateIndexes = config.getJSONArray("coordinateIndexes");
+		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			dataHandler.set(i, splitData[i], coordinateIndexes.getJSONObject(0));
+			dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"));
 		}
 		
 		return dataHandler;
@@ -535,25 +533,25 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		config = new JSONObject(configString);
 		
-		// Add all labels
-		for (int i = 0; i < config.getJSONArray("labels").length(); i++) {
-			JSONArray labelsJSONArray = config.getJSONArray("labels").getJSONArray(i);
-			String[] labelsArray = new String[labelsJSONArray.length()];
+		JSONArray datasetsJSONArray = config.getJSONArray("datasets");
+		dataSourceCount = datasetsJSONArray.length();
+		
+		// Add all data
+		for (int i = 0; i < datasetsJSONArray.length(); i++) {
+			JSONObject currentDataset = datasetsJSONArray.getJSONObject(i);
+			
+			JSONArray labelsJsonArray = currentDataset.getJSONArray("labels");
+			
+			// Load labels
+			String[] labelsArray = new String[labelsJsonArray.length()];
 			
 			for (int j = 0; j < labelsArray.length; j++) {
-				labelsArray[j] = labelsJSONArray.getString(j);
+				labelsArray[j] = labelsJsonArray.getString(j);
 			}
 			
 			labels.add(labelsArray);
-		}
-		
-		// Setup variables based on labels length
-		
-		dataSourceCount = labels.size();
-		
-		// Set a default data length
-		for (int i = 0; i < labels.size(); i++) {
-			dataLength.add(labels.get(i).length);
+			
+			dataLength.add(labelsArray.length);
 		}
 	}
 	
