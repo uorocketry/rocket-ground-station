@@ -129,20 +129,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				simulation = Boolean.parseBoolean(args[i + 1]);
 				
 				break;
-			case "--dataLength":
-				
-				// See how many data lengths were specified
-				for (int j = i; j + 1 < args.length; j++) {
-					if (args[j].startsWith("--")) break;
-					
-					try {
-						dataLength.add(Integer.parseInt(args[i + j + 1]));
-					} catch (NumberFormatException e) {
-						System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
-					}
-				}
-				
-				break;
 			}
 		}
 		
@@ -290,9 +276,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.latestButton.addActionListener(this);
 		
 		window.addChartButton.addActionListener(this);
-		
-		window.dataLengthButton.addActionListener(this);
-		window.dataLengthTextBox.setText(dataLength + "");
 		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
@@ -703,31 +686,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
-		} else if (e.getSource() == window.dataLengthButton) {
-			String warningMessage = "";
-			if (!simulation) {
-				warningMessage = "Are you sure you would like to change the data length?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
-			} else {
-				warningMessage = "Are you sure you would like to change the data length? The data will be reloaded.";
-			}
-			
-			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
-				// Set data length
-				try {
-					dataLength.set(0, Integer.parseInt(window.dataLengthTextBox.getText()));
-				} catch (NumberFormatException error) {
-					JOptionPane.showMessageDialog(window, "'" + window.dataLengthTextBox.getText() + "' is not a number");
-				}
-				
-				// Load labels
-				loadConfig();
-				
-				// Different setups depending on if simulation or not
-				setupData();
-				
-				updateUI();
-			} 
 		}
 	}
 	

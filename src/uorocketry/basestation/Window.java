@@ -20,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -54,10 +53,6 @@ public class Window extends JFrame {
 	JSlider minSlider;
 	JButton latestButton;
 	JButton pauseButton;
-	private JPanel dataLengthPanel;
-	JTextField dataLengthTextBox;
-	JButton dataLengthButton;
-	private JLabel dataLengthLabel;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -112,23 +107,6 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
-		
-		dataLengthPanel = new JPanel();
-		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-		leftPanel.add(dataLengthPanel);
-		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
-		
-		dataLengthLabel = new JLabel("Data Length:");
-		dataLengthPanel.add(dataLengthLabel);
-		
-		dataLengthTextBox = new JTextField();
-		dataLengthPanel.add(dataLengthTextBox);
-		dataLengthTextBox.setText("0");
-		dataLengthTextBox.setColumns(5);
-		
-		dataLengthButton = new JButton("Save");
-		dataLengthPanel.add(dataLengthButton);
 		
 		savingToPanel = new JPanel();
 		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
