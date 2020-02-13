@@ -869,8 +869,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			window.dataTables.get(newTableIndex).setRowSelectionInterval(1, 1);
 			window.dataTables.get(newTableIndex).setColumnSelectionInterval(0, 0);
 			window.dataTables.get(newTableIndex).repaint();
-			
-			updateUI();
 		}
 		
 		// Move yType selection if needed
