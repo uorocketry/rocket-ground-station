@@ -269,6 +269,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupUI() {
+		addChart();
+		
 		// Add slider listeners
 		window.maxSlider.addChangeListener(this);
 		window.minSlider.addChangeListener(this);
@@ -722,7 +724,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
 		dataChart.snapPanel.setSnapPanelListener(this);
 		
-		selectedChart.chartPanel.setBorder(null);
+		if (selectedChart != null) selectedChart.chartPanel.setBorder(null);
 		selectedChart = dataChart;
 		
 		snapPanelSelected(selectedChart.snapPanel);

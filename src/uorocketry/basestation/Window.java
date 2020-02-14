@@ -167,35 +167,10 @@ public class Window extends JFrame {
 		
 		centerChartPanel = new JPanel();
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
-		
-		// Create Chart
-		XYChart firstChart = new XYChartBuilder().title("Loading").xAxisTitle("Loading").yAxisTitle("Loading").build();
-		
-		// Customize Chart
-		XYStyler firstChartStyler = firstChart.getStyler();
-		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		firstChart.getStyler().setLegendVisible(true);
-		firstChartStyler.setToolTipsEnabled(true);
-
-		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
-
-		// Series
-		firstChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
 		centerChartPanel.setLayout(null);
-		
-		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
-		centerChartPanel.add(chart1Panel);
-		
-		// Create the data chart container
-		DataChart dataChart = new DataChart(this, firstChart, chart1Panel);
-		
-		// Add these default charts to the list
-		charts.add(dataChart);
-		
+
 		setVisible(true);
 		
-		// Set default chart size
-		dataChart.snapPanel.setRelSize(600, 450);
 	}
 	
 	public void addJTable(int tableIndex, JSONObject dataSet) {
