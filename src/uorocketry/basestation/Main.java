@@ -41,7 +41,9 @@ import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.XYStyler;
 import org.knowm.xchart.style.Styler.LegendPosition;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -424,11 +426,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			chart.xyChart.setYAxisTitle(xTypeTitle);
 			
+			XYSeries series = null;
+			
 			if (chart.activeSeries.length > i) {
-				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+				series = chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			} else {
-				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+				series = chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			}
+			
+			series.setLabel(xTypeTitle);
 			
 			newActiveSeries[i] = "series" + i;
 		}
@@ -691,8 +697,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 
 		// Customize Chart
-		xyChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		xyChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		XYStyler firstChartStyler = xyChart.getStyler();
+		
+		firstChartStyler.setLegendPosition(LegendPosition.InsideNE);
+		firstChartStyler.setLegendVisible(true);
+		firstChartStyler.setToolTipsEnabled(true);
+		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
 		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });

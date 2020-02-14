@@ -32,6 +32,7 @@ import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
+import org.knowm.xchart.style.XYStyler;
 import org.knowm.xchart.style.Styler.LegendPosition;
 
 public class Window extends JFrame {
@@ -168,11 +169,15 @@ public class Window extends JFrame {
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
 		
 		// Create Chart
-		XYChart firstChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
+		XYChart firstChart = new XYChartBuilder().title("Loading").xAxisTitle("Loading").yAxisTitle("Loading").build();
 		
 		// Customize Chart
+		XYStyler firstChartStyler = firstChart.getStyler();
 		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		firstChart.getStyler().setLegendVisible(true);
+		firstChartStyler.setToolTipsEnabled(true);
+
+		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
 		firstChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
