@@ -140,7 +140,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		loadConfig();
 		
 		// Create window
-		window = new Window();
+		window = new Window(this);
 		
 		window.addComponentListener(this);
 		

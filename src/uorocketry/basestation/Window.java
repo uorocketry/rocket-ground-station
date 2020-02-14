@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -26,6 +27,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
+import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -69,7 +71,7 @@ public class Window extends JFrame {
 	JButton addChartButton;
 	private JPanel savingToPanel;
 	
-	public Window() {
+	public Window(Main main) {
 		// Set look and feel
 		try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -97,7 +99,7 @@ public class Window extends JFrame {
 		
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addJTable(i);
+			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -191,7 +193,7 @@ public class Window extends JFrame {
 		dataChart.snapPanel.setRelSize(600, 450);
 	}
 	
-	public void addJTable(int tableIndex) {
+	public void addJTable(int tableIndex, JSONObject dataSet) {
 		JTable dataTable = new JTable(Main.dataLength.get(tableIndex), 2);
 		dataTable.setBorder(new LineBorder(new Color(0, 0, 0)));
 		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
@@ -212,7 +214,13 @@ public class Window extends JFrame {
 		
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
 		
-		dataTablePanel.add(dataTable);
+		// Make outer title
+		JPanel borderPanel = new JPanel();
+		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
+		
+		borderPanel.add(dataTable);
+		
+		dataTablePanel.add(borderPanel);
 		dataTables.add(dataTable);
 	}
 	
