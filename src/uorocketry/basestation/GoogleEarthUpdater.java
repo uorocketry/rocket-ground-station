@@ -45,6 +45,15 @@ public class GoogleEarthUpdater {
 				"    </Style>");
 		
 		for (int i = 0; i < allData.size(); i++) {
+			// Add style
+			content.append("<Style id='blackLine'>\r\n"); 
+			content.append("<LineStyle>\r\n");
+			content.append("<color>" + dataSets.getJSONObject(i).getString("color"));
+			content.append("</color>\r\n");
+			content.append("<width>5</width>\r\n");
+			content.append("</LineStyle>");
+			content.append("</Style>");
+			
 			content.append("<Placemark>\r\n");
 			content.append("<name>Path of " + dataSets.getJSONObject(i).getString("name"));
 			content.append("</name>\r\n");

@@ -2,6 +2,7 @@
     "datasets": [
     	{
     		"name": "Rocket",
+    		"color": "DD000000",
     		"labels": [
 	            "Timestamp (ms)",
 	            "Altitude (m)",
