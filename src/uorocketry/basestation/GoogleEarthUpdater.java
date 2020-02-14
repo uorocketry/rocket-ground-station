@@ -46,8 +46,7 @@ public class GoogleEarthUpdater {
 		
 		for (int i = 0; i < allData.size(); i++) {
 			content.append("<Placemark>\r\n");
-			content.append("<name>Rocket Path ");
-			content.append(i);
+			content.append("<name>Path of " + dataSets.getJSONObject(i).getString("name"));
 			content.append("</name>\r\n");
 			content.append("<styleUrl>#blackLine</styleUrl>");
 			content.append("<LineString><altitudeMode>absolute</altitudeMode><coordinates>\r\n");
@@ -68,8 +67,7 @@ public class GoogleEarthUpdater {
 			String latestDataString = getCoordinateString(allData.get(i).get(currentDataIndex.get(i)), dataSets.getJSONObject(i).getJSONObject("coordinateIndexes"));
 			if (latestDataString != null) {
 				content.append("<Placemark>\r\n");
-				content.append("<name>Latest Position ");
-				content.append(i);
+				content.append("<name>Latest Position of " + dataSets.getJSONObject(i).getString("name"));
 				content.append("</name>\r\n");
 				content.append("<Point>\r\n<altitudeMode>absolute</altitudeMode>\r\n<coordinates>");
 				
