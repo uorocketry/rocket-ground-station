@@ -582,6 +582,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} catch (IOException e) {
 			e.printStackTrace();
 			
+			JOptionPane.showMessageDialog(window, "The config file was not found in " + fileName + 
+					"\r\n\r\nIf you plan downloaded a release build, you might want to download the version with labels and sample data included.");
+			
 			return;
 		}
 		
