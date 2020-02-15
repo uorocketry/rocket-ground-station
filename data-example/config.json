@@ -25,6 +25,32 @@
 	        	"latitude": 2,
 	        	"longitude": 3
 	        }
-        }
+        },
+        {
+    		"name": "Payload",
+    		"color": "DD00FF00",
+    		"labels": [
+	            "Timestamp (ms)",
+	            "Altitude (m)",
+	            "Latitude",
+	            "Longitude",
+	            "Pitch",
+	            "Roll",
+	            "Yaw",
+	            "Acceleration X (g)",
+	            "Acceleration Y (g)",
+	            "Acceleration Z (g)",
+	            "Velocity (m/s)",
+	            "Brake Percentage",
+	            "Actual Brake Value",
+	            "GPS Fix",
+	            "GPS Fix Quality"
+        	],
+        	"coordinateIndexes": {
+	        	"altitude": 1,
+	        	"latitude": 2,
+	        	"longitude": 3
+	        }
+    	}
     ]
 }
