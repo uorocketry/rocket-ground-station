@@ -92,9 +92,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
-	ArrayList<Integer> currentDataIndex = new ArrayList<>(2);
+	ArrayList<Integer> currentDataIndexes = new ArrayList<>(2);
 	/** Index of the minimum data point being looked at */
-	ArrayList<Integer> minDataIndex = new ArrayList<>(2);
+	ArrayList<Integer> minDataIndexes = new ArrayList<>(2);
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -168,12 +168,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void setupData() {
 		allData = new ArrayList<>(dataSourceCount);
+		currentDataIndexes = new ArrayList<>(dataSourceCount);
+		minDataIndexes = new ArrayList<>(dataSourceCount);
+
 		for (int i = 0; i < dataSourceCount; i++) {
 			allData.add(new ArrayList<>());
 
 			// Add data indexes
-			currentDataIndex.add(0);
-			minDataIndex.add(0);
+			currentDataIndexes.add(0);
+			minDataIndexes.add(0);
 		}
 		
 		// Reset sliders
@@ -285,9 +288,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		connectingToSerial.set(tableIndex, true);
 		
-		boolean open = activeSerialPort.get(tableIndex).openPort();
+		boolean open = serialPort.openPort();
 		
-		activeSerialPort.get(tableIndex).setBaudRate(57600);
+		serialPort.setBaudRate(57600);
 		
 		if (open) {
 			window.comConnectionSuccessLabels.get(tableIndex).setText("Connected");
@@ -298,7 +301,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Setup listener
-		activeSerialPort.get(tableIndex).addDataListener(this);
+		serialPort.addDataListener(this);
 		
 		connectingToSerial.set(tableIndex, false);
 	}
@@ -369,7 +372,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.minSlider.setMaximum(allData.get(i).size() - 1);
 			}
 			
-			DataHandler currentDataHandler = allData.get(i).get(currentDataIndex.get(i));
+			DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
 			
 			if (currentDataHandler != null) {
 				currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
@@ -381,7 +384,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Only record google earth data for the first one for now 
 		// There is no way to change the filename yet
 		if (googleEarth) {
-			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, config.getJSONArray("datasets"), false);
+			googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 		}
 		
 		// Update every chart
@@ -395,7 +398,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set first item to "Error"
 		tableModel.setValueAt("Parsing Error", 0, 0);
-		tableModel.setValueAt(currentDataIndex, 0, 1);
+		tableModel.setValueAt(currentDataIndexes, 0, 1);
 		
 		for (int i = 1; i < dataLength.get(index); i++) {
 			// Set label
@@ -422,7 +425,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Add y axis
-		for (int i = minDataIndex.get(chart.yType.tableIndex); i <= currentDataIndex.get(chart.yType.tableIndex); i++) {
+		for (int i = minDataIndexes.get(chart.yType.tableIndex); i <= currentDataIndexes.get(chart.yType.tableIndex); i++) {
 			if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 			
 			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
@@ -434,7 +437,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
-			for (int j = minDataIndex.get(chart.xTypes[i].tableIndex); j <= currentDataIndex.get(chart.xTypes[i].tableIndex); j++) {
+			for (int j = minDataIndexes.get(chart.xTypes[i].tableIndex); j <= currentDataIndexes.get(chart.xTypes[i].tableIndex); j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
@@ -608,35 +611,35 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource() == window.maxSlider) {
 			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndex.size(); i++) {
+			for (int i = 0; i < currentDataIndexes.size(); i++) {
 				int value = window.maxSlider.getValue();
 				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
 				
-				currentDataIndex.set(i, value);
+				currentDataIndexes.set(i, value);
 				
 				// Check if min is too high
-				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
-					minDataIndex.set(i, currentDataIndex.get(i));
-					window.minSlider.setValue(minDataIndex.get(i));
+				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
+					minDataIndexes.set(i, currentDataIndexes.get(i));
+					window.minSlider.setValue(minDataIndexes.get(i));
 				}
 			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndex.get(0) == window.maxSlider.getMaximum() - 1;
+			latest = currentDataIndexes.get(0) == window.maxSlider.getMaximum() - 1;
 		} else if (e.getSource() == window.minSlider) {
 			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndex.size(); i++) {
+			for (int i = 0; i < currentDataIndexes.size(); i++) {
 				int value = window.minSlider.getValue();
 				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
 				
-				minDataIndex.set(i, value);
+				minDataIndexes.set(i, value);
 				
 				// Check if min is too high
-				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
-					minDataIndex.set(i, currentDataIndex.get(i));
-					window.minSlider.setValue(minDataIndex.get(i));
+				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
+					minDataIndexes.set(i, currentDataIndexes.get(i));
+					window.minSlider.setValue(minDataIndexes.get(i));
 				}
 			}
 			
