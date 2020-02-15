@@ -674,7 +674,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.maxSlider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.get(0).size() - 1);
 		}
 		
 		// Add this message to the log file
