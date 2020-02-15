@@ -557,7 +557,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"));
+			if (!dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"))) {
+				System.err.println("Failed to set data handler");
+
+				// Parsing failed
+				return null;
+			}
 		}
 		
 		return dataHandler;
