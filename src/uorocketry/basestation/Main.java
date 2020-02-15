@@ -431,7 +431,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue() / 1000);
+				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
 			}
 		}
 		
