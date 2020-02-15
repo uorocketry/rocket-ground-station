@@ -28,12 +28,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
-import org.knowm.xchart.XChartPanel;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
-import org.knowm.xchart.style.XYStyler;
-import org.knowm.xchart.style.Styler.LegendPosition;
+import javax.swing.border.TitledBorder;
 
 public class Window extends JFrame {
 	
@@ -71,6 +66,10 @@ public class Window extends JFrame {
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
+	private JPanel layoutTools;
+	
+	JButton saveLayout;
+	JButton loadLayout;
 	
 	public Window(Main main) {
 		// Set look and feel
@@ -110,6 +109,17 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
+		
+		layoutTools = new JPanel();
+		layoutTools.setBorder(new TitledBorder(null, "Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(layoutTools);
+		layoutTools.setLayout(new BoxLayout(layoutTools, BoxLayout.Y_AXIS));
+		
+		saveLayout = new JButton("Save Layout");
+		layoutTools.add(saveLayout);
+		
+		loadLayout = new JButton("Load Layout");
+		layoutTools.add(loadLayout);
 		
 		savingToPanel = new JPanel();
 		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -43,8 +45,8 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
-import org.knowm.xchart.style.XYStyler;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -280,6 +282,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.latestButton.addActionListener(this);
 		
 		window.addChartButton.addActionListener(this);
+		
+		window.saveLayout.addActionListener(this);
+		window.loadLayout.addActionListener(this);
 		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
@@ -692,6 +697,70 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
+		} else if (e.getSource() == window.saveLayout) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.resetChoosableFileFilters();
+			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			
+			// Start the in current working directory
+			fileChooser.setCurrentDirectory(new File("."));
+
+			int result = fileChooser.showSaveDialog(window);
+			
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fileChooser.getSelectedFile();
+				
+				// Add extension
+				if (!saveFile.getName().endsWith(".rlay")) {
+					saveFile = new File(saveFile.getPath() + ".rlay");
+				}
+				
+				// Prep file
+				JSONObject saveObject = new JSONObject();
+				
+				JSONArray chartsArray = new JSONArray();
+				saveObject.put("charts", chartsArray);
+				
+				for (DataChart chart: window.charts) {
+					JSONObject chartData = new JSONObject();
+					
+					chartData.put("x", chart.snapPanel.relX);
+					chartData.put("y", chart.snapPanel.relY);
+					chartData.put("width", chart.snapPanel.relWidth);
+					chartData.put("height", chart.snapPanel.relHeight);
+					
+					// Add xTypes
+					JSONArray xTypeArray = new JSONArray();
+					for (DataType dataType: chart.xTypes) {
+						JSONObject xTypeData = new JSONObject();
+						
+						xTypeData.put("index", dataType.index);
+						xTypeData.put("tableIndex", dataType.tableIndex);
+						
+						xTypeArray.put(xTypeData);
+					}
+					chartData.put("xTypes", xTypeArray);
+					
+					// Add yType
+					JSONObject yTypeData = new JSONObject();
+					yTypeData.put("index", chart.yType.index);
+					yTypeData.put("tableIndex", chart.yType.tableIndex);
+					chartData.put("yType", yTypeData);
+					
+					chartsArray.put(chartData);
+				}
+				
+				// Save file
+				try (PrintWriter out = new PrintWriter(saveFile)) {
+				    out.println(saveObject.toString());
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+		} else if (e.getSource() == window.loadLayout) {
+			
 		}
 	}
 	
@@ -944,4 +1013,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void mouseReleased(MouseEvent e) {
 		
 	}
+}
+
+class LayoutFileFilter extends javax.swing.filechooser.FileFilter {
+
+	@Override
+	public boolean accept(File pathname) {
+		if (pathname.isDirectory()) {
+			return true;
+		} else {
+			return pathname.getName().endsWith(".rlay");
+		}
+	}
+
+	@Override
+	public String getDescription() {
+		return "Rocket Layout File (.rlay)";
+	}
+	
 }
