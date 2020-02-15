@@ -67,6 +67,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public static final String SIM_DATA_LOCATION = "data/data";
 	public static final String SIM_DATA_EXTENSION = ".txt";
 	
+	public static final Color LEGEND_BACKGROUND_COLOR = new Color(255, 255, 255, 100);
+	
 	/** Whether to update Google Earth file */
 	public static boolean googleEarth = false;
 	/** Where the updating Google Earth kml file is stored */
@@ -845,6 +847,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		firstChartStyler.setLegendPosition(LegendPosition.InsideNE);
 		firstChartStyler.setLegendVisible(true);
+		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
