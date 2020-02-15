@@ -217,8 +217,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			connectingToSerial.add(false);
 			currentlyWriting.add(false);
 		}
-		for (int i = 0; i < dataSourceCount; i++) {
-		}
 	}
 	
 	public void setupLogFileName() {
