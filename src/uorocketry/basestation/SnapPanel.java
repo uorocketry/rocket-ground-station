@@ -304,14 +304,24 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	}
 	
 	/**
+	 * Updates the bounds based on the rel bounds and the screen size given.
+	 * 
+	 * @param width
+	 * @param height
+	 */
+	public void updateBounds(int width, int height) {
+		panel.setBounds((int) (relX * width), (int) (relY * height), (int) (relWidth * width), (int) (relHeight * height));
+
+	}
+	
+	/**
 	 * Called whenever the parent is resized to change the layout to the new size.
 	 * 
 	 * @param xFactor The factor the x is stretched by (new/old)
 	 * @param yFactor The factor the y is stretched by (new/old)
 	 */
 	public void containerResized(int newWidth, int newHeight) {
-		panel.setBounds((int) (relX * newWidth), (int) (relY * newHeight), (int) (relWidth * newWidth), (int) (relHeight * newHeight));
-	
+		updateBounds(newWidth, newHeight);
 	}
 	
 	@Override

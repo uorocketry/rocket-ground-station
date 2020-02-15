@@ -29,6 +29,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -39,6 +40,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
@@ -699,7 +701,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} else if (e.getSource() == window.saveLayout) {
 			JFileChooser fileChooser = new JFileChooser();
-			fileChooser.resetChoosableFileFilters();
+			fileChooser.setAcceptAllFileFilterUsed(false);
 			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
@@ -760,11 +762,82 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.loadLayout) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setAcceptAllFileFilterUsed(false);
+			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
+			// Start the in current working directory
+			fileChooser.setCurrentDirectory(new File("."));
+
+			int result = fileChooser.showOpenDialog(window);
+			
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fileChooser.getSelectedFile();
+				
+				// Load file
+				JSONObject loadedLayout = null;
+				try {
+					loadedLayout = new JSONObject(new String(Files.readAllBytes(saveFile.toPath()), StandardCharsets.UTF_8));
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
+				
+				// Clear current charts
+				for (DataChart dataChart: window.charts) {
+					// Remove from the UI
+					window.centerChartPanel.remove(dataChart.chartPanel);
+				}
+				
+				// Finally, remove it from the list
+				window.charts.clear();
+				
+				for (int i = 0; i < chartsArray.length(); i++) {
+					JSONObject chartData = chartsArray.getJSONObject(i);
+					
+					addChart(true);
+					
+					DataChart chart = window.charts.get(i);
+					
+					// Get location
+					chart.snapPanel.relX = chartData.getDouble("x");
+					chart.snapPanel.relY = chartData.getDouble("y");
+					chart.snapPanel.relWidth = chartData.getDouble("width");
+					chart.snapPanel.relHeight = chartData.getDouble("height");
+					
+					chart.snapPanel.updateBounds(window.centerChartPanel.getWidth(), window.centerChartPanel.getHeight());
+					
+					// Get xTypes
+					JSONArray xTypeArray = chartData.getJSONArray("xTypes");
+					chart.xTypes = new DataType[xTypeArray.length()];
+					for (int j = 0; j < chart.xTypes.length; j++) {
+						JSONObject xTypeData = xTypeArray.getJSONObject(j);
+						
+						chart.xTypes[j] = new DataType(xTypeData.getInt("index"), xTypeData.getInt("tableIndex"));
+					}
+					
+					// Add yType
+					JSONObject yTypeData = chartData.getJSONObject("yType");
+					chart.yType = new DataType(yTypeData.getInt("index"), yTypeData.getInt("tableIndex"));
+				}
+				
+				updateUI();
+			}
 		}
 	}
 	
 	public void addChart() {
+		addChart(false);
+	}
+	
+	/**
+	 * @param silent Will not perform tasks such as updating the UI or selecting the chart
+	 */
+	public void addChart(boolean silent) {
 		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 
 		// Customize Chart
@@ -794,11 +867,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		dataChart.snapPanel.setSnapPanelListener(this);
 		
 		if (selectedChart != null) selectedChart.chartPanel.setBorder(null);
-		selectedChart = dataChart;
 		
-		snapPanelSelected(selectedChart.snapPanel);
-		
-		updateUI();
+		if (!silent) {
+			selectedChart = dataChart;
+			
+			snapPanelSelected(selectedChart.snapPanel);
+			
+			updateUI();
+		}
 	}
 
 	/** For com selector JList */
