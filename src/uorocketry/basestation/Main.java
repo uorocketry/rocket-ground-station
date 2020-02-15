@@ -127,7 +127,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
 	/** Is the log file being currently updated */
-	boolean currentlyWriting;
+	ArrayList<Boolean> currentlyWriting = new ArrayList<Boolean>(2);
 	
 	public static void main(String[] args) {
 		// Find different possible commands
@@ -214,9 +214,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Create required lists
 		for (int i = 0; i < dataSourceCount; i++) {
 			activeSerialPort.add(null);
+			connectingToSerial.add(false);
+			currentlyWriting.add(false);
 		}
 		for (int i = 0; i < dataSourceCount; i++) {
-			connectingToSerial.add(false);
 		}
 	}
 	
@@ -681,8 +682,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Get string
 		String logFileString = logFileStringBuilder.toString();
 		
-		if (!currentlyWriting) {
-			currentlyWriting = true;
+		if (!currentlyWriting.get(tableIndex)) {
+			currentlyWriting.set(tableIndex, true);
 
 			// Write to file
 			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(tableIndex)), StandardCharsets.UTF_8))) {
@@ -691,7 +692,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				err.printStackTrace();
 			}
 			
-			currentlyWriting = false;
+			currentlyWriting.set(tableIndex, false);
 		}
 		
 	}
