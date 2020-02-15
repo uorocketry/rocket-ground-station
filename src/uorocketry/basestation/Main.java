@@ -15,16 +15,21 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -34,11 +39,16 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
+import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -48,8 +58,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Constants */
 	/** The location of the comma separated labels without the extension. */
-	public static final String LABELS_LOCATION = "data/labels";
-	public static final String LABELS_EXTENSION = ".txt";
+	public static final String CONFIG_LOCATION = "data/config.json";
 	/** How many data points are there. By default, it is the number of labels */
 	public static List<Integer> dataLength = new ArrayList<>();
 	/** Separator for the data */
@@ -57,6 +66,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
 	public static final String SIM_DATA_LOCATION = "data/data";
 	public static final String SIM_DATA_EXTENSION = ".txt";
+	
+	public static final Color LEGEND_BACKGROUND_COLOR = new Color(255, 255, 255, 100);
 	
 	/** Whether to update Google Earth file */
 	public static boolean googleEarth = false;
@@ -69,8 +80,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Will have a number appended to the end to not overwrite old logs */
 	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
 	
-	/** How many data sources to record data from. For now, it much be set at launch time */
-	public static final int DATA_SOURCE_COUNT = 2;
+	/** How many data sources to record data from. It is set when the config is loaded. */
+	public static int dataSourceCount = 1;
 	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
@@ -78,6 +89,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	List<List<DataHandler>> allData = new ArrayList<>();
 	
 	List<String[]> labels = new ArrayList<>();
+	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
 	ArrayList<Integer> currentDataIndex = new ArrayList<>();
@@ -99,7 +111,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	List<Boolean> connectingToSerial = new ArrayList<Boolean>();
 	
 	/** Used for the map view */
-	GoogleEarthUpdater googleEarthUpdater = new GoogleEarthUpdater();
+	GoogleEarthUpdater googleEarthUpdater;
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -125,20 +137,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				simulation = Boolean.parseBoolean(args[i + 1]);
 				
 				break;
-			case "--dataLength":
-				
-				// See how many data lengths were specified
-				for (int j = i; j + 1 < args.length; j++) {
-					if (args[j].startsWith("--")) break;
-					
-					try {
-						dataLength.add(Integer.parseInt(args[i + j + 1]));
-					} catch (NumberFormatException e) {
-						System.err.println("Failed to interpret " + args[i] + " " + args[i + 1]);
-					}
-				}
-				
-				break;
 			}
 		}
 		
@@ -147,15 +145,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public Main() {
 		// Load labels
-		loadLabels();
-		
-		// Set a default data length
-		for (int i = 0; i < labels.size(); i++) {
-			dataLength.add(labels.get(i).length);
-		}
+		loadConfig();
 		
 		// Create window
-		window = new Window();
+		window = new Window(this);
 		
 		window.addComponentListener(this);
 		
@@ -166,7 +159,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup Google Earth map support
 		if (googleEarth) {
-			googleEarthUpdater = new GoogleEarthUpdater();
+			setupGoogleEarth();
 		}
 		
 		// Update UI once
@@ -175,7 +168,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void setupData() {
 		allData = new ArrayList<>();
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			allData.add(new ArrayList<>());
 
 			// Add data indexes
@@ -219,10 +212,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Create required lists
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			activeSerialPort.add(null);
 		}
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			connectingToSerial.add(false);
 		}
 	}
@@ -282,6 +275,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupUI() {
+		addChart();
+		
 		// Add slider listeners
 		window.maxSlider.addChangeListener(this);
 		window.minSlider.addChangeListener(this);
@@ -292,8 +287,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
-		window.dataLengthButton.addActionListener(this);
-		window.dataLengthTextBox.setText(dataLength + "");
+		window.saveLayout.addActionListener(this);
+		window.loadLayout.addActionListener(this);
 		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
@@ -319,6 +314,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		selectedChart.snapPanel.setSnapPanelListener(this);
 
 		snapPanelSelected(selectedChart.snapPanel);
+	}
+	
+	public void setupGoogleEarth() {
+		googleEarthUpdater = new GoogleEarthUpdater();
+		
+		// Setup updater file
+//		googleEarthUpdater.createKMLUpdaterFile();
 	}
 	
 	public void updateUI() {
@@ -349,7 +351,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Only record google earth data for the first one for now 
 		// There is no way to change the filename yet
-		if (googleEarth) googleEarthUpdater.updateKMLFile(0, allData.get(0), currentDataIndex.get(0));
+		if (googleEarth) {
+			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, config.getJSONArray("datasets"), false);
+		}
 		
 		// Update every chart
 		for (DataChart chart : window.charts) {
@@ -433,11 +437,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			chart.xyChart.setYAxisTitle(xTypeTitle);
 			
+			XYSeries series = null;
+			
 			if (chart.activeSeries.length > i) {
-				chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+				series = chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			} else {
-				chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
+				series = chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			}
+			
+			series.setLabel(xTypeTitle);
 			
 			newActiveSeries[i] = "series" + i;
 		}
@@ -467,7 +475,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	public void loadSimulationData() {
 		// Load simulation data
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < dataSourceCount; i++) {
 			loadSimulationData(i, SIM_DATA_LOCATION + i + SIM_DATA_EXTENSION);
 		}
 	}
@@ -515,9 +523,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return null;
 		}
 		
-		
+		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			dataHandler.set(i, splitData[i]);
+			dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"));
 		}
 		
 		return dataHandler;
@@ -526,38 +534,42 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** 
 	 * Run once at the beginning of simulation mode
 	 */
-	public void loadLabels() {
-		// Load simulation data
-		for (int i = 0; i < DATA_SOURCE_COUNT; i++) {
-			loadLabels(LABELS_LOCATION + i + LABELS_EXTENSION);
-		}
+	public void loadConfig() {
+		loadConfig(CONFIG_LOCATION);
 	}
 	
-	public void loadLabels(String fileName) {
-		BufferedReader br = null;
+	public void loadConfig(String fileName) {
+		String configString = null;
 		try {
-			br = new BufferedReader(new FileReader(fileName));
-		} catch (FileNotFoundException e) {
+			configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
+		} catch (IOException e) {
 			e.printStackTrace();
+			
+			return;
 		}
 		
-		String[] currentLabelStrings = null;
+		config = new JSONObject(configString);
 		
-		try {
-		    String line = null;
-
-		    if ((line = br.readLine()) != null) {
-		    	//this line contains all of the labels
-		    	//this one is comma separated, not the same as the actual data
-		    	currentLabelStrings = line.split(",");
-		    }
-		    
-		    br.close();
-		} catch(IOException e) {
-			e.printStackTrace();
+		JSONArray datasetsJSONArray = config.getJSONArray("datasets");
+		dataSourceCount = datasetsJSONArray.length();
+		
+		// Add all data
+		for (int i = 0; i < datasetsJSONArray.length(); i++) {
+			JSONObject currentDataset = datasetsJSONArray.getJSONObject(i);
+			
+			JSONArray labelsJsonArray = currentDataset.getJSONArray("labels");
+			
+			// Load labels
+			String[] labelsArray = new String[labelsJsonArray.length()];
+			
+			for (int j = 0; j < labelsArray.length; j++) {
+				labelsArray[j] = labelsJsonArray.getString(j);
+			}
+			
+			labels.add(labelsArray);
+			
+			dataLength.add(labelsArray.length);
 		}
-		
-		labels.add(currentLabelStrings);
 	}
 	
 	/**
@@ -671,6 +683,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
 			googleEarth = window.googleEarthCheckBox.isSelected();
+			
+			if (googleEarth) setupGoogleEarth();
 		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
@@ -687,40 +701,155 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
-		} else if (e.getSource() == window.dataLengthButton) {
-			String warningMessage = "";
-			if (!simulation) {
-				warningMessage = "Are you sure you would like to change the data length?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
-			} else {
-				warningMessage = "Are you sure you would like to change the data length? The data will be reloaded.";
-			}
+		} else if (e.getSource() == window.saveLayout) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setAcceptAllFileFilterUsed(false);
+			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
-			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
-				// Set data length
-				try {
-					dataLength.set(0, Integer.parseInt(window.dataLengthTextBox.getText()));
-				} catch (NumberFormatException error) {
-					JOptionPane.showMessageDialog(window, "'" + window.dataLengthTextBox.getText() + "' is not a number");
+			// Start the in current working directory
+			fileChooser.setCurrentDirectory(new File("."));
+
+			int result = fileChooser.showSaveDialog(window);
+			
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fileChooser.getSelectedFile();
+				
+				// Add extension
+				if (!saveFile.getName().endsWith(".rlay")) {
+					saveFile = new File(saveFile.getPath() + ".rlay");
 				}
 				
-				// Load labels
-				loadLabels(LABELS_LOCATION);
+				// Prep file
+				JSONObject saveObject = new JSONObject();
 				
-				// Different setups depending on if simulation or not
-				setupData();
+				JSONArray chartsArray = new JSONArray();
+				saveObject.put("charts", chartsArray);
+				
+				for (DataChart chart: window.charts) {
+					JSONObject chartData = new JSONObject();
+					
+					chartData.put("x", chart.snapPanel.relX);
+					chartData.put("y", chart.snapPanel.relY);
+					chartData.put("width", chart.snapPanel.relWidth);
+					chartData.put("height", chart.snapPanel.relHeight);
+					
+					// Add xTypes
+					JSONArray xTypeArray = new JSONArray();
+					for (DataType dataType: chart.xTypes) {
+						JSONObject xTypeData = new JSONObject();
+						
+						xTypeData.put("index", dataType.index);
+						xTypeData.put("tableIndex", dataType.tableIndex);
+						
+						xTypeArray.put(xTypeData);
+					}
+					chartData.put("xTypes", xTypeArray);
+					
+					// Add yType
+					JSONObject yTypeData = new JSONObject();
+					yTypeData.put("index", chart.yType.index);
+					yTypeData.put("tableIndex", chart.yType.tableIndex);
+					chartData.put("yType", yTypeData);
+					
+					chartsArray.put(chartData);
+				}
+				
+				// Save file
+				try (PrintWriter out = new PrintWriter(saveFile)) {
+				    out.println(saveObject.toString());
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+		} else if (e.getSource() == window.loadLayout) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setAcceptAllFileFilterUsed(false);
+			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			
+			// Start the in current working directory
+			fileChooser.setCurrentDirectory(new File("."));
+
+			int result = fileChooser.showOpenDialog(window);
+			
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File saveFile = fileChooser.getSelectedFile();
+				
+				// Load file
+				JSONObject loadedLayout = null;
+				try {
+					loadedLayout = new JSONObject(new String(Files.readAllBytes(saveFile.toPath()), StandardCharsets.UTF_8));
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
+				
+				// Clear current charts
+				for (DataChart dataChart: window.charts) {
+					// Remove from the UI
+					window.centerChartPanel.remove(dataChart.chartPanel);
+				}
+				
+				// Finally, remove it from the list
+				window.charts.clear();
+				
+				for (int i = 0; i < chartsArray.length(); i++) {
+					JSONObject chartData = chartsArray.getJSONObject(i);
+					
+					addChart(true);
+					
+					DataChart chart = window.charts.get(i);
+					
+					// Get location
+					chart.snapPanel.relX = chartData.getDouble("x");
+					chart.snapPanel.relY = chartData.getDouble("y");
+					chart.snapPanel.relWidth = chartData.getDouble("width");
+					chart.snapPanel.relHeight = chartData.getDouble("height");
+					
+					chart.snapPanel.updateBounds(window.centerChartPanel.getWidth(), window.centerChartPanel.getHeight());
+					
+					// Get xTypes
+					JSONArray xTypeArray = chartData.getJSONArray("xTypes");
+					chart.xTypes = new DataType[xTypeArray.length()];
+					for (int j = 0; j < chart.xTypes.length; j++) {
+						JSONObject xTypeData = xTypeArray.getJSONObject(j);
+						
+						chart.xTypes[j] = new DataType(xTypeData.getInt("index"), xTypeData.getInt("tableIndex"));
+					}
+					
+					// Add yType
+					JSONObject yTypeData = chartData.getJSONObject("yType");
+					chart.yType = new DataType(yTypeData.getInt("index"), yTypeData.getInt("tableIndex"));
+				}
 				
 				updateUI();
-			} 
+			}
 		}
 	}
 	
 	public void addChart() {
+		addChart(false);
+	}
+	
+	/**
+	 * @param silent Will not perform tasks such as updating the UI or selecting the chart
+	 */
+	public void addChart(boolean silent) {
 		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
 
 		// Customize Chart
-		xyChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		xyChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		XYStyler firstChartStyler = xyChart.getStyler();
+		
+		firstChartStyler.setLegendPosition(LegendPosition.InsideNE);
+		firstChartStyler.setLegendVisible(true);
+		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
+		firstChartStyler.setToolTipsEnabled(true);
+		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
 
 		// Series
 		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
@@ -740,12 +869,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
 		dataChart.snapPanel.setSnapPanelListener(this);
 		
-		selectedChart.chartPanel.setBorder(null);
-		selectedChart = dataChart;
+		if (selectedChart != null) selectedChart.chartPanel.setBorder(null);
 		
-		snapPanelSelected(selectedChart.snapPanel);
-		
-		updateUI();
+		if (!silent) {
+			selectedChart = dataChart;
+			
+			snapPanelSelected(selectedChart.snapPanel);
+			
+			updateUI();
+		}
 	}
 
 	/** For com selector JList */
@@ -853,8 +985,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			window.dataTables.get(newTableIndex).setRowSelectionInterval(1, 1);
 			window.dataTables.get(newTableIndex).setColumnSelectionInterval(0, 0);
 			window.dataTables.get(newTableIndex).repaint();
-			
-			updateUI();
 		}
 		
 		// Move yType selection if needed
@@ -962,4 +1092,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void mouseReleased(MouseEvent e) {
 		
 	}
+}
+
+class LayoutFileFilter extends javax.swing.filechooser.FileFilter {
+
+	@Override
+	public boolean accept(File pathname) {
+		if (pathname.isDirectory()) {
+			return true;
+		} else {
+			return pathname.getName().endsWith(".rlay");
+		}
+	}
+
+	@Override
+	public String getDescription() {
+		return "Rocket Layout File (.rlay)";
+	}
+	
 }

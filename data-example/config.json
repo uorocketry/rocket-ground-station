@@ -1,0 +1,30 @@
+{
+    "datasets": [
+    	{
+    		"name": "Rocket",
+    		"color": "DD000000",
+    		"labels": [
+	            "Timestamp (ms)",
+	            "Altitude (m)",
+	            "Latitude",
+	            "Longitude",
+	            "Pitch",
+	            "Roll",
+	            "Yaw",
+	            "Acceleration X (g)",
+	            "Acceleration Y (g)",
+	            "Acceleration Z (g)",
+	            "Velocity (m/s)",
+	            "Brake Percentage",
+	            "Actual Brake Value",
+	            "GPS Fix",
+	            "GPS Fix Quality"
+        	],
+        	"coordinateIndexes": {
+	        	"altitude": 1,
+	        	"latitude": 2,
+	        	"longitude": 3
+	        }
+        }
+    ]
+}

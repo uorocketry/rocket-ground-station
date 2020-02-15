@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -20,18 +21,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
-import org.knowm.xchart.XChartPanel;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
-import org.knowm.xchart.style.Styler.LegendPosition;
+import org.json.JSONObject;
+import javax.swing.border.TitledBorder;
 
 public class Window extends JFrame {
 	
@@ -54,10 +51,6 @@ public class Window extends JFrame {
 	JSlider minSlider;
 	JButton latestButton;
 	JButton pauseButton;
-	private JPanel dataLengthPanel;
-	JTextField dataLengthTextBox;
-	JButton dataLengthButton;
-	private JLabel dataLengthLabel;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -73,8 +66,12 @@ public class Window extends JFrame {
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
+	private JPanel layoutTools;
 	
-	public Window() {
+	JButton saveLayout;
+	JButton loadLayout;
+	
+	public Window(Main main) {
 		// Set look and feel
 		try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -101,8 +98,8 @@ public class Window extends JFrame {
 		leftPanel.add(dataTablePanel);
 		
 		
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
-			addJTable(i);
+		for (int i = 0; i < Main.dataSourceCount; i++) {
+			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -113,22 +110,16 @@ public class Window extends JFrame {
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
 		
-		dataLengthPanel = new JPanel();
-		dataLengthPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataLengthPanel.setAlignmentY(Component.TOP_ALIGNMENT);
-		leftPanel.add(dataLengthPanel);
-		dataLengthPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
+		layoutTools = new JPanel();
+		layoutTools.setBorder(new TitledBorder(null, "Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(layoutTools);
+		layoutTools.setLayout(new BoxLayout(layoutTools, BoxLayout.Y_AXIS));
 		
-		dataLengthLabel = new JLabel("Data Length:");
-		dataLengthPanel.add(dataLengthLabel);
+		saveLayout = new JButton("Save Layout");
+		layoutTools.add(saveLayout);
 		
-		dataLengthTextBox = new JTextField();
-		dataLengthPanel.add(dataLengthTextBox);
-		dataLengthTextBox.setText("0");
-		dataLengthTextBox.setColumns(5);
-		
-		dataLengthButton = new JButton("Save");
-		dataLengthPanel.add(dataLengthButton);
+		loadLayout = new JButton("Load Layout");
+		layoutTools.add(loadLayout);
 		
 		savingToPanel = new JPanel();
 		savingToPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -180,40 +171,19 @@ public class Window extends JFrame {
 		getContentPane().add(sidePanel, BorderLayout.EAST);
 		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
 		
-		for (int i = 0; i < Main.DATA_SOURCE_COUNT; i++) {
+		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addComSelectorPanel();
 		}
 		
 		centerChartPanel = new JPanel();
 		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
-		
-		// Create Chart
-		XYChart firstChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
-		
-		// Customize Chart
-		firstChart.getStyler().setLegendPosition(LegendPosition.InsideNE);
-		firstChart.getStyler().setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
-
-		// Series
-		firstChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
 		centerChartPanel.setLayout(null);
-		
-		XChartPanel<XYChart> chart1Panel = new XChartPanel<>(firstChart);
-		centerChartPanel.add(chart1Panel);
-		
-		// Create the data chart container
-		DataChart dataChart = new DataChart(this, firstChart, chart1Panel);
-		
-		// Add these default charts to the list
-		charts.add(dataChart);
-		
+
 		setVisible(true);
 		
-		// Set default chart size
-		dataChart.snapPanel.setRelSize(600, 450);
 	}
 	
-	public void addJTable(int tableIndex) {
+	public void addJTable(int tableIndex, JSONObject dataSet) {
 		JTable dataTable = new JTable(Main.dataLength.get(tableIndex), 2);
 		dataTable.setBorder(new LineBorder(new Color(0, 0, 0)));
 		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
@@ -234,7 +204,13 @@ public class Window extends JFrame {
 		
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
 		
-		dataTablePanel.add(dataTable);
+		// Make outer title
+		JPanel borderPanel = new JPanel();
+		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
+		
+		borderPanel.add(dataTable);
+		
+		dataTablePanel.add(borderPanel);
 		dataTables.add(dataTable);
 	}
 	
