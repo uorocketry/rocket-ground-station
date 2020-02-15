@@ -59,7 +59,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** The location of the comma separated labels without the extension. */
 	public static final String CONFIG_LOCATION = "data/config.json";
 	/** How many data points are there. By default, it is the number of labels */
-	public static List<Integer> dataLength = new ArrayList<>();
+	public static List<Integer> dataLength = new ArrayList<>(2);
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
 	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
@@ -86,15 +86,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	List<List<DataHandler>> allData = new ArrayList<>();
+	List<List<DataHandler>> allData = new ArrayList<>(2);
 	
 	List<String[]> labels = new ArrayList<>();
 	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
-	ArrayList<Integer> currentDataIndex = new ArrayList<>();
+	ArrayList<Integer> currentDataIndex = new ArrayList<>(2);
 	/** Index of the minimum data point being looked at */
-	ArrayList<Integer> minDataIndex = new ArrayList<>();
+	ArrayList<Integer> minDataIndex = new ArrayList<>(2);
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -102,13 +102,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean paused = false;
 	
 	/** If not in a simulation, the serial port being listened to */
-	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>();
+	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>(2);
 	
 	Window window;
 	
 	/** All the serial ports found */
 	SerialPort[] allSerialPorts;
-	List<Boolean> connectingToSerial = new ArrayList<Boolean>();
+	List<Boolean> connectingToSerial = new ArrayList<Boolean>(2);
 	
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;
@@ -167,7 +167,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupData() {
-		allData = new ArrayList<>();
+		allData = new ArrayList<>(dataSourceCount);
 		for (int i = 0; i < dataSourceCount; i++) {
 			allData.add(new ArrayList<>());
 
