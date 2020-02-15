@@ -29,7 +29,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -60,7 +59,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** The location of the comma separated labels without the extension. */
 	public static final String CONFIG_LOCATION = "data/config.json";
 	/** How many data points are there. By default, it is the number of labels */
-	public static List<Integer> dataLength = new ArrayList<>();
+	public static List<Integer> dataLength = new ArrayList<>(2);
 	/** Separator for the data */
 	public static final String SEPARATOR = ";";
 	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
@@ -76,9 +75,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Where to save the log file */
 	public static final String LOG_FILE_SAVE_LOCATION = "data/";
-	public static final String DEFAULT_LOG_FILE_NAME = "log.txt";
+    public static final String DEFAULT_LOG_FILE_NAME = "log";
+    public static final String LOG_FILE_EXTENSION = ".txt";
 	/** Will have a number appended to the end to not overwrite old logs */
-	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
+	ArrayList<String> currentLogFileName = new ArrayList<String>(2);
 	
 	/** How many data sources to record data from. It is set when the config is loaded. */
 	public static int dataSourceCount = 1;
@@ -86,15 +86,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	List<List<DataHandler>> allData = new ArrayList<>();
+	List<List<DataHandler>> allData = new ArrayList<>(2);
 	
 	List<String[]> labels = new ArrayList<>();
 	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
-	ArrayList<Integer> currentDataIndex = new ArrayList<>();
+	ArrayList<Integer> currentDataIndexes = new ArrayList<>(2);
 	/** Index of the minimum data point being looked at */
-	ArrayList<Integer> minDataIndex = new ArrayList<>();
+	ArrayList<Integer> minDataIndexes = new ArrayList<>(2);
 	
 	/** If {@link currentDataIndex} should be set to the latest message */
 	boolean latest = true;
@@ -102,13 +102,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean paused = false;
 	
 	/** If not in a simulation, the serial port being listened to */
-	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>();
+	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>(2);
 	
 	Window window;
 	
 	/** All the serial ports found */
 	SerialPort[] allSerialPorts;
-	List<Boolean> connectingToSerial = new ArrayList<Boolean>();
+	List<Boolean> connectingToSerial = new ArrayList<Boolean>(2);
 	
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;
@@ -127,7 +127,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
 	/** Is the log file being currently updated */
-	boolean currentlyWriting;
+	ArrayList<Boolean> currentlyWriting = new ArrayList<Boolean>(2);
 	
 	public static void main(String[] args) {
 		// Find different possible commands
@@ -167,13 +167,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupData() {
-		allData = new ArrayList<>();
+		allData = new ArrayList<>(dataSourceCount);
+		currentDataIndexes = new ArrayList<>(dataSourceCount);
+		minDataIndexes = new ArrayList<>(dataSourceCount);
+
 		for (int i = 0; i < dataSourceCount; i++) {
 			allData.add(new ArrayList<>());
 
 			// Add data indexes
-			currentDataIndex.add(0);
-			minDataIndex.add(0);
+			currentDataIndexes.add(0);
+			minDataIndexes.add(0);
 		}
 		
 		// Reset sliders
@@ -214,9 +217,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Create required lists
 		for (int i = 0; i < dataSourceCount; i++) {
 			activeSerialPort.add(null);
-		}
-		for (int i = 0; i < dataSourceCount; i++) {
 			connectingToSerial.add(false);
+			currentlyWriting.add(false);
 		}
 	}
 	
@@ -232,16 +234,46 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
-		// Find a suitable filename
 		int logIndex = 0;
-		while (usedFileNames.contains(logIndex + "_" + DEFAULT_LOG_FILE_NAME)) {
-			logIndex++;
+		
+		JSONArray dataSets = config.getJSONArray("datasets");
+		
+		// Find a suitable filename
+		for (int i = 0; i <= listOfLogFiles.length; i++) {
+			boolean containsFile = false;
+			for (int j = 0 ; j < dataSourceCount; j++) {
+				if (usedFileNames.contains(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(j).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION)) {
+					containsFile = true;
+					break;
+				}
+			}
+			
+			if (containsFile) {
+				logIndex++;
+			} else {
+				break;
+			}
 		}
 		
-		// Set the name
-		currentLogFileName = logIndex + DEFAULT_LOG_FILE_NAME;
+		// Set the names
+		for (int i = 0 ; i < dataSourceCount; i++) {
+			currentLogFileName.add(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(i).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION);
+		}
 		
-		window.savingToLabel.setText("Saving to " + LOG_FILE_SAVE_LOCATION + currentLogFileName);
+		window.savingToLabel.setText("Saving to " + formattedSavingToLocations());
+	}
+	
+	public String formattedSavingToLocations() {
+		StringBuilder savingToText = new StringBuilder();
+		
+		// Add text for each file
+		for (int i = 0 ; i < dataSourceCount; i++) {
+			if (i != 0) savingToText.append(", ");
+			
+			savingToText.append(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(i));
+		}
+		
+		return savingToText.toString();
 	}
 	
 	public void initialisePort(int tableIndex, SerialPort serialPort) {
@@ -256,9 +288,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		connectingToSerial.set(tableIndex, true);
 		
-		boolean open = activeSerialPort.get(tableIndex).openPort();
+		boolean open = serialPort.openPort();
 		
-		activeSerialPort.get(tableIndex).setBaudRate(57600);
+		serialPort.setBaudRate(57600);
 		
 		if (open) {
 			window.comConnectionSuccessLabels.get(tableIndex).setText("Connected");
@@ -269,7 +301,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Setup listener
-		activeSerialPort.get(tableIndex).addDataListener(this);
+		serialPort.addDataListener(this);
 		
 		connectingToSerial.set(tableIndex, false);
 	}
@@ -340,7 +372,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.minSlider.setMaximum(allData.get(i).size() - 1);
 			}
 			
-			DataHandler currentDataHandler = allData.get(i).get(currentDataIndex.get(i));
+			DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
 			
 			if (currentDataHandler != null) {
 				currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
@@ -352,7 +384,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Only record google earth data for the first one for now 
 		// There is no way to change the filename yet
 		if (googleEarth) {
-			googleEarthUpdater.updateKMLFile(allData, minDataIndex, currentDataIndex, config.getJSONArray("datasets"), false);
+			googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 		}
 		
 		// Update every chart
@@ -366,7 +398,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set first item to "Error"
 		tableModel.setValueAt("Parsing Error", 0, 0);
-		tableModel.setValueAt(currentDataIndex, 0, 1);
+		tableModel.setValueAt(currentDataIndexes, 0, 1);
 		
 		for (int i = 1; i < dataLength.get(index); i++) {
 			// Set label
@@ -393,19 +425,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Add y axis
-		for (int i = minDataIndex.get(chart.yType.tableIndex); i <= currentDataIndex.get(chart.yType.tableIndex); i++) {
+		for (int i = minDataIndexes.get(chart.yType.tableIndex); i <= currentDataIndexes.get(chart.yType.tableIndex); i++) {
 			if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 			
 			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
 			
 			if (data != null) {
-				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue() / 1000);
+				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
 			}
 		}
 		
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
-			for (int j = minDataIndex.get(chart.xTypes[i].tableIndex); j <= currentDataIndex.get(chart.xTypes[i].tableIndex); j++) {
+			for (int j = minDataIndexes.get(chart.xTypes[i].tableIndex); j <= currentDataIndexes.get(chart.xTypes[i].tableIndex); j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
@@ -525,7 +557,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"));
+			if (!dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"))) {
+				System.err.println("Failed to set data handler");
+
+				// Parsing failed
+				return null;
+			}
 		}
 		
 		return dataHandler;
@@ -579,35 +616,35 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource() == window.maxSlider) {
 			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndex.size(); i++) {
+			for (int i = 0; i < currentDataIndexes.size(); i++) {
 				int value = window.maxSlider.getValue();
 				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
 				
-				currentDataIndex.set(i, value);
+				currentDataIndexes.set(i, value);
 				
 				// Check if min is too high
-				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
-					minDataIndex.set(i, currentDataIndex.get(i));
-					window.minSlider.setValue(minDataIndex.get(i));
+				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
+					minDataIndexes.set(i, currentDataIndexes.get(i));
+					window.minSlider.setValue(minDataIndexes.get(i));
 				}
 			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndex.get(0) == window.maxSlider.getMaximum() - 1;
+			latest = currentDataIndexes.get(0) == window.maxSlider.getMaximum() - 1;
 		} else if (e.getSource() == window.minSlider) {
 			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndex.size(); i++) {
+			for (int i = 0; i < currentDataIndexes.size(); i++) {
 				int value = window.minSlider.getValue();
 				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
 				
-				minDataIndex.set(i, value);
+				minDataIndexes.set(i, value);
 				
 				// Check if min is too high
-				if (minDataIndex.get(i) > currentDataIndex.get(i)) {
-					minDataIndex.set(i, currentDataIndex.get(i));
-					window.minSlider.setValue(minDataIndex.get(i));
+				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
+					minDataIndexes.set(i, currentDataIndexes.get(i));
+					window.minSlider.setValue(minDataIndexes.get(i));
 				}
 			}
 			
@@ -642,7 +679,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.maxSlider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.get(0).size() - 1);
 		}
 		
 		// Add this message to the log file
@@ -651,17 +688,17 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Get string
 		String logFileString = logFileStringBuilder.toString();
 		
-		if (!currentlyWriting) {
-			currentlyWriting = true;
+		if (!currentlyWriting.get(tableIndex)) {
+			currentlyWriting.set(tableIndex, true);
 
 			// Write to file
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName), StandardCharsets.UTF_8))) {
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(tableIndex)), StandardCharsets.UTF_8))) {
 			   writer.write(logFileString);
 			} catch (IOException err) {
 				err.printStackTrace();
 			}
 			
-			currentlyWriting = false;
+			currentlyWriting.set(tableIndex, false);
 		}
 		
 	}
@@ -678,7 +715,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			window.maxSlider.setValue(allData.size() - 1);
+			window.maxSlider.setValue(allData.get(0).size() - 1);
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
@@ -689,7 +726,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
 				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+						+ "The current data will be deleted from the UI. You can find it in " + formattedSavingToLocations();
 			} else {
 				warningMessage = "Are you sure you would like to disable simulation mode?";
 			}

@@ -48,7 +48,7 @@ public class DataHandler {
 		}
 	}
 	
-	public void set(int index, String currentData, JSONObject coordinateIndexes) {
+	public boolean set(int index, String currentData, JSONObject coordinateIndexes) {
 		// Check for special cases first
 		if (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index) {
 			float degrees = 0;
@@ -75,11 +75,14 @@ public class DataHandler {
 					floatData = Float.MAX_VALUE;
 				} else {
 					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
+					
+					return false;
 				}
 			}
 			
 			data[index] = new Data(floatData);
 		}
 		
+		return true;
 	}
 }
