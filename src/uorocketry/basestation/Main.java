@@ -29,7 +29,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -76,9 +75,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Where to save the log file */
 	public static final String LOG_FILE_SAVE_LOCATION = "data/";
-	public static final String DEFAULT_LOG_FILE_NAME = "log.txt";
+    public static final String DEFAULT_LOG_FILE_NAME = "log";
+    public static final String LOG_FILE_EXTENSION = ".txt";
 	/** Will have a number appended to the end to not overwrite old logs */
-	String currentLogFileName = DEFAULT_LOG_FILE_NAME;
+	ArrayList<String> currentLogFileName = new ArrayList<String>(2);
 	
 	/** How many data sources to record data from. It is set when the config is loaded. */
 	public static int dataSourceCount = 1;
@@ -232,16 +232,46 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
-		// Find a suitable filename
 		int logIndex = 0;
-		while (usedFileNames.contains(logIndex + "_" + DEFAULT_LOG_FILE_NAME)) {
-			logIndex++;
+		
+		JSONArray dataSets = config.getJSONArray("datasets");
+		
+		// Find a suitable filename
+		for (int i = 0; i <= listOfLogFiles.length; i++) {
+			boolean containsFile = false;
+			for (int j = 0 ; j < dataSourceCount; j++) {
+				if (usedFileNames.contains(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(j).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION)) {
+					containsFile = true;
+					break;
+				}
+			}
+			
+			if (containsFile) {
+				logIndex++;
+			} else {
+				break;
+			}
 		}
 		
-		// Set the name
-		currentLogFileName = logIndex + DEFAULT_LOG_FILE_NAME;
+		// Set the names
+		for (int i = 0 ; i < dataSourceCount; i++) {
+			currentLogFileName.add(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(i).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION);
+		}
 		
-		window.savingToLabel.setText("Saving to " + LOG_FILE_SAVE_LOCATION + currentLogFileName);
+		window.savingToLabel.setText("Saving to " + formattedSavingToLocations());
+	}
+	
+	public String formattedSavingToLocations() {
+		StringBuilder savingToText = new StringBuilder();
+		
+		// Add text for each file
+		for (int i = 0 ; i < dataSourceCount; i++) {
+			if (i != 0) savingToText.append(", ");
+			
+			savingToText.append(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(i));
+		}
+		
+		return savingToText.toString();
 	}
 	
 	public void initialisePort(int tableIndex, SerialPort serialPort) {
@@ -655,7 +685,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			currentlyWriting = true;
 
 			// Write to file
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName), StandardCharsets.UTF_8))) {
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(tableIndex)), StandardCharsets.UTF_8))) {
 			   writer.write(logFileString);
 			} catch (IOException err) {
 				err.printStackTrace();
@@ -689,7 +719,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
 				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + LOG_FILE_SAVE_LOCATION + currentLogFileName;
+						+ "The current data will be deleted from the UI. You can find it in " + formattedSavingToLocations();
 			} else {
 				warningMessage = "Are you sure you would like to disable simulation mode?";
 			}
