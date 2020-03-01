@@ -29,6 +29,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -177,11 +178,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Add data indexes
 			currentDataIndexes.add(0);
 			minDataIndexes.add(0);
+			
+			// Reset sliders
+			window.maxSliders.get(i).setValue(0);
+			window.minSliders.get(i).setValue(0);
 		}
-		
-		// Reset sliders
-		window.maxSlider.setValue(0);
-		window.minSlider.setValue(0);
 		
 		// Load simulation data if necessary
 		if (simulation) {
@@ -310,8 +311,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		addChart();
 		
 		// Add slider listeners
-		window.maxSlider.addChangeListener(this);
-		window.minSlider.addChangeListener(this);
+		for (int i = 0; i < dataSourceCount; i++) {
+			window.maxSliders.get(i).addChangeListener(this);
+			window.minSliders.get(i).addChangeListener(this);
+		}
 		
 		// Buttons
 		window.pauseButton.addActionListener(this);
@@ -365,11 +368,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (allData.get(i).size() == 0) continue;
 			
 			// Don't change slider if paused
-			// Only do this once
-			if (!paused && i == 0) {
+			if (!paused) {
 				// Set max value of the sliders
-				window.maxSlider.setMaximum(allData.get(i).size() - 1);
-				window.minSlider.setMaximum(allData.get(i).size() - 1);
+				window.maxSliders.get(i).setMaximum(allData.get(i).size() - 1);
+				window.minSliders.get(i).setMaximum(allData.get(i).size() - 1);
 			}
 			
 			DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
@@ -381,8 +383,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
-		// Only record google earth data for the first one for now 
-		// There is no way to change the filename yet
 		if (googleEarth) {
 			googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 		}
@@ -617,38 +617,32 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (e.getSource() == window.maxSlider) {
-			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndexes.size(); i++) {
-				int value = window.maxSlider.getValue();
-				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
-				
-				currentDataIndexes.set(i, value);
-				
-				// Check if min is too high
-				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
-					minDataIndexes.set(i, currentDataIndexes.get(i));
-					window.minSlider.setValue(minDataIndexes.get(i));
-				}
+		if (e.getSource() instanceof JSlider && window.maxSliders.contains(e.getSource())) {
+			JSlider maxSlider = (JSlider) e.getSource();
+			int tableIndex = window.maxSliders.indexOf(maxSlider);
+
+			currentDataIndexes.set(tableIndex, maxSlider.getValue());
+			
+			// Check if min is too high
+			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
+				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
+				window.minSliders.get(tableIndex).setValue(minDataIndexes.get(tableIndex));
 			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndexes.get(0) == window.maxSlider.getMaximum() - 1;
-		} else if (e.getSource() == window.minSlider) {
-			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndexes.size(); i++) {
-				int value = window.minSlider.getValue();
-				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
-				
-				minDataIndexes.set(i, value);
-				
-				// Check if min is too high
-				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
-					minDataIndexes.set(i, currentDataIndexes.get(i));
-					window.minSlider.setValue(minDataIndexes.get(i));
-				}
+			latest = currentDataIndexes.get(0) == maxSlider.getMaximum() - 1;
+		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
+			JSlider minSlider = (JSlider) e.getSource();
+			int tableIndex = window.minSliders.indexOf(minSlider);
+
+			minDataIndexes.set(tableIndex, minSlider.getValue());
+			
+			// Check if min is too high
+			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
+				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
+				minSlider.setValue(minDataIndexes.get(tableIndex));
 			}
 			
 			updateUI();
@@ -682,7 +676,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.maxSlider.setValue(allData.get(0).size() - 1);
+			window.maxSliders.get(tableIndex).setValue(allData.get(0).size() - 1);
 		}
 		
 		// Add this message to the log file
@@ -718,7 +712,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			window.maxSlider.setValue(allData.get(0).size() - 1);
+			for (int i = 0; i < window.maxSliders.size(); i++) {
+				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);
+			}
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {

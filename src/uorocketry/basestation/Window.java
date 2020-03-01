@@ -30,6 +30,7 @@ import javax.swing.border.LineBorder;
 import org.json.JSONObject;
 import javax.swing.border.TitledBorder;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 
 public class Window extends JFrame {
 	
@@ -48,8 +49,9 @@ public class Window extends JFrame {
 	private JPanel eastSliderButtons;
 	private JPanel westSliderButtons;
 	
-	JSlider maxSlider;
-	JSlider minSlider;
+	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
+	List<JSlider> minSliders = new ArrayList<JSlider>(2);
+	JTabbedPane sliderTabs;
 	JButton latestButton;
 	JButton pauseButton;
 	JLabel savingToLabel;
@@ -143,15 +145,13 @@ public class Window extends JFrame {
 		getContentPane().add(sliderSection, BorderLayout.SOUTH);
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
-		maxSlider = new JSlider();
-		sliderSection.add(maxSlider);
-		maxSlider.setPaintTicks(true);
-		maxSlider.setValue(0);
+		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		minSlider = new JSlider();
-		minSlider.setValue(0);
-		minSlider.setPaintTicks(true);
-		sliderSection.add(minSlider, BorderLayout.SOUTH);
+		for (int i = 0; i < Main.dataSourceCount; i++) {
+			addSlider(main.config.getJSONArray("datasets").getJSONObject(i));
+		}
+		
+		sliderSection.add(sliderTabs, BorderLayout.SOUTH);
 		
 		sliderButtons = new JPanel();
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);
@@ -219,6 +219,28 @@ public class Window extends JFrame {
 		
 		dataTablePanel.add(borderPanel);
 		dataTables.add(dataTable);
+	}
+	
+	public void addSlider(JSONObject dataSet) {
+		// Add sliders to tabbedPane
+		JPanel sliders = new JPanel();
+		sliderSection.add(sliders, BorderLayout.SOUTH);
+		sliders.setLayout(new BorderLayout(0, 0));
+		
+		JSlider maxSlider = new JSlider();
+		sliders.add(maxSlider, BorderLayout.NORTH);
+		maxSlider.setPaintTicks(true);
+		maxSlider.setValue(0);
+		
+		JSlider minSlider = new JSlider();
+		sliders.add(minSlider, BorderLayout.SOUTH);
+		minSlider.setValue(0);
+		minSlider.setPaintTicks(true);
+		
+		maxSliders.add(maxSlider);
+		minSliders.add(minSlider);
+		
+		sliderTabs.add(sliders, dataSet.getString("name"));
 	}
 	
 	public void addComSelectorPanel() {
