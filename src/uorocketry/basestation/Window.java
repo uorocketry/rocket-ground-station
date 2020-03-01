@@ -29,6 +29,7 @@ import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
 import javax.swing.border.TitledBorder;
+import javax.swing.JSplitPane;
 
 public class Window extends JFrame {
 	
@@ -70,6 +71,7 @@ public class Window extends JFrame {
 	
 	JButton saveLayout;
 	JButton loadLayout;
+	private JSplitPane splitPane;
 	
 	public Window(Main main) {
 		// Set look and feel
@@ -86,6 +88,9 @@ public class Window extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout(0, 0));
 		
+		splitPane = new JSplitPane();
+		getContentPane().add(splitPane, BorderLayout.CENTER);
+		
 		leftPanel = new JPanel();
 		leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		leftPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -96,7 +101,6 @@ public class Window extends JFrame {
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
-		
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
@@ -128,7 +132,9 @@ public class Window extends JFrame {
 		
 		savingToLabel = new JLabel("Saving to data/log.txt");
 		savingToPanel.add(savingToLabel);
-		getContentPane().add(scrollPane, BorderLayout.WEST);
+		
+		splitPane.setLeftComponent(scrollPane);
+		
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setViewportBorder(null);
@@ -138,7 +144,6 @@ public class Window extends JFrame {
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
 		maxSlider = new JSlider();
-//		slider.setSnapToTicks(true);
 		sliderSection.add(maxSlider);
 		maxSlider.setPaintTicks(true);
 		maxSlider.setValue(0);
@@ -176,7 +181,9 @@ public class Window extends JFrame {
 		}
 		
 		centerChartPanel = new JPanel();
-		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
+		
+		splitPane.setRightComponent(centerChartPanel);
+
 		centerChartPanel.setLayout(null);
 
 		setVisible(true);
