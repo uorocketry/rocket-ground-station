@@ -1,5 +1,8 @@
 package uorocketry.basestation;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
@@ -24,6 +27,10 @@ public class DataHandler {
 	static final DataType GPS_FIX_QUALITY = new DataType(14, 0);
 	
 	Data[] data;
+	DataType[] types;
+	
+	/** Which of this data should be hidden for any reason */
+	List<DataType> hiddenDataTypes = new LinkedList<DataType>();
 	
 	/**
 	 * This chooses which table this data is displayed in
@@ -34,6 +41,11 @@ public class DataHandler {
 		this.tableIndex = tableIndex;
 		
 		this.data = new Data[Main.dataLength.get(tableIndex)];
+		
+		types = new DataType[Main.dataLength.get(tableIndex)];
+		for (int i = 0; i < types.length; i++) {
+			types[i] = new DataType(i, tableIndex);
+		}
 	}
 	
 	public void updateTableUIWithData(JTable table, String[] labels) {
@@ -43,8 +55,11 @@ public class DataHandler {
 			// Set label
 			tableModel.setValueAt(labels[i], i, 0);
 			
+			String dataText = data[i].getFormattedString();
+			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
+			
 			// Set data
-			tableModel.setValueAt(data[i].getFormattedString(), i, 1);
+			tableModel.setValueAt(dataText, i, 1);
 		}
 	}
 	

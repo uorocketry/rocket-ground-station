@@ -443,7 +443,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
-					altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index])) {
+						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+					} else {
+						// Hidden data
+						altitudeDataY.get(i).add(null);
+					}
 				}
 			}
 		}
@@ -893,7 +898,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
-		DataChart dataChart = new DataChart(window, xyChart, chartPanel);
+		DataChart dataChart = new DataChart(this, xyChart, chartPanel);
 		
 		// Set default size
 		dataChart.snapPanel.setRelSize(600, 450);
