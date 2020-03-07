@@ -325,6 +325,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		window.restoreDeletedData.addActionListener(this);
+		
 		window.saveLayout.addActionListener(this);
 		window.loadLayout.addActionListener(this);
 		
@@ -748,6 +750,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
+		} else if (e.getSource() == window.restoreDeletedData) {
+			for (int tableIndex = 0; tableIndex < allData.size(); tableIndex++) {
+				List<DataHandler> dataHandlers = allData.get(tableIndex);
+				
+				for (DataHandler dataHandler: dataHandlers) {
+					// See if the hidden list needs to be cleared
+					if (dataHandler != null && !dataHandler.hiddenDataTypes.isEmpty()) {
+						dataHandler.hiddenDataTypes.clear();
+					}
+				}
+			}
+			
+			updateUI();
 		} else if (e.getSource() == window.saveLayout) {
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setAcceptAllFileFilterUsed(false);

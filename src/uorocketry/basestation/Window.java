@@ -43,6 +43,9 @@ public class Window extends JFrame {
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
+	
+	private JPanel dataTools;
+	JButton restoreDeletedData;
 	JCheckBox dataDeletionModeCheckBox;
 	
 	private JPanel sliderSection;
@@ -117,8 +120,16 @@ public class Window extends JFrame {
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
 		
+		dataTools = new JPanel();
+		dataTools.setBorder(new TitledBorder(null, "Data", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(dataTools);
+		dataTools.setLayout(new BoxLayout(dataTools, BoxLayout.Y_AXIS));
+		
 		dataDeletionModeCheckBox = new JCheckBox("Data Deletion Mode");
-		leftPanel.add(dataDeletionModeCheckBox);
+		dataTools.add(dataDeletionModeCheckBox);
+		
+		restoreDeletedData = new JButton("Restore Deleted Data");
+		dataTools.add(restoreDeletedData);
 		
 		layoutTools = new JPanel();
 		layoutTools.setBorder(new TitledBorder(null, "Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));
