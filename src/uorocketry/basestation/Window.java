@@ -43,6 +43,7 @@ public class Window extends JFrame {
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
+	JCheckBox dataDeletionModeCheckBox;
 	
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
@@ -115,6 +116,9 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
+		
+		dataDeletionModeCheckBox = new JCheckBox("Data Deletion Mode");
+		leftPanel.add(dataDeletionModeCheckBox);
 		
 		layoutTools = new JPanel();
 		layoutTools.setBorder(new TitledBorder(null, "Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));

@@ -125,6 +125,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Set to true when automatically selecting or deselcting from the data table */
 	boolean ignoreSelections = false;
 	
+	/** If true, clicking on data in a chart will hide it */
+	boolean dataDeletionMode = false;
+	
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
 	/** Is the log file being currently updated */
@@ -328,6 +331,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
+		window.dataDeletionModeCheckBox.addActionListener(this);
 		
 		// Set simulation checkbox to be default
 		window.simulationCheckBox.setSelected(simulation);
@@ -742,6 +746,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
+		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
+			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.saveLayout) {
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setAcceptAllFileFilterUsed(false);
