@@ -70,37 +70,6 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			chart.main.window.centerChartPanel.remove(panel);
 		}
 		
-		if (chart.main.dataDeletionMode) {
-			double xMousePos = chart.chartPanel.getChart().getChartXFromCoordinate(e.getX());
-			double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY());
-			
-			// Start value - Last value is the total chart size in chart coordinates
-			double chartSizeX = Math.abs(chart.chartPanel.getChart().getChartXFromCoordinate(0) - 
-					chart.chartPanel.getChart().getChartXFromCoordinate(chart.chartPanel.getChart().getWidth()));
-			double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0) - 
-					chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight()));
-			
-			
-			// Find all data points near the click
-			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
-				DataType currentType = chart.xTypes[xTypeIndex];
-				List<DataHandler> dataHandlers = chart.main.allData.get(currentType.tableIndex);
-				
-				for (DataHandler dataHandler: dataHandlers) {
-					// See if click is anywhere near this point
-					if (dataHandler != null && Math.abs(dataHandler.data[chart.yType.index].data - xMousePos) < chartSizeX / 100
-						&& Math.abs(dataHandler.data[currentType.index].data - yMousePos) < chartSizeY / 100
-						&& !dataHandler.hiddenDataTypes.contains(currentType)) {
-						
-						// Hide this point
-						dataHandler.hiddenDataTypes.add(new DataType(currentType.index, currentType.tableIndex));
-					}
-				}
-			}
-			
-			chart.main.updateUI();
-		}
-		
 		lastClickTime = System.nanoTime();
 	}
 	
@@ -216,6 +185,40 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
+		if (chart.main.dataDeletionMode) {
+			double xMousePos = chart.chartPanel.getChart().getChartXFromCoordinate(e.getX());
+			double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY());
+			
+			// Start value - Last value is the total chart size in chart coordinates
+			double chartSizeX = Math.abs(chart.chartPanel.getChart().getChartXFromCoordinate(0) - 
+					chart.chartPanel.getChart().getChartXFromCoordinate(chart.chartPanel.getChart().getWidth()));
+			double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0) - 
+					chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight()));
+			
+			
+			// Find all data points near the click
+			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
+				DataType currentType = chart.xTypes[xTypeIndex];
+				List<DataHandler> dataHandlers = chart.main.allData.get(currentType.tableIndex);
+				
+				for (DataHandler dataHandler: dataHandlers) {
+					// See if click is anywhere near this point
+					if (dataHandler != null && Math.abs(dataHandler.data[chart.yType.index].data - xMousePos) < chartSizeX / 100
+						&& Math.abs(dataHandler.data[currentType.index].data - yMousePos) < chartSizeY / 100
+						&& !dataHandler.hiddenDataTypes.contains(currentType)) {
+						
+						// Hide this point
+						dataHandler.hiddenDataTypes.add(new DataType(currentType.index, currentType.tableIndex));
+					}
+				}
+			}
+			
+			chart.main.updateUI();
+			
+			// Don't allow window moving
+			return;
+		}
+		
 		int currentX = e.getXOnScreen();
 		int currentY = e.getYOnScreen();
 		
