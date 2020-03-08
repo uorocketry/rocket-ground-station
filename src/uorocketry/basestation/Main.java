@@ -102,8 +102,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
 	
-	/** If not in a simulation, the serial port being listened to */
-	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>(2);
+	/** If not in a simulation, the serial ports being listened to */
+	List<SerialPort> activeSerialPorts = new ArrayList<SerialPort>(2);
 	
 	Window window;
 	
@@ -220,7 +220,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Create required lists
 		for (int i = 0; i < dataSourceCount; i++) {
-			activeSerialPort.add(null);
+			activeSerialPorts.add(null);
 			connectingToSerial.add(false);
 			currentlyWriting.add(false);
 		}
@@ -283,12 +283,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void initialisePort(int tableIndex, SerialPort serialPort) {
 		if (serialPort.isOpen() || connectingToSerial.get(tableIndex)) return;
 		
-		if (activeSerialPort.get(tableIndex) != null && activeSerialPort.get(tableIndex).isOpen()) {
+		if (activeSerialPorts.get(tableIndex) != null && activeSerialPorts.get(tableIndex).isOpen()) {
 			// Switching ports, close the old one
-			activeSerialPort.get(tableIndex).closePort();
+			activeSerialPorts.get(tableIndex).closePort();
 		}
 		
-		activeSerialPort.set(tableIndex, serialPort);
+		activeSerialPorts.set(tableIndex, serialPort);
 		
 		connectingToSerial.set(tableIndex, true);
 		
@@ -677,7 +677,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void serialEvent(SerialPortEvent e) {
-		int tableIndex = activeSerialPort.indexOf(e.getSerialPort());
+		int tableIndex = activeSerialPorts.indexOf(e.getSerialPort());
 		
 		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
 		
