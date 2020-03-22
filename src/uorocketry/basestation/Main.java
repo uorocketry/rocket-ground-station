@@ -990,6 +990,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					// Set chart to be based on this row
 					selectedChart.xTypes = formattedSelections;
 					
+					dataTable.setColumnSelectionInterval(0, 0);
+					
 					updateUI();
 					
 					break;
