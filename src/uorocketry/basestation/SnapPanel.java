@@ -187,19 +187,20 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	public void mouseDragged(MouseEvent e) {
 		if (chart.main.dataDeletionMode) {
 			double xMousePos = chart.chartPanel.getChart().getChartXFromCoordinate(e.getX());
-			double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY());
 			
 			// Start value - Last value is the total chart size in chart coordinates
 			double chartSizeX = Math.abs(chart.chartPanel.getChart().getChartXFromCoordinate(0) - 
 					chart.chartPanel.getChart().getChartXFromCoordinate(chart.chartPanel.getChart().getWidth()));
-			double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0) - 
-					chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight()));
-			
 			
 			// Find all data points near the click
 			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
 				DataType currentType = chart.xTypes[xTypeIndex];
 				List<DataHandler> dataHandlers = chart.main.allData.get(currentType.tableIndex);
+				
+				// Y axis depends on the which data is being checked
+				double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY(), xTypeIndex);
+				double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0, xTypeIndex) - 
+						chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight(), xTypeIndex));
 				
 				for (DataHandler dataHandler: dataHandlers) {
 					// See if click is anywhere near this point
