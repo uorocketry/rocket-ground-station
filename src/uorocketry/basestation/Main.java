@@ -48,6 +48,7 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import org.knowm.xchart.style.Styler.YAxisPosition;
 import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -478,7 +479,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (title.length() != 0) title.append(", ");
 			title.append(xTypeTitle);
 			
-			chart.xyChart.setYAxisTitle(xTypeTitle);
+			chart.xyChart.setYAxisGroupTitle(i, xTypeTitle);
 			
 			XYSeries series = null;
 			
@@ -489,6 +490,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 			series.setLabel(xTypeTitle);
+			series.setYAxisGroup(i);
 			
 			newActiveSeries[i] = "series" + i;
 		}
@@ -496,10 +498,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		String yTypeTitle =  labels.get(chart.yType.tableIndex)[chart.yType.index];
 		
 		chart.xyChart.setTitle(title + " vs " + yTypeTitle);
-		
-		if (chart.xTypes.length > 1) {
-			chart.xyChart.setYAxisTitle("Value");
-		}
 		
 		chart.xyChart.setXAxisTitle(yTypeTitle);
 		
@@ -912,6 +910,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		firstChartStyler.setYAxisGroupPosition(1, YAxisPosition.Right);
 
 		// Series
 		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
