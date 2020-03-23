@@ -249,7 +249,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 						xMovementFactor, yMovementFactor);
 			} else {
 				// Move panel
-				setRelPosition((int) startBoundsRectangle.getX() + (currentX - lastMouseX), (int) startBoundsRectangle.getY() + (currentY - lastMouseY));
+				setRelPosition((int) startBoundsRectangle.getX() + (currentX - lastMouseX), 
+						(int) startBoundsRectangle.getY() + (currentY - lastMouseY), true);
 			}
 			
 		} else {
@@ -275,31 +276,97 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 	}
 	
+	/**
+	 * Defaults checked to false.
+	 * 
+	 * @param absoluteX
+	 * @param absoluteY
+	 * @param absoluteWidth
+	 * @param absoluteHeight
+	 */
 	public void setRelBounds(int absoluteX, int absoluteY, int absoluteWidth, int absoluteHeight) {
-		setRelPosition(absoluteX, absoluteY);
+		setRelBounds(absoluteX, absoluteY, absoluteWidth, absoluteHeight, false);
+	}
+	
+	/**
+	 * @param absoluteX
+	 * @param absoluteY
+	 * @param absoluteWidth
+	 * @param absoluteHeight
+	 * @param checked If true, the window will not go offscreen
+	 */
+	public void setRelBounds(int absoluteX, int absoluteY, int absoluteWidth, int absoluteHeight, boolean checked) {
+		setRelPosition(absoluteX, absoluteY, checked);
 		setRelSize(absoluteWidth, absoluteHeight);
 	}
 	
 	public void setRelPosition(int absoluteX, int absoluteY) {
+		setRelPosition(absoluteX, absoluteY, false);
+	}
+	
+	/**
+	 * Sets the rel position based on an absolute position.
+	 * 
+	 * @param absoluteX
+	 * @param absoluteY
+	 * @param checked If true, the window will not go offscreen
+	 */
+	public void setRelPosition(int absoluteX, int absoluteY, boolean checked) {
 		Rectangle screenBounds = panel.getParent().getBounds();
 		
-		// Don't let it go off screen
-		if (absoluteX < 0) {
-			absoluteX = 0;
-		} else if (absoluteX > screenBounds.getWidth() - panel.getWidth()) {
-			absoluteX = (int) (screenBounds.getWidth() - panel.getWidth());
-		}
-		
-		if (absoluteY < 0) {
-			absoluteY = 0;
-		} else if (absoluteY > screenBounds.getHeight() - panel.getHeight()) {
-			absoluteY = (int) (screenBounds.getHeight() - panel.getHeight());
+		if (checked) {
+			// Don't let it go off screen
+			if (absoluteX < 0) {
+				absoluteX = 0;
+			} else if (absoluteX > screenBounds.getWidth() - panel.getWidth()) {
+				absoluteX = (int) (screenBounds.getWidth() - panel.getWidth());
+			}
+			
+			if (absoluteY < 0) {
+				absoluteY = 0;
+			} else if (absoluteY > screenBounds.getHeight() - panel.getHeight()) {
+				absoluteY = (int) (screenBounds.getHeight() - panel.getHeight());
+			}
 		}
 		
 		relX = absoluteX / screenBounds.getWidth();
 		relY = absoluteY / screenBounds.getHeight();
 		
 		panel.setLocation(absoluteX, absoluteY);
+	}
+	
+	/**
+	 * Sets the rel size based on an absolute size
+	 * Returns the adjustments to the mouse position needed if the minimum size has been hit.
+	 * 
+	 * @param absoluteWidth
+	 * @param absoluteHeight
+	 * @return
+	 */
+	public int[] setRelSize(int absoluteWidth, int absoluteHeight) {
+		// If a cap is reached, treat it as if the mouse was in a different position
+		int[] mousePosition = new int[]{0, 0};
+		
+		Rectangle screenBounds = panel.getParent().getBounds();
+		
+		// Don't get too small
+		if (absoluteWidth < 100) {
+			mousePosition[0] = 100 - absoluteWidth;
+			
+			absoluteWidth = 100;
+		}
+		if (absoluteHeight < 100) {
+			mousePosition[1] = 100 - absoluteHeight;
+
+			absoluteHeight = 100;
+		}
+		
+		relWidth = absoluteWidth / screenBounds.getWidth();
+		relHeight = absoluteHeight / screenBounds.getHeight();
+		
+		panel.setSize(absoluteWidth, absoluteHeight);
+		
+		return mousePosition;
 	}
 	
 	/**
@@ -349,40 +416,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 		panel.setSize(absoluteWidth, absoluteHeight);
 		
-		setRelPosition(absoluteX - xMovementFactor * positionAdjustmentX, absoluteY - yMovementFactor * positionAdjustmentY);
-	}
-	
-	/**
-	 * Returns the adjustments to the mouse position needed if the minimum size has been hit.
-	 * 
-	 * @param absoluteWidth
-	 * @param absoluteHeight
-	 * @return
-	 */
-	public int[] setRelSize(int absoluteWidth, int absoluteHeight) {
-		// If a cap is reached, treat it as if the mouse was in a different position
-		int[] mousePosition = new int[]{0, 0};
-		
-		Rectangle screenBounds = panel.getParent().getBounds();
-		
-		// Don't get too small
-		if (absoluteWidth < 100) {
-			mousePosition[0] = 100 - absoluteWidth;
-			
-			absoluteWidth = 100;
-		}
-		if (absoluteHeight < 100) {
-			mousePosition[1] = 100 - absoluteHeight;
-
-			absoluteHeight = 100;
-		}
-		
-		relWidth = absoluteWidth / screenBounds.getWidth();
-		relHeight = absoluteHeight / screenBounds.getHeight();
-		
-		panel.setSize(absoluteWidth, absoluteHeight);
-		
-		return mousePosition;
+		setRelPosition(absoluteX - xMovementFactor * positionAdjustmentX, 
+				absoluteY - yMovementFactor * positionAdjustmentY, true);
 	}
 	
 	/**
@@ -393,7 +428,6 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	 */
 	public void updateBounds(int width, int height) {
 		panel.setBounds((int) (relX * width), (int) (relY * height), (int) (relWidth * width), (int) (relHeight * height));
-
 	}
 	
 	/**
