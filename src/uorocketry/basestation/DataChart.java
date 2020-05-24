@@ -10,7 +10,7 @@ public class DataChart {
 	/** The snap panel for this chart */
 	SnapPanel snapPanel;
 	
-	Window window;
+	Main main;
 	
 	// The active chart series on this chart
 	String[] activeSeries = new String[0];
@@ -18,8 +18,8 @@ public class DataChart {
 	DataType[] xTypes = {DataHandler.ALTITUDE};
 	DataType yType = DataHandler.TIMESTAMP;
 	
-	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
-		this.window = window;
+	public DataChart(Main main, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
+		this.main = main;
 		
 		this.xyChart = xyChart;
 		this.chartPanel = chartPanel;
@@ -32,8 +32,8 @@ public class DataChart {
 		}
 	}
 	
-	public DataChart(Window window, XYChart xyChart, XChartPanel<XYChart> chartPanel, DataType[] xTypes) {
-		this(window, xyChart, chartPanel);
+	public DataChart(Main main, XYChart xyChart, XChartPanel<XYChart> chartPanel, DataType[] xTypes) {
+		this(main, xyChart, chartPanel);
 
 		this.xTypes = xTypes;
 	}

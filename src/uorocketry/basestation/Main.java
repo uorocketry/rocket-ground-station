@@ -29,6 +29,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -47,6 +48,7 @@ import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
+import org.knowm.xchart.style.Styler.YAxisPosition;
 import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
@@ -101,8 +103,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
 	
-	/** If not in a simulation, the serial port being listened to */
-	List<SerialPort> activeSerialPort = new ArrayList<SerialPort>(2);
+	/** If not in a simulation, the serial ports being listened to */
+	List<SerialPort> activeSerialPorts = new ArrayList<SerialPort>(2);
 	
 	Window window;
 	
@@ -123,6 +125,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Set to true when automatically selecting or deselcting from the data table */
 	boolean ignoreSelections = false;
+	
+	/** If true, clicking on data in a chart will hide it */
+	boolean dataDeletionMode = false;
 	
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
@@ -177,11 +182,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Add data indexes
 			currentDataIndexes.add(0);
 			minDataIndexes.add(0);
+			
+			// Reset sliders
+			window.maxSliders.get(i).setValue(0);
+			window.minSliders.get(i).setValue(0);
 		}
-		
-		// Reset sliders
-		window.maxSlider.setValue(0);
-		window.minSlider.setValue(0);
 		
 		// Load simulation data if necessary
 		if (simulation) {
@@ -216,7 +221,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Create required lists
 		for (int i = 0; i < dataSourceCount; i++) {
-			activeSerialPort.add(null);
+			activeSerialPorts.add(null);
 			connectingToSerial.add(false);
 			currentlyWriting.add(false);
 		}
@@ -279,12 +284,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void initialisePort(int tableIndex, SerialPort serialPort) {
 		if (serialPort.isOpen() || connectingToSerial.get(tableIndex)) return;
 		
-		if (activeSerialPort.get(tableIndex) != null && activeSerialPort.get(tableIndex).isOpen()) {
+		if (activeSerialPorts.get(tableIndex) != null && activeSerialPorts.get(tableIndex).isOpen()) {
 			// Switching ports, close the old one
-			activeSerialPort.get(tableIndex).closePort();
+			activeSerialPorts.get(tableIndex).closePort();
 		}
 		
-		activeSerialPort.set(tableIndex, serialPort);
+		activeSerialPorts.set(tableIndex, serialPort);
 		
 		connectingToSerial.set(tableIndex, true);
 		
@@ -310,8 +315,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		addChart();
 		
 		// Add slider listeners
-		window.maxSlider.addChangeListener(this);
-		window.minSlider.addChangeListener(this);
+		for (int i = 0; i < dataSourceCount; i++) {
+			window.maxSliders.get(i).addChangeListener(this);
+			window.minSliders.get(i).addChangeListener(this);
+		}
 		
 		// Buttons
 		window.pauseButton.addActionListener(this);
@@ -319,12 +326,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		window.restoreDeletedData.addActionListener(this);
+		
 		window.saveLayout.addActionListener(this);
 		window.loadLayout.addActionListener(this);
 		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
+		window.dataDeletionModeCheckBox.addActionListener(this);
 		
 		// Set simulation checkbox to be default
 		window.simulationCheckBox.setSelected(simulation);
@@ -365,11 +375,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (allData.get(i).size() == 0) continue;
 			
 			// Don't change slider if paused
-			// Only do this once
-			if (!paused && i == 0) {
+			if (!paused) {
 				// Set max value of the sliders
-				window.maxSlider.setMaximum(allData.get(i).size() - 1);
-				window.minSlider.setMaximum(allData.get(i).size() - 1);
+				window.maxSliders.get(i).setMaximum(allData.get(i).size() - 1);
+				window.minSliders.get(i).setMaximum(allData.get(i).size() - 1);
 			}
 			
 			DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
@@ -381,8 +390,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 		
-		// Only record google earth data for the first one for now 
-		// There is no way to change the filename yet
 		if (googleEarth) {
 			googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 		}
@@ -443,7 +450,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
-					altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index])) {
+						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+					} else {
+						// Hidden data
+						altitudeDataY.get(i).add(null);
+					}
 				}
 			}
 		}
@@ -467,7 +479,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (title.length() != 0) title.append(", ");
 			title.append(xTypeTitle);
 			
-			chart.xyChart.setYAxisTitle(xTypeTitle);
+			chart.xyChart.setYAxisGroupTitle(i, xTypeTitle);
 			
 			XYSeries series = null;
 			
@@ -478,6 +490,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 			series.setLabel(xTypeTitle);
+			series.setYAxisGroup(i);
 			
 			newActiveSeries[i] = "series" + i;
 		}
@@ -485,10 +498,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		String yTypeTitle =  labels.get(chart.yType.tableIndex)[chart.yType.index];
 		
 		chart.xyChart.setTitle(title + " vs " + yTypeTitle);
-		
-		if (chart.xTypes.length > 1) {
-			chart.xyChart.setYAxisTitle("Value");
-		}
 		
 		chart.xyChart.setXAxisTitle(yTypeTitle);
 		
@@ -617,38 +626,32 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		if (e.getSource() == window.maxSlider) {
-			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndexes.size(); i++) {
-				int value = window.maxSlider.getValue();
-				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
-				
-				currentDataIndexes.set(i, value);
-				
-				// Check if min is too high
-				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
-					minDataIndexes.set(i, currentDataIndexes.get(i));
-					window.minSlider.setValue(minDataIndexes.get(i));
-				}
+		if (e.getSource() instanceof JSlider && window.maxSliders.contains(e.getSource())) {
+			JSlider maxSlider = (JSlider) e.getSource();
+			int tableIndex = window.maxSliders.indexOf(maxSlider);
+
+			currentDataIndexes.set(tableIndex, maxSlider.getValue());
+			
+			// Check if min is too high
+			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
+				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
+				window.minSliders.get(tableIndex).setValue(minDataIndexes.get(tableIndex));
 			}
 			
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndexes.get(0) == window.maxSlider.getMaximum() - 1;
-		} else if (e.getSource() == window.minSlider) {
-			// For now, just use a fraction of the slider value
-			for (int i = 0; i < currentDataIndexes.size(); i++) {
-				int value = window.minSlider.getValue();
-				if (i != 0) value = (int) ((double) value / allData.get(0).size() * allData.get(i).size());
-				
-				minDataIndexes.set(i, value);
-				
-				// Check if min is too high
-				if (minDataIndexes.get(i) > currentDataIndexes.get(i)) {
-					minDataIndexes.set(i, currentDataIndexes.get(i));
-					window.minSlider.setValue(minDataIndexes.get(i));
-				}
+			latest = currentDataIndexes.get(0) == maxSlider.getMaximum() - 1;
+		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
+			JSlider minSlider = (JSlider) e.getSource();
+			int tableIndex = window.minSliders.indexOf(minSlider);
+
+			minDataIndexes.set(tableIndex, minSlider.getValue());
+			
+			// Check if min is too high
+			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
+				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
+				minSlider.setValue(minDataIndexes.get(tableIndex));
 			}
 			
 			updateUI();
@@ -672,7 +675,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void serialEvent(SerialPortEvent e) {
-		int tableIndex = activeSerialPort.indexOf(e.getSerialPort());
+		int tableIndex = activeSerialPorts.indexOf(e.getSerialPort());
 		
 		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
 		
@@ -682,7 +685,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Move position to end
 		if (latest) {
-			window.maxSlider.setValue(allData.get(0).size() - 1);
+			window.maxSliders.get(tableIndex).setValue(allData.get(0).size() - 1);
 		}
 		
 		// Add this message to the log file
@@ -718,7 +721,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			window.maxSlider.setValue(allData.get(0).size() - 1);
+			for (int i = 0; i < window.maxSliders.size(); i++) {
+				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);
+			}
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
@@ -741,6 +746,21 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
+		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
+			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
+		} else if (e.getSource() == window.restoreDeletedData) {
+			for (int tableIndex = 0; tableIndex < allData.size(); tableIndex++) {
+				List<DataHandler> dataHandlers = allData.get(tableIndex);
+				
+				for (DataHandler dataHandler: dataHandlers) {
+					// See if the hidden list needs to be cleared
+					if (dataHandler != null && !dataHandler.hiddenDataTypes.isEmpty()) {
+						dataHandler.hiddenDataTypes.clear();
+					}
+				}
+			}
+			
+			updateUI();
 		} else if (e.getSource() == window.saveLayout) {
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setAcceptAllFileFilterUsed(false);
@@ -890,6 +910,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		firstChartStyler.setYAxisGroupPosition(1, YAxisPosition.Right);
 
 		// Series
 		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
@@ -897,7 +918,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
-		DataChart dataChart = new DataChart(window, xyChart, chartPanel);
+		DataChart dataChart = new DataChart(this, xyChart, chartPanel);
 		
 		// Set default size
 		dataChart.snapPanel.setRelSize(600, 450);
@@ -968,6 +989,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					
 					// Set chart to be based on this row
 					selectedChart.xTypes = formattedSelections;
+					
+					dataTable.setColumnSelectionInterval(0, 0);
 					
 					updateUI();
 					

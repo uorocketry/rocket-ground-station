@@ -29,6 +29,8 @@ import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
 import javax.swing.border.TitledBorder;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 
 public class Window extends JFrame {
 	
@@ -42,13 +44,18 @@ public class Window extends JFrame {
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
 	
+	private JPanel dataTools;
+	JButton restoreDeletedData;
+	JCheckBox dataDeletionModeCheckBox;
+	
 	private JPanel sliderSection;
 	private JPanel sliderButtons;
 	private JPanel eastSliderButtons;
 	private JPanel westSliderButtons;
 	
-	JSlider maxSlider;
-	JSlider minSlider;
+	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
+	List<JSlider> minSliders = new ArrayList<JSlider>(2);
+	JTabbedPane sliderTabs;
 	JButton latestButton;
 	JButton pauseButton;
 	JLabel savingToLabel;
@@ -70,6 +77,7 @@ public class Window extends JFrame {
 	
 	JButton saveLayout;
 	JButton loadLayout;
+	private JSplitPane splitPane;
 	
 	public Window(Main main) {
 		// Set look and feel
@@ -86,6 +94,9 @@ public class Window extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout(0, 0));
 		
+		splitPane = new JSplitPane();
+		getContentPane().add(splitPane, BorderLayout.CENTER);
+		
 		leftPanel = new JPanel();
 		leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 		leftPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -96,7 +107,6 @@ public class Window extends JFrame {
 		dataTablePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
-		
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
@@ -109,6 +119,17 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
+		
+		dataTools = new JPanel();
+		dataTools.setBorder(new TitledBorder(null, "Data", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(dataTools);
+		dataTools.setLayout(new BoxLayout(dataTools, BoxLayout.Y_AXIS));
+		
+		dataDeletionModeCheckBox = new JCheckBox("Data Deletion Mode");
+		dataTools.add(dataDeletionModeCheckBox);
+		
+		restoreDeletedData = new JButton("Restore Deleted Data");
+		dataTools.add(restoreDeletedData);
 		
 		layoutTools = new JPanel();
 		layoutTools.setBorder(new TitledBorder(null, "Layout", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -128,7 +149,9 @@ public class Window extends JFrame {
 		
 		savingToLabel = new JLabel("Saving to data/log.txt");
 		savingToPanel.add(savingToLabel);
-		getContentPane().add(scrollPane, BorderLayout.WEST);
+		
+		splitPane.setLeftComponent(scrollPane);
+		
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setViewportBorder(null);
@@ -137,16 +160,13 @@ public class Window extends JFrame {
 		getContentPane().add(sliderSection, BorderLayout.SOUTH);
 		sliderSection.setLayout(new BorderLayout(0, 0));
 		
-		maxSlider = new JSlider();
-//		slider.setSnapToTicks(true);
-		sliderSection.add(maxSlider);
-		maxSlider.setPaintTicks(true);
-		maxSlider.setValue(0);
+		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		minSlider = new JSlider();
-		minSlider.setValue(0);
-		minSlider.setPaintTicks(true);
-		sliderSection.add(minSlider, BorderLayout.SOUTH);
+		for (int i = 0; i < Main.dataSourceCount; i++) {
+			addSlider(main.config.getJSONArray("datasets").getJSONObject(i));
+		}
+		
+		sliderSection.add(sliderTabs, BorderLayout.SOUTH);
 		
 		sliderButtons = new JPanel();
 		sliderSection.add(sliderButtons, BorderLayout.NORTH);
@@ -176,7 +196,9 @@ public class Window extends JFrame {
 		}
 		
 		centerChartPanel = new JPanel();
-		getContentPane().add(centerChartPanel, BorderLayout.CENTER);
+		
+		splitPane.setRightComponent(centerChartPanel);
+
 		centerChartPanel.setLayout(null);
 
 		setVisible(true);
@@ -212,6 +234,28 @@ public class Window extends JFrame {
 		
 		dataTablePanel.add(borderPanel);
 		dataTables.add(dataTable);
+	}
+	
+	public void addSlider(JSONObject dataSet) {
+		// Add sliders to tabbedPane
+		JPanel sliders = new JPanel();
+		sliderSection.add(sliders, BorderLayout.SOUTH);
+		sliders.setLayout(new BorderLayout(0, 0));
+		
+		JSlider maxSlider = new JSlider();
+		sliders.add(maxSlider, BorderLayout.NORTH);
+		maxSlider.setPaintTicks(true);
+		maxSlider.setValue(0);
+		
+		JSlider minSlider = new JSlider();
+		sliders.add(minSlider, BorderLayout.SOUTH);
+		minSlider.setValue(0);
+		minSlider.setPaintTicks(true);
+		
+		maxSliders.add(maxSlider);
+		minSliders.add(minSlider);
+		
+		sliderTabs.add(sliders, dataSet.getString("name"));
 	}
 	
 	public void addComSelectorPanel() {
