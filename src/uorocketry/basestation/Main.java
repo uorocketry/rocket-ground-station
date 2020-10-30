@@ -641,7 +641,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndexes.get(0) == maxSlider.getMaximum() - 1;
+			latest = currentDataIndexes.get(tableIndex) == maxSlider.getMaximum() - 1;
 		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
 			JSlider minSlider = (JSlider) e.getSource();
 			int tableIndex = window.minSliders.indexOf(minSlider);
