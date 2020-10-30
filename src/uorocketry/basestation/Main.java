@@ -641,7 +641,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			updateUI();
 			
 			// Update the latest value
-			latest = currentDataIndexes.get(0) == maxSlider.getMaximum() - 1;
+			latest = currentDataIndexes.get(tableIndex) == maxSlider.getMaximum() - 1;
 		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
 			JSlider minSlider = (JSlider) e.getSource();
 			int tableIndex = window.minSliders.indexOf(minSlider);
@@ -721,9 +721,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			for (int i = 0; i < window.maxSliders.size(); i++) {
-				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);
-			}
+			latest = true;
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
