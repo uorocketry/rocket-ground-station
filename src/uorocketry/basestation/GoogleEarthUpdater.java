@@ -11,6 +11,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class GoogleEarthUpdater {
@@ -141,9 +142,17 @@ public class GoogleEarthUpdater {
 		Data altitudeData = dataPoint.data[coordinateIndexes.getInt("altitude")];
 		Data longitudeData = dataPoint.data[coordinateIndexes.getInt("longitude")];
 		Data latitudeData = dataPoint.data[coordinateIndexes.getInt("latitude")];
-
+		
+		String prefixString = "";
+		try {
+			if (coordinateIndexes.getBoolean("formattedCoordinates")) {
+				// Assume west
+				prefixString = "-";
+			}
+		} catch (JSONException e) {}
+		
 		if (longitudeData.data != 0 && latitudeData.data != 0) {
-			return "-" + longitudeData.getDecimalCoordinate() + "," + latitudeData.getDecimalCoordinate() + "," + altitudeData.data;
+			return prefixString + longitudeData.getDecimalValue() + "," + latitudeData.getDecimalValue() + "," + altitudeData.data;
 		}
 		
 		return null;

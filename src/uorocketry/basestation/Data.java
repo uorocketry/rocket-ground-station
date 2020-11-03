@@ -15,7 +15,7 @@ public class Data {
 	
 	enum Types {
 		NORMAL,
-		COORDINATE
+		FORMATTED_COORDINATE
 	}
 	
 	public Data(float data) {
@@ -27,16 +27,23 @@ public class Data {
 		format.setGroupingSize(3);
 	}
 	
+	/**
+	 * Used for formatted coordinates.
+	 * Not used anymore since the SBG returns a decimal coordinate.
+	 * 
+	 * @param degrees
+	 * @param minutes
+	 */
 	public Data(float degrees, float minutes) {
 		this.data = degrees;
 		this.minutes = minutes;
 		
-		type = Types.COORDINATE;
+		type = Types.FORMATTED_COORDINATE;
 	}
 	
 	public String getFormattedString() {
 		switch (type) {
-			case COORDINATE:
+			case FORMATTED_COORDINATE:
 				return Math.round(data) + "° " + minutes + " '";
 			default: 
 				return format.format(data);
@@ -45,7 +52,7 @@ public class Data {
 	
 	public float getDecimalValue() {
 		switch (type) {
-			case COORDINATE:
+			case FORMATTED_COORDINATE:
 				return getDecimalCoordinate();
 			default:
 				return data;
@@ -56,7 +63,7 @@ public class Data {
 	 * Only used by type COORDINATE
 	 * @return
 	 */
-	public float getDecimalCoordinate() {
+	private float getDecimalCoordinate() {
 		return data + minutes/60;
 	}
 }
