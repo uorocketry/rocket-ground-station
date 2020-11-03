@@ -321,6 +321,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Buttons
+		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
 		
@@ -711,7 +712,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == window.pauseButton) {
+		if (e.getSource() == window.hideBarsButton) {
+			window.sliderTabs.setVisible(!window.sliderTabs.isVisible());
+			
+			if (window.sliderTabs.isVisible()) {
+				window.hideBarsButton.setText("Hide Sliders");
+			} else {
+				window.hideBarsButton.setText("Show Sliders");
+			}
+		} else if (e.getSource() == window.pauseButton) {
 			paused = !paused;
 			
 			if (paused) {
@@ -722,6 +731,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 		} else if (e.getSource() == window.latestButton) {
 			latest = true;
+			
+			for (int i = 0; i < window.maxSliders.size(); i++) {				latest = true;
+				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);	
+			}
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {

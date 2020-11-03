@@ -3,6 +3,7 @@ package uorocketry.basestation;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -55,9 +56,10 @@ public class Window extends JFrame {
 	
 	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
-	JTabbedPane sliderTabs;
-	JButton latestButton;
+	public JTabbedPane sliderTabs;
+	JButton hideBarsButton;
 	JButton pauseButton;
+	JButton latestButton;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -180,6 +182,9 @@ public class Window extends JFrame {
 		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
+		
+		hideBarsButton = new JButton("Hide Sliders");
+		eastSliderButtons.add(hideBarsButton);
 		
 		pauseButton = new JButton("Pause");
 		eastSliderButtons.add(pauseButton);
