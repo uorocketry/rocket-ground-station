@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DataHandler {
@@ -65,7 +66,15 @@ public class DataHandler {
 	
 	public boolean set(int index, String currentData, JSONObject coordinateIndexes) {
 		// Check for special cases first
-		if (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index) {
+		boolean isFormattedCoordinate = false;
+		try {
+			isFormattedCoordinate = coordinateIndexes.getBoolean("formattedCoordinates") && 
+					(coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index);
+		} catch (JSONException e) {}
+		
+		if (isFormattedCoordinate) {
+			// These need to be converted to decimal coordinates to be used
+			
 			float degrees = 0;
 			float minutes = 0;
 			
