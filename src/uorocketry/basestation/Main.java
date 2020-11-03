@@ -722,6 +722,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 		} else if (e.getSource() == window.latestButton) {
 			latest = true;
+			
+			for (int i = 0; i < window.maxSliders.size(); i++) {				latest = true;
+				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);	
+			}
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
