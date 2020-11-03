@@ -396,7 +396,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Update every chart
-		for (DataChart chart : window.charts) {
+		for (DataChart chart : new ArrayList<DataChart>(window.charts)) {
 			updateChart(chart);
 		}
 	}
