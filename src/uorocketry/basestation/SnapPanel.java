@@ -66,8 +66,11 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 		if (e.getButton() == MouseEvent.BUTTON2) {
 			// Close this
-			chart.main.window.charts.remove(chart);
+			synchronized (chart.main.window.charts) {
+				chart.main.window.charts.remove(chart);
+			}
 			chart.main.window.centerChartPanel.remove(panel);
+			
 		}
 		
 		lastClickTime = System.nanoTime();
@@ -136,46 +139,48 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			otherPos = x;
 		}
 		
-		for (DataChart chart : chart.main.window.charts) {
-			if (chart == this.chart) continue;
-			
-			int currentChartPos = (int) chart.chartPanel.getBounds().getX();
-			int currentChartOtherPos = (int) chart.chartPanel.getBounds().getY();
-			int currentChartSize = (int) chart.chartPanel.getBounds().getWidth();
-			int currentChartOtherSize = (int) chart.chartPanel.getBounds().getHeight();
-			int closestChartPos = 0;
-			int closestChartSize = 0;
-			// To prevent null pointer exceptions
-			if (closestChart != null) {
-				closestChartPos = (int) closestChart.chartPanel.getBounds().getX();
-				closestChartSize = (int) closestChart.chartPanel.getBounds().getWidth();
-			}
-			
-			// For Y coordinate
-			if (coordinate == 1) {
-				currentChartPos = (int) chart.chartPanel.getBounds().getY();
-				currentChartOtherPos = (int) chart.chartPanel.getBounds().getX();
-				currentChartSize = (int) chart.chartPanel.getBounds().getHeight();
-				currentChartOtherSize = (int) chart.chartPanel.getBounds().getWidth();
+		synchronized (chart.main.window.charts) {
+			for (DataChart chart : chart.main.window.charts) {
+				if (chart == this.chart) continue;
 				
+				int currentChartPos = (int) chart.chartPanel.getBounds().getX();
+				int currentChartOtherPos = (int) chart.chartPanel.getBounds().getY();
+				int currentChartSize = (int) chart.chartPanel.getBounds().getWidth();
+				int currentChartOtherSize = (int) chart.chartPanel.getBounds().getHeight();
+				int closestChartPos = 0;
+				int closestChartSize = 0;
+				// To prevent null pointer exceptions
 				if (closestChart != null) {
-					closestChartPos = (int) closestChart.chartPanel.getBounds().getY();
-					closestChartSize = (int) closestChart.chartPanel.getBounds().getHeight();
-				}
-			}
-			
-			if (currentChartOtherPos < otherPos && currentChartOtherPos + currentChartOtherSize > otherPos) {
-				// Check for direction == 0
-				boolean check = currentChartPos < pos && 
-						(closestChart == null || closestChartPos < currentChartPos);
-				
-				if (direction == 1) {
-					check = currentChartPos > pos && 
-							(closestChart == null || closestChartPos > currentChartPos);
+					closestChartPos = (int) closestChart.chartPanel.getBounds().getX();
+					closestChartSize = (int) closestChart.chartPanel.getBounds().getWidth();
 				}
 				
-				if (check) {
-					closestChart = chart;
+				// For Y coordinate
+				if (coordinate == 1) {
+					currentChartPos = (int) chart.chartPanel.getBounds().getY();
+					currentChartOtherPos = (int) chart.chartPanel.getBounds().getX();
+					currentChartSize = (int) chart.chartPanel.getBounds().getHeight();
+					currentChartOtherSize = (int) chart.chartPanel.getBounds().getWidth();
+					
+					if (closestChart != null) {
+						closestChartPos = (int) closestChart.chartPanel.getBounds().getY();
+						closestChartSize = (int) closestChart.chartPanel.getBounds().getHeight();
+					}
+				}
+				
+				if (currentChartOtherPos < otherPos && currentChartOtherPos + currentChartOtherSize > otherPos) {
+					// Check for direction == 0
+					boolean check = currentChartPos < pos && 
+							(closestChart == null || closestChartPos < currentChartPos);
+					
+					if (direction == 1) {
+						check = currentChartPos > pos && 
+								(closestChart == null || closestChartPos > currentChartPos);
+					}
+					
+					if (check) {
+						closestChart = chart;
+					}
 				}
 			}
 		}
