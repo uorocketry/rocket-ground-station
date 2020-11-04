@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -102,6 +103,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean latest = true;
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
+	
+	/** Used to only update the UI once at a time, even though it runs in its own thread */
+	boolean updatingUI = false;
 	
 	/** If not in a simulation, the serial ports being listened to */
 	List<SerialPort> activeSerialPorts = new ArrayList<SerialPort>(2);
@@ -353,10 +357,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		
 		// Setup Snap Panel system
-		selectedChart = window.charts.get(0);
-		selectedChart.snapPanel.setSnapPanelListener(this);
-
-		snapPanelSelected(selectedChart.snapPanel);
+		synchronized (window.charts) {
+			selectedChart = window.charts.get(0);
+			selectedChart.snapPanel.setSnapPanelListener(this);
+			
+			snapPanelSelected(selectedChart.snapPanel);
+		}
 	}
 	
 	public void setupGoogleEarth() {
@@ -368,37 +374,53 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void updateUI() {
 		// If not ready yet
-		if (allData.size() == 0) return;
+		if (allData.size() == 0 || updatingUI) return;
 		
-		// Update every table's data
-		for (int i = 0; i < allData.size(); i++) {
-			// If not ready yet
-			if (allData.get(i).size() == 0) continue;
-			
-			// Don't change slider if paused
-			if (!paused) {
-				// Set max value of the sliders
-				window.maxSliders.get(i).setMaximum(allData.get(i).size() - 1);
-				window.minSliders.get(i).setMaximum(allData.get(i).size() - 1);
+		updatingUI = true;
+		
+		// Update UI on another thread
+		new Thread(this::updateUIInternal).start();
+	}
+	
+	private void updateUIInternal() {
+		try {
+			// Update every table's data
+			for (int i = 0; i < allData.size(); i++) {
+				// If not ready yet
+				if (allData.get(i).size() == 0) continue;
+				
+				// Don't change slider if paused
+				if (!paused) {
+					// Set max value of the sliders
+					window.maxSliders.get(i).setMaximum(allData.get(i).size() - 1);
+					window.minSliders.get(i).setMaximum(allData.get(i).size() - 1);
+				}
+				
+				DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
+				
+				if (currentDataHandler != null) {
+					currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
+				} else {
+					setTableToError(i, window.dataTables.get(i));
+				}
 			}
 			
-			DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
-			
-			if (currentDataHandler != null) {
-				currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
-			} else {
-				setTableToError(i, window.dataTables.get(i));
+			if (googleEarth) {
+				googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 			}
+			
+			// Update every chart
+			synchronized (window.charts) {
+				for (DataChart chart : window.charts) {
+					updateChart(chart);
+				}
+			}
+		} catch (Exception e) {
+			// Don't let an exception while updating break the program
+			e.printStackTrace();
 		}
 		
-		if (googleEarth) {
-			googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
-		}
-		
-		// Update every chart
-		for (DataChart chart : new ArrayList<DataChart>(window.charts)) {
-			updateChart(chart);
-		}
+		updatingUI = false;
 	}
 	
 	public void setTableToError(int index, JTable table) {
@@ -639,10 +661,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.minSliders.get(tableIndex).setValue(minDataIndexes.get(tableIndex));
 			}
 			
-			updateUI();
-			
 			// Update the latest value
-			latest = currentDataIndexes.get(tableIndex) == maxSlider.getMaximum() - 1;
+			latest = maxSlider.getValue() == maxSlider.getMaximum() - 1;
+			
+			updateUI();
 		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
 			JSlider minSlider = (JSlider) e.getSource();
 			int tableIndex = window.minSliders.indexOf(minSlider);
@@ -935,7 +957,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		dataChart.snapPanel.setRelSize(600, 450);
 		
 		// Add these default charts to the list
-		window.charts.add(dataChart);
+		synchronized (window.charts) {
+			window.charts.add(dataChart);
+		}
 		
 		// Set to be selected
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
@@ -998,8 +1022,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(dataTable));
 					}
 					
-					// Set chart to be based on this row
-					selectedChart.xTypes = formattedSelections;
+					synchronized (window.charts) {
+						// Set chart to be based on this row
+						selectedChart.xTypes = formattedSelections;
+					}
 					
 					dataTable.setColumnSelectionInterval(0, 0);
 					
@@ -1134,8 +1160,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		int currentChartContainerWidth = window.centerChartPanel.getWidth();
 		int currentChartContainerHeight = window.centerChartPanel.getHeight();
 		
-		for (DataChart chart : window.charts) {
-			chart.snapPanel.containerResized(currentChartContainerWidth, currentChartContainerHeight);
+		synchronized (window.charts) {
+			for (DataChart chart : window.charts) {
+				chart.snapPanel.containerResized(currentChartContainerWidth, currentChartContainerHeight);
+			}
 		}
 		
 		chartContainerWidth = currentChartContainerWidth;
