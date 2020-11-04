@@ -189,7 +189,7 @@ public class Window extends JFrame {
 		pauseButton = new JButton("Pause");
 		eastSliderButtons.add(pauseButton);
 		
-		latestButton = new JButton("Latest");
+		latestButton = new JButton("Detach From Latest");
 		eastSliderButtons.add(latestButton);
 		
 		sidePanel = new JPanel();

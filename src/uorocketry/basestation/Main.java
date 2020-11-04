@@ -397,6 +397,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					// Set max value of the sliders
 					window.maxSliders.get(i).setMaximum(allData.get(i).size() - 1);
 					window.minSliders.get(i).setMaximum(allData.get(i).size() - 1);
+					
+					// Move position to end
+					if (latest) {
+						window.maxSliders.get(i).setValue(allData.get(i).size() - 1);
+					}
 				}
 				
 				DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
@@ -663,7 +668,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (e.getSource() instanceof JSlider && window.maxSliders.contains(e.getSource())) {
 			JSlider maxSlider = (JSlider) e.getSource();
 			int tableIndex = window.maxSliders.indexOf(maxSlider);
-
+			
 			currentDataIndexes.set(tableIndex, maxSlider.getValue());
 			
 			// Check if min is too high
@@ -672,8 +677,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.minSliders.get(tableIndex).setValue(minDataIndexes.get(tableIndex));
 			}
 			
-			// Update the latest value
-			latest = maxSlider.getValue() == maxSlider.getMaximum() - 1;
 			
 			updateUI();
 		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
@@ -717,11 +720,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		updateUI();
 		
-		// Move position to end
-		if (latest) {
-			window.maxSliders.get(tableIndex).setValue(allData.get(0).size() - 1);
-		}
-		
 		// Add this message to the log file
 		logFileStringBuilder.append(delimitedMessage);
 		
@@ -763,10 +761,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 		} else if (e.getSource() == window.latestButton) {
-			latest = true;
+			latest = !latest;
 			
-			for (int i = 0; i < window.maxSliders.size(); i++) {				latest = true;
-				window.maxSliders.get(i).setValue(allData.get(0).size() - 1);	
+			if (latest) {
+				window.latestButton.setText("Detach From Latest");
+				
+				for (int i = 0; i < window.maxSliders.size(); i++) {
+					window.maxSliders.get(i).setValue(allData.get(0).size() - 1);	
+				}
+			} else {
+				window.latestButton.setText("Latest");
 			}
 		} else if (e.getSource() == window.addChartButton) {
 			addChart();
