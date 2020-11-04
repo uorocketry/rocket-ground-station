@@ -83,6 +83,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Will have a number appended to the end to not overwrite old logs */
 	ArrayList<String> currentLogFileName = new ArrayList<String>(2);
 	
+	/** Used to limit displayed data points to speed up rendering */
+	public static int maxDataPointsDisplayed = 1000;
+	
 	/** How many data sources to record data from. It is set when the config is loaded. */
 	public static int dataSourceCount = 1;
 	
@@ -467,14 +470,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
+			// Used to limit the max number of data points displayed
+			float targetRatio = (float) maxDataPointsDisplayed / (currentDataIndexes.get(chart.xTypes[i].tableIndex) - minDataIndexes.get(chart.xTypes[i].tableIndex));
+			int dataPointsAdded = 0;
+
 			for (int j = minDataIndexes.get(chart.xTypes[i].tableIndex); j <= currentDataIndexes.get(chart.xTypes[i].tableIndex); j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
-					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index])) {
+					// Ensures that not too many data points are displayed
+					boolean shouldShowDataPoint = (float) dataPointsAdded / j <= targetRatio;
+					
+					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index]) && shouldShowDataPoint ) {
 						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+						dataPointsAdded++;
 					} else {
 						// Hidden data
 						altitudeDataY.get(i).add(null);
