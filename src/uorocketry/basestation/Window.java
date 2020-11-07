@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -44,6 +45,12 @@ public class Window extends JFrame {
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
+	
+	private JPanel chartDataPointsOptions;
+	JCheckBox onlyShowLatestDataCheckBox;
+	JPanel maxDataPoints;
+	JButton setMaxDataPointsButton;
+	JTextField maxDataPointsTextField;
 	
 	private JPanel dataTools;
 	JButton restoreDeletedData;
@@ -121,6 +128,28 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
+		
+		chartDataPointsOptions = new JPanel();
+		chartDataPointsOptions.setBorder(new TitledBorder(null, "Chart Data Points", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(chartDataPointsOptions);
+		chartDataPointsOptions.setLayout(new BoxLayout(chartDataPointsOptions, BoxLayout.Y_AXIS));
+		
+		onlyShowLatestDataCheckBox = new JCheckBox("Only Show Latest Data");
+		chartDataPointsOptions.add(onlyShowLatestDataCheckBox);
+		
+		maxDataPoints = new JPanel();
+		maxDataPoints.setAlignmentY(Component.TOP_ALIGNMENT);
+		maxDataPoints.setAlignmentX(Component.LEFT_ALIGNMENT);
+		maxDataPoints.setLayout(new BoxLayout(maxDataPoints, BoxLayout.X_AXIS));
+		chartDataPointsOptions.add(maxDataPoints);
+		
+		maxDataPointsTextField = new JTextField(6);
+		maxDataPointsTextField.setMaximumSize(maxDataPointsTextField.getPreferredSize());
+		maxDataPointsTextField.setText(Main.maxDataPointsDisplayed + "");
+		maxDataPoints.add(maxDataPointsTextField);
+		
+		setMaxDataPointsButton = new JButton("Set");
+		maxDataPoints.add(setMaxDataPointsButton);
 		
 		dataTools = new JPanel();
 		dataTools.setBorder(new TitledBorder(null, "Data", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -227,7 +256,7 @@ public class Window extends JFrame {
 		
 		// Adjust width
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(130);
-		dataTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+		dataTable.getColumnModel().getColumn(1).setPreferredWidth(130);
 		
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
 		

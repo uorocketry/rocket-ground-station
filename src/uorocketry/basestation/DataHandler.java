@@ -59,6 +59,39 @@ public class DataHandler {
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
 			
+			// Hardcode for now TODO: Move this into config
+			if (i == data.length - 1 && labels[i].toLowerCase().contains("state")) {
+				switch (dataText) {
+				case "0":
+					dataText = "Init";
+					break;
+				case "1":
+					dataText = "Wait For Init";
+					break;
+				case "2":
+					dataText = "Wait For Launch";
+					break;
+				case "3":
+					dataText = "Powered Flight";
+					break;
+				case "4":
+					dataText = "Coast";
+					break;
+				case "5":
+					dataText = "Descent Phase 1";
+					break;
+				case "6":
+					dataText = "Descent Phase 2";
+					break;
+				case "7":
+					dataText = "Ground";
+					break;
+				case "8":
+					dataText = "Max States";
+					break;
+				}
+			}
+			
 			// Set data
 			tableModel.setValueAt(dataText, i, 1);
 		}
