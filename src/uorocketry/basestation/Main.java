@@ -337,6 +337,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		window.addChartButton.addActionListener(this);
 		
+		window.setMaxDataPointsButton.addActionListener(this);
+		
 		window.restoreDeletedData.addActionListener(this);
 		
 		window.saveLayout.addActionListener(this);
@@ -805,6 +807,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} else if (e.getSource() == window.onlyShowLatestDataCheckBox) {
 			onlyShowLatestData = window.onlyShowLatestDataCheckBox.isSelected();
+		} else if (e.getSource() == window.setMaxDataPointsButton) {
+			try {
+				int maxDataPoints = Integer.parseInt(window.maxDataPointsTextField.getText());
+				maxDataPointsDisplayed = maxDataPoints;
+			} catch (NumberFormatException err) {}
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {

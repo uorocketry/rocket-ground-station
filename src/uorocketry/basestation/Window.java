@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -47,6 +48,9 @@ public class Window extends JFrame {
 	
 	private JPanel chartDataPointsOptions;
 	JCheckBox onlyShowLatestDataCheckBox;
+	JPanel maxDataPoints;
+	JButton setMaxDataPointsButton;
+	JTextField maxDataPointsTextField;
 	
 	private JPanel dataTools;
 	JButton restoreDeletedData;
@@ -132,6 +136,20 @@ public class Window extends JFrame {
 		
 		onlyShowLatestDataCheckBox = new JCheckBox("Only Show Latest Data");
 		chartDataPointsOptions.add(onlyShowLatestDataCheckBox);
+		
+		maxDataPoints = new JPanel();
+		maxDataPoints.setAlignmentY(Component.TOP_ALIGNMENT);
+		maxDataPoints.setAlignmentX(Component.LEFT_ALIGNMENT);
+		maxDataPoints.setLayout(new BoxLayout(maxDataPoints, BoxLayout.X_AXIS));
+		chartDataPointsOptions.add(maxDataPoints);
+		
+		maxDataPointsTextField = new JTextField(6);
+		maxDataPointsTextField.setMaximumSize(maxDataPointsTextField.getPreferredSize());
+		maxDataPointsTextField.setText(Main.maxDataPointsDisplayed + "");
+		maxDataPoints.add(maxDataPointsTextField);
+		
+		setMaxDataPointsButton = new JButton("Set");
+		maxDataPoints.add(setMaxDataPointsButton);
 		
 		dataTools = new JPanel();
 		dataTools.setBorder(new TitledBorder(null, "Data", TitledBorder.LEADING, TitledBorder.TOP, null, null));
