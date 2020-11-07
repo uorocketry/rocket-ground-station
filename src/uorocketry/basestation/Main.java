@@ -616,7 +616,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		//TODO: Remove this hardcoded code to ignore small timestamp data
 		try {
-			if (Integer.parseInt(splitData[1]) < 1000) {
+			List<DataHandler> currentTableDatas = allData.get(tableIndex);
+			DataHandler lastDataPointDataHandler = null;
+			// Find last non null data point
+			for (int i = currentTableDatas.size() - 1; i >= 0; i--) {
+				if (currentTableDatas.get(i) != null) {
+					lastDataPointDataHandler = currentTableDatas.get(i);
+					break;
+				}
+			}
+			if (lastDataPointDataHandler != null && Integer.parseInt(splitData[1]) < lastDataPointDataHandler.data[1].getDecimalValue()) {
 				// Treat as invalid data
 				return null;
 			}
