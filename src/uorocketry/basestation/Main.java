@@ -614,6 +614,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return null;
 		}
 		
+		//TODO: Remove this hardcoded code to ignore small timestamp data
+		try {
+			if (Integer.parseInt(splitData[1]) < 1000) {
+				// Treat as invalid data
+				return null;
+			}
+		} catch (NumberFormatException e) {}
+		
 		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
 			if (!dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex).getJSONObject("coordinateIndexes"))) {
