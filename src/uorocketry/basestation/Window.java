@@ -238,7 +238,7 @@ public class Window extends JFrame {
 		
 		// Adjust width
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(130);
-		dataTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+		dataTable.getColumnModel().getColumn(1).setPreferredWidth(130);
 		
 		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
 		
