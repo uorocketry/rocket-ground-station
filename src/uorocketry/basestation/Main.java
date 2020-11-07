@@ -84,7 +84,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	ArrayList<String> currentLogFileName = new ArrayList<String>(2);
 	
 	/** Used to limit displayed data points to speed up rendering */
-	public static int maxDataPointsDisplayed = 1000;
+	public static int maxDataPointsDisplayed = 800;
 	
 	/** How many data sources to record data from. It is set when the config is loaded. */
 	public static int dataSourceCount = 1;
