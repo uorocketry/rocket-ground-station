@@ -103,29 +103,19 @@ public class GoogleEarthUpdater {
 	 * 		  The task is run to force Google Earth to update the display.
 	 */
 	public void updateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets, boolean secondRun) {
-		String fileContent = generateKMLFile(allData, minDataIndex, currentDataIndex, dataSets);
-		
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
-		   writer.write(fileContent);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
 		if (!secondRun) {
 			if (mapRefreshTaskTimer != null) {
-				try {
-					mapRefreshTaskTimer.cancel();
-				} catch (IllegalStateException e) {
-					// Ignore if it is already canceled
-				}
+				// No need to update again that recently
+				return;
 			}
-			
+
 			// Start a new task
 			mapRefreshTaskTimer = new TimerTask() {
 				@Override
 				public void run() {
 					updateKMLFile(allData, minDataIndex, currentDataIndex, dataSets, true);
+					
+					mapRefreshTaskTimer = null;
 				}
 			};
 			try {
@@ -133,6 +123,15 @@ public class GoogleEarthUpdater {
 			} catch (IllegalStateException e) {
 				// Ignore as another has already started
 			}
+		}
+		
+		String fileContent = generateKMLFile(allData, minDataIndex, currentDataIndex, dataSets);
+		
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(Main.GOOGLE_EARTH_DATA_LOCATION), StandardCharsets.UTF_8))) {
+		   writer.write(fileContent);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
