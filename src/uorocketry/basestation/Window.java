@@ -45,6 +45,9 @@ public class Window extends JFrame {
 	JCheckBox googleEarthCheckBox;
 	JCheckBox simulationCheckBox;
 	
+	private JPanel chartDataPointsOptions;
+	JCheckBox onlyShowLatestDataCheckBox;
+	
 	private JPanel dataTools;
 	JButton restoreDeletedData;
 	JCheckBox dataDeletionModeCheckBox;
@@ -121,6 +124,14 @@ public class Window extends JFrame {
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
+		
+		chartDataPointsOptions = new JPanel();
+		chartDataPointsOptions.setBorder(new TitledBorder(null, "Chart Data Points", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		leftPanel.add(chartDataPointsOptions);
+		chartDataPointsOptions.setLayout(new BoxLayout(chartDataPointsOptions, BoxLayout.Y_AXIS));
+		
+		onlyShowLatestDataCheckBox = new JCheckBox("Only Show Latest Data");
+		chartDataPointsOptions.add(onlyShowLatestDataCheckBox);
 		
 		dataTools = new JPanel();
 		dataTools.setBorder(new TitledBorder(null, "Data", TitledBorder.LEADING, TitledBorder.TOP, null, null));

@@ -133,6 +133,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Set to true when automatically selecting or deselcting from the data table */
 	boolean ignoreSelections = false;
 	
+	/** If true, it will show the latest data instead of showing a subset of all data */
+	boolean onlyShowLatestData = false;
+	
 	/** If true, clicking on data in a chart will hide it */
 	boolean dataDeletionMode = false;
 	
@@ -342,6 +345,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
+		window.onlyShowLatestDataCheckBox.addActionListener(this);
 		window.dataDeletionModeCheckBox.addActionListener(this);
 		
 		// Set simulation checkbox to be default
@@ -401,6 +405,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					// Move position to end
 					if (latest) {
 						window.maxSliders.get(i).setValue(allData.get(i).size() - 1);
+						
+						if (onlyShowLatestData) {
+							window.minSliders.get(i).setValue(allData.get(i).size() - 1 - maxDataPointsDisplayed);
+						}
 					}
 				}
 				
@@ -486,7 +494,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				if (data != null) {
 					// Ensures that not too many data points are displayed
-					boolean shouldShowDataPoint = (float) dataPointsAdded / j <= targetRatio;
+					// Always show data if only showing latest data (that is handled by changing the minSlider)
+					boolean shouldShowDataPoint = onlyShowLatestData || ((float) dataPointsAdded / j <= targetRatio);
 					
 					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index]) && shouldShowDataPoint ) {
 						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
@@ -794,6 +803,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
 			}
+		} else if (e.getSource() == window.onlyShowLatestDataCheckBox) {
+			onlyShowLatestData = window.onlyShowLatestDataCheckBox.isSelected();
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
