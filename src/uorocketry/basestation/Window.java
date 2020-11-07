@@ -86,7 +86,8 @@ public class Window extends JFrame {
 	
 	JButton saveLayout;
 	JButton loadLayout;
-	private JSplitPane splitPane;
+	private JSplitPane leftSplitPane;
+	private JSplitPane rightSplitPane;
 	
 	public Window(Main main) {
 		// Set look and feel
@@ -103,8 +104,8 @@ public class Window extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout(0, 0));
 		
-		splitPane = new JSplitPane();
-		getContentPane().add(splitPane, BorderLayout.CENTER);
+		leftSplitPane = new JSplitPane();
+		getContentPane().add(leftSplitPane, BorderLayout.CENTER);
 		
 		leftPanel = new JPanel();
 		leftPanel.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -181,7 +182,7 @@ public class Window extends JFrame {
 		savingToLabel = new JLabel("Saving to data/log.txt");
 		savingToPanel.add(savingToLabel);
 		
-		splitPane.setLeftComponent(scrollPane);
+		leftSplitPane.setLeftComponent(scrollPane);
 		
 		scrollPane.setAlignmentY(Component.TOP_ALIGNMENT);
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -221,22 +222,26 @@ public class Window extends JFrame {
 		latestButton = new JButton("Detach From Latest");
 		eastSliderButtons.add(latestButton);
 		
+		rightSplitPane = new JSplitPane();
+		leftSplitPane.setRightComponent(rightSplitPane);
+		
 		sidePanel = new JPanel();
-		getContentPane().add(sidePanel, BorderLayout.EAST);
 		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
+		rightSplitPane.setRightComponent(sidePanel);
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addComSelectorPanel();
 		}
 		
 		centerChartPanel = new JPanel();
-		
-		splitPane.setRightComponent(centerChartPanel);
-
 		centerChartPanel.setLayout(null);
+		
+		rightSplitPane.setLeftComponent(centerChartPanel);
 
 		setVisible(true);
 		
+		// Has to be after the window is visible
+		rightSplitPane.setDividerLocation(0.9);
 	}
 	
 	public void addJTable(int tableIndex, JSONObject dataSet) {
