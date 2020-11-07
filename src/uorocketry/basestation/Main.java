@@ -331,6 +331,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Buttons
+		window.hideComSelectorButton.addActionListener(this);
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
@@ -771,7 +772,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == window.hideBarsButton) {
+		if (e.getSource() == window.hideComSelectorButton) {
+			window.sidePanel.setVisible(!window.sidePanel.isVisible());
+			
+			if (window.sidePanel.isVisible()) {
+				window.hideComSelectorButton.setText("Hide Com Selector");
+			} else {
+				window.hideComSelectorButton.setText("Show Com Selector");
+			}
+		} else if (e.getSource() == window.hideBarsButton) {
 			window.sliderTabs.setVisible(!window.sliderTabs.isVisible());
 			
 			if (window.sliderTabs.isVisible()) {
