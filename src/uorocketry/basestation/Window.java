@@ -64,10 +64,11 @@ public class Window extends JFrame {
 	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
 	public JTabbedPane sliderTabs;
+	JButton clearDataButton;
+	JButton hideComSelectorButton;
 	JButton hideBarsButton;
 	JButton pauseButton;
 	JButton latestButton;
-	JButton hideComSelectorButton;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -212,6 +213,9 @@ public class Window extends JFrame {
 		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
+		
+		clearDataButton = new JButton("Clear Data");
+		eastSliderButtons.add(clearDataButton);
 		
 		hideComSelectorButton = new JButton("Hide Com Selector");
 		eastSliderButtons.add(hideComSelectorButton);

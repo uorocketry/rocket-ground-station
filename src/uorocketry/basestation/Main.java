@@ -772,7 +772,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == window.hideComSelectorButton) {
+		if (e.getSource() == window.clearDataButton) {
+			if (JOptionPane.showConfirmDialog(window, 
+					"Are you sure you would like to clear all the data?") == 0) {
+				for (int i = 0; i < allData.size(); i++) {
+					allData.get(i).clear();
+				}
+				
+				updateUI();
+			}
+		} else if (e.getSource() == window.hideComSelectorButton) {
 			window.sidePanel.setVisible(!window.sidePanel.isVisible());
 			
 			if (window.sidePanel.isVisible()) {
