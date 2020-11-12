@@ -331,6 +331,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Buttons
+		window.clearDataButton.addActionListener(this);
 		window.hideComSelectorButton.addActionListener(this);
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
