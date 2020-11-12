@@ -67,6 +67,7 @@ public class Window extends JFrame {
 	JButton hideBarsButton;
 	JButton pauseButton;
 	JButton latestButton;
+	JButton hideComSelectorButton;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -74,7 +75,7 @@ public class Window extends JFrame {
 	List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
 
 	Vector<String> comSelectorData = new Vector<String>();
-	private JPanel sidePanel;
+	public JPanel sidePanel;
 	
 	JPanel centerChartPanel;
 	
@@ -211,6 +212,9 @@ public class Window extends JFrame {
 		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
+		
+		hideComSelectorButton = new JButton("Hide Com Selector");
+		eastSliderButtons.add(hideComSelectorButton);
 		
 		hideBarsButton = new JButton("Hide Sliders");
 		eastSliderButtons.add(hideBarsButton);

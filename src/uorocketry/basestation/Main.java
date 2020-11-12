@@ -331,6 +331,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Buttons
+		window.hideComSelectorButton.addActionListener(this);
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
@@ -407,10 +408,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					// Move position to end
 					if (latest) {
 						window.maxSliders.get(i).setValue(allData.get(i).size() - 1);
-						
-						if (onlyShowLatestData) {
-							window.minSliders.get(i).setValue(allData.get(i).size() - 1 - maxDataPointsDisplayed);
-						}
 					}
 				}
 				
@@ -488,8 +485,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Used to limit the max number of data points displayed
 			float targetRatio = (float) maxDataPointsDisplayed / (currentDataIndexes.get(chart.xTypes[i].tableIndex) - minDataIndexes.get(chart.xTypes[i].tableIndex));
 			int dataPointsAdded = 0;
+			
+			int maxDataIndex = currentDataIndexes.get(chart.xTypes[i].tableIndex);
+			int minDataIndex = onlyShowLatestData ? Math.max(maxDataIndex - maxDataPointsDisplayed, 0)
+					: minDataIndexes.get(chart.xTypes[i].tableIndex);
 
-			for (int j = minDataIndexes.get(chart.xTypes[i].tableIndex); j <= currentDataIndexes.get(chart.xTypes[i].tableIndex); j++) {
+			for (int j = minDataIndex; j <= maxDataIndex; j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 
 				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
@@ -613,6 +614,23 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			return null;
 		}
+		
+		//TODO: Remove this hardcoded code to ignore small timestamp data
+		try {
+			List<DataHandler> currentTableDatas = allData.get(tableIndex);
+			DataHandler lastDataPointDataHandler = null;
+			// Find last non null data point
+			for (int i = currentTableDatas.size() - 1; i >= 0; i--) {
+				if (currentTableDatas.get(i) != null) {
+					lastDataPointDataHandler = currentTableDatas.get(i);
+					break;
+				}
+			}
+			if (lastDataPointDataHandler != null && Integer.parseInt(splitData[1]) < lastDataPointDataHandler.data[1].getDecimalValue()) {
+				// Treat as invalid data
+				return null;
+			}
+		} catch (NumberFormatException e) {}
 		
 		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
@@ -754,7 +772,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == window.hideBarsButton) {
+		if (e.getSource() == window.hideComSelectorButton) {
+			window.sidePanel.setVisible(!window.sidePanel.isVisible());
+			
+			if (window.sidePanel.isVisible()) {
+				window.hideComSelectorButton.setText("Hide Com Selector");
+			} else {
+				window.hideComSelectorButton.setText("Show Com Selector");
+			}
+		} else if (e.getSource() == window.hideBarsButton) {
 			window.sliderTabs.setVisible(!window.sliderTabs.isVisible());
 			
 			if (window.sliderTabs.isVisible()) {
