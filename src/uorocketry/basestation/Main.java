@@ -488,8 +488,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			int dataPointsAdded = 0;
 			
 			int maxDataIndex = currentDataIndexes.get(chart.xTypes[i].tableIndex);
-			int minDataIndex = onlyShowLatestData ? Math.max(maxDataIndex - maxDataPointsDisplayed, 0)
-					: minDataIndexes.get(chart.xTypes[i].tableIndex);
+			int minDataIndex = minDataIndexes.get(chart.xTypes[i].tableIndex);
+			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 
 			for (int j = minDataIndex; j <= maxDataIndex; j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
