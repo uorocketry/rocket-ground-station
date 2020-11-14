@@ -471,15 +471,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Add y axis
-		for (int i = minDataIndexes.get(chart.yType.tableIndex); i <= currentDataIndexes.get(chart.yType.tableIndex); i++) {
-			if (allData.get(chart.yType.tableIndex).size() == 0) continue;
+		{
+			int maxDataIndex = currentDataIndexes.get(chart.yType.tableIndex);
+			int minDataIndex = minDataIndexes.get(chart.yType.tableIndex);
+			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 			
-			DataHandler data = allData.get(chart.yType.tableIndex).get(i);
-			
-			if (data != null) {
-				altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
+			for (int i = minDataIndex; i <= maxDataIndex; i++) {
+				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
+				
+				DataHandler data = allData.get(chart.yType.tableIndex).get(i);
+				
+				if (data != null) {
+					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
+				}
 			}
 		}
+		
 		
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
