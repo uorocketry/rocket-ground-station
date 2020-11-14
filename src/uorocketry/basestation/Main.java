@@ -76,6 +76,17 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 	
+	/** Used for the map view */
+	GoogleEarthUpdater googleEarthUpdater;
+	
+	/** Whether to update web view JSON file */
+	public static boolean webView = false;
+	/** Where the updating Google Earth kml file is stored */
+	public static final String WEB_VIEW_DATA_LOCATION = "web/data/data.json";
+	
+	/** Used for the web view */
+	WebViewUpdater webViewUpdater;
+	
 	/** Where to save the log file */
 	public static final String LOG_FILE_SAVE_LOCATION = "data/";
     public static final String DEFAULT_LOG_FILE_NAME = "log";
@@ -118,9 +129,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** All the serial ports found */
 	SerialPort[] allSerialPorts;
 	List<Boolean> connectingToSerial = new ArrayList<Boolean>(2);
-	
-	/** Used for the map view */
-	GoogleEarthUpdater googleEarthUpdater;
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -175,6 +183,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup Google Earth map support
 		if (googleEarth) {
 			setupGoogleEarth();
+		}
+		
+		// Setup web view support
+		if (webView) {
+			setupWebView();
 		}
 		
 		// Update UI once
@@ -348,6 +361,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
+		window.webViewCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
 		window.onlyShowLatestDataCheckBox.addActionListener(this);
 		window.dataDeletionModeCheckBox.addActionListener(this);
@@ -381,6 +395,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup updater file
 //		googleEarthUpdater.createKMLUpdaterFile();
+	}
+	
+	public void setupWebView() { 
+		webViewUpdater = new WebViewUpdater();
 	}
 	
 	public void updateUI() {
@@ -423,6 +441,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			
 			if (googleEarth) {
 				googleEarthUpdater.updateKMLFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
+			}
+			
+			if (webView) {
+				webViewUpdater.updateJSONFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 			}
 			
 			// Update every chart
@@ -832,6 +854,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			googleEarth = window.googleEarthCheckBox.isSelected();
 			
 			if (googleEarth) setupGoogleEarth();
+		} else if (e.getSource() == window.webViewCheckBox) {
+			webView = window.webViewCheckBox.isSelected();
+			
+			if (webView) setupWebView();
 		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {

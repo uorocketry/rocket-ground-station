@@ -44,6 +44,7 @@ public class Window extends JFrame {
 	private JPanel leftPanel;
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
+	JCheckBox webViewCheckBox;
 	JCheckBox simulationCheckBox;
 	
 	private JPanel chartDataPointsOptions;
@@ -127,6 +128,9 @@ public class Window extends JFrame {
 		
 		googleEarthCheckBox = new JCheckBox("Google Earth");
 		leftPanel.add(googleEarthCheckBox);
+		
+		webViewCheckBox = new JCheckBox("Web View");
+		leftPanel.add(webViewCheckBox);
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
