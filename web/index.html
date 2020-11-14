@@ -123,10 +123,10 @@
                         lineVertices.push(newLocation);
                         line.setLocations(lineVertices);
 
-                        altitudeDiv.innerText = data.altitude + " m";
+                        altitudeDiv.innerText = "Altitude: " + data.altitude + " m";
 
                         // Calculate downrange distance
-                        distanceDiv.innerText = Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
+                        distanceDiv.innerText = "Distance: " + Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
                                  newLocation, Microsoft.Maps.SpatialMath.DistanceUnits.Meters) + " m";
 
                         if (startTime - lastUpdateMarker > 5000) {
