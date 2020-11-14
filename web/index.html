@@ -2,7 +2,7 @@
     <head>
         <style>
             #map {
-                font-size: 20px;
+                font-size: 100px;
                 margin: 0;
                 width: 100%;
                 height: 100%;
@@ -10,7 +10,7 @@
             }
 
             #overlayText {
-                font-size: 30px;
+                font-size: 70px;
                 font-family: sans-serif;
                 text-align: center;
                 position: absolute;
@@ -19,13 +19,27 @@
                 z-index: 1;
                 color: white;
             }
+
+            #updateMarker {
+                font-size: 50px;
+                font-family: sans-serif;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                color: white;
+            }
         </style>
     </head>
-    <body>
-        <div id="outer" style="position: relative; margin: 0;">
+    <body style="margin: 0;">
+        <div style="position: relative; margin: 0;">
             <span id="overlayText">
                 <div id="altitude"></div>
                 <div id="distance"></div>
+            </span>
+
+            <span id="overlayBottomText">
+                <div id="updateMarker"></div>
             </span>
 
             <div id="map"></div>
@@ -89,7 +103,10 @@
             const altitudeDiv = document.getElementById("altitude");
             const distanceDiv = document.getElementById("distance");
 
+            const updateMarkerDiv = document.getElementById("updateMarker");
+
             const updateTime = 50;
+            let lastUpdateMarker = Date.now();
             while (true) {
                 const startTime = Date.now();
                 const result = await fetch("data/data.json");
@@ -111,6 +128,15 @@
                         // Calculate downrange distance
                         distanceDiv.innerText = Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
                                  newLocation, Microsoft.Maps.SpatialMath.DistanceUnits.Meters) + " m";
+
+                        if (startTime - lastUpdateMarker > 5000) {
+                            lastUpdateMarker = startTime;
+                            if (updateMarkerDiv.innerText.length === 0) {
+                                updateMarkerDiv.innerText = ".";
+                            } else {
+                                updateMarkerDiv.innerText = "";
+                            }
+                        }
                     } catch(e) { console.log(e)}
                 }
 
@@ -123,6 +149,6 @@
         }
     </script>
 
-    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=initMap&key=AlkfmFirgNL23C-rk4vlO8haZbOXUvhGOom7MRnWHPZNs013Z3SNln9Z2uxrM5PU' async defer></script>
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=initMap&key=AjISGq8zsmyv38hlaTI-0cjB3ealoFEZARgCHtclQjOkbXZFey8k_r3W_olU-JcM' async defer></script>
 
 </html>
