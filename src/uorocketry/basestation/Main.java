@@ -503,7 +503,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				DataHandler data = allData.get(chart.yType.tableIndex).get(i);
 				
-				if (data != null) {
+				DataHandler other = allData.get(chart.xTypes[0].tableIndex).get(i);
+				
+				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
 					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
 				}
 			}
@@ -532,8 +534,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					
 					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index]) && shouldShowDataPoint ) {
 						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
+						
 						dataPointsAdded++;
-					} else {
+					} else if (!shouldShowDataPoint) {
 						// Hidden data
 						altitudeDataY.get(i).add(null);
 					}
