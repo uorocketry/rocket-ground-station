@@ -659,7 +659,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					break;
 				}
 			}
-			if (lastDataPointDataHandler != null && Integer.parseInt(splitData[1]) < lastDataPointDataHandler.data[1].getDecimalValue()) {
+			if (lastDataPointDataHandler != null && Float.parseFloat(splitData[1]) < lastDataPointDataHandler.data[1].getDecimalValue()) {
 				// Treat as invalid data
 				return null;
 			}
