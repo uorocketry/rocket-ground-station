@@ -613,7 +613,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 		}
 		
-		ArrayList<DataHandler> dataHandlers = new ArrayList<DataHandler>();
+		List<DataHandler> dataHandlers = new ArrayList<DataHandler>();
+		allData.set(index, dataHandlers);
 		
 		try {
 			try {
@@ -629,8 +630,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
-		
-		allData.set(index, dataHandlers);
 	}
 	
 	public DataHandler parseData(String data, int tableIndex) {
@@ -648,22 +647,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			return null;
 		}
 		
-		//TODO: Remove this hardcoded code to ignore small timestamp data
+		// Ensure that the timestamp has not gone back in time
 		try {
-			List<DataHandler> currentTableDatas = allData.get(tableIndex);
-			DataHandler lastDataPointDataHandler = null;
-			// Find last non null data point
-			for (int i = currentTableDatas.size() - 1; i >= 0; i--) {
-				if (currentTableDatas.get(i) != null) {
-					lastDataPointDataHandler = currentTableDatas.get(i);
-					break;
-				}
-			}
-			if (lastDataPointDataHandler != null && Float.parseFloat(splitData[1]) < lastDataPointDataHandler.data[1].getDecimalValue()) {
+			DataHandler lastDataPointDataHandler = findLastValidDataPoint(allData.get(tableIndex));
+			
+			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
+			if (lastDataPointDataHandler != null && Float.parseFloat(splitData[timestampIndex]) < lastDataPointDataHandler.data[timestampIndex].getDecimalValue()) {
 				// Treat as invalid data
 				return null;
 			}
-		} catch (NumberFormatException e) {}
+		} catch (NumberFormatException | JSONException e) {}
 		
 		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
@@ -676,6 +669,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		return dataHandler;
+	}
+	
+	/**
+	 * Find last non null data point
+	 * 
+	 * @param currentTableData
+	 * @return DataHandler if found, null otherwise
+	 */
+	private DataHandler findLastValidDataPoint(List<DataHandler> currentTableData) {
+		for (int i = currentTableData.size() - 1; i >= 0; i--) {
+			if (currentTableData.get(i) != null) {
+				return currentTableData.get(i);
+			}
+		}
+		
+		return null;
 	}
 	
 	/** 

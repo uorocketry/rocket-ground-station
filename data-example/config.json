@@ -24,7 +24,8 @@
 	        	"altitude": 1,
 	        	"latitude": 2,
 	        	"longitude": 3
-	        }
+	        },
+	        "timestampIndex": 1
         },
         {
     		"name": "Payload",
@@ -50,7 +51,8 @@
 	        	"altitude": 1,
 	        	"latitude": 2,
 	        	"longitude": 3
-	        }
+	        },
+	        "timestampIndex": 1
     	}
     ]
 }
