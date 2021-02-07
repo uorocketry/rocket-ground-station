@@ -1,0 +1,154 @@
+<html>
+    <head>
+        <style>
+            #map {
+                font-size: 100px;
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+            }
+
+            #overlayText {
+                font-size: 70px;
+                font-family: sans-serif;
+                text-align: center;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                color: white;
+            }
+
+            #updateMarker {
+                font-size: 50px;
+                font-family: sans-serif;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                color: white;
+            }
+        </style>
+    </head>
+    <body style="margin: 0;">
+        <div style="position: relative; margin: 0;">
+            <span id="overlayText">
+                <div id="altitude"></div>
+                <div id="distance"></div>
+            </span>
+
+            <span id="overlayBottomText">
+                <div id="updateMarker"></div>
+            </span>
+
+            <div id="map"></div>
+        </div>
+    </body>
+
+    <!-- Load script at the end -->
+    <script>
+        // Get hash parameters
+        {
+            const hash = window.location.hash.slice(1);
+            const params = hash.split(",");
+            const outer = document.getElementById("outer");
+            if (params[0] && !isNaN(params[0])) {
+                outer.style.width = params[0] + "%";
+            }
+            if (params[1] && !isNaN(params[1])) {
+                outer.style.height = params[1] + "%";
+            }
+        }
+
+        // Initialize and add the map
+        async function initMap() {
+            await new Promise((resolve) => Microsoft.Maps.loadModule('Microsoft.Maps.SpatialMath', resolve));
+
+            // Default position
+            const pos = { lat: 45.1362, lng: -75.3124 };
+            const map = new Microsoft.Maps.Map(document.getElementById("map"), {
+                zoom: 16,
+                // zoom: 15,
+                center: new Microsoft.Maps.Location(45.1362, -75.3124),
+                mapTypeId: Microsoft.Maps.MapTypeId.aerial,
+                showDashboard: false,
+                enableInertia: false,
+                liteMode: true,
+                showScalebar: false,
+                showTermsLink: false,
+                enableClickableLogo: false
+            });
+
+            // Do it after load due to bug
+            map.setView({
+                labelOverlay: Microsoft.Maps.LabelOverlay.hidden
+            });
+
+            const center = map.getCenter();
+            //Create custom Pushpin
+            let pin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(45.1362, -75.3124), {
+                text: 'R',
+                // anchor: new Microsoft.Maps.Point(12, 39)
+                // anchor: new Microsoft.Maps.Location(45.1362, -75.3124)
+            });
+            map.entities.push(pin);
+
+            let lineVertices = [];
+            let line = new Microsoft.Maps.Polyline(lineVertices, {
+                strokeColor: 'white'
+            });
+            map.entities.push(line);
+
+            const altitudeDiv = document.getElementById("altitude");
+            const distanceDiv = document.getElementById("distance");
+
+            const updateMarkerDiv = document.getElementById("updateMarker");
+
+            const updateTime = 50;
+            let lastUpdateMarker = Date.now();
+            while (true) {
+                const startTime = Date.now();
+                const result = await fetch("data/data.json");
+                if (result.ok) {
+                    try {
+                        const data = await result.json();
+                        const newLocation = new Microsoft.Maps.Location(data.latitude, data.longitude);
+
+                        map.setView({
+                            center: newLocation
+                        });
+
+                        pin.setLocation(newLocation);
+                        lineVertices.push(newLocation);
+                        line.setLocations(lineVertices);
+
+                        altitudeDiv.innerText = "Altitude: " + data.altitude + " m";
+
+                        // Calculate downrange distance
+                        distanceDiv.innerText = "Distance: " + Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
+                                 newLocation, Microsoft.Maps.SpatialMath.DistanceUnits.Meters) + " m";
+
+                        if (startTime - lastUpdateMarker > 5000) {
+                            lastUpdateMarker = startTime;
+                            if (updateMarkerDiv.innerText.length === 0) {
+                                updateMarkerDiv.innerText = ".";
+                            } else {
+                                updateMarkerDiv.innerText = "";
+                            }
+                        }
+                    } catch(e) { console.log(e)}
+                }
+
+                const endTime = Date.now();
+                if (endTime - startTime < updateTime) {
+                    // Wait until updateTime has passed
+                    await new Promise((resolve) => setTimeout(resolve, updateTime - (endTime - startTime)));
+                }
+            }
+        }
+    </script>
+
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=initMap&key=AjISGq8zsmyv38hlaTI-0cjB3ealoFEZARgCHtclQjOkbXZFey8k_r3W_olU-JcM' async defer></script>
+
+</html>

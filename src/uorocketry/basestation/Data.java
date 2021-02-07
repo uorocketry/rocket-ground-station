@@ -1,10 +1,13 @@
 package uorocketry.basestation;
 
+import java.io.Console;
 import java.text.DecimalFormat;
 
 public class Data {
 	//the actual data point
 	float data;
+	
+	long dataLong;
 	
 	//used for special data types
 	float minutes;
@@ -15,6 +18,7 @@ public class Data {
 	
 	enum Types {
 		NORMAL,
+		LONG,
 		FORMATTED_COORDINATE
 	}
 	
@@ -22,6 +26,20 @@ public class Data {
 		this.data = data;
 		
 		type = Types.NORMAL;
+		
+		format.setGroupingUsed(true);
+		format.setGroupingSize(3);
+	}
+	
+	/**
+	 * Used for timestamps
+	 * 
+	 * @param data
+	 */
+	public Data(long data) {
+		this.dataLong = data;
+		
+		type = Types.LONG;
 		
 		format.setGroupingUsed(true);
 		format.setGroupingSize(3);
@@ -45,6 +63,8 @@ public class Data {
 		switch (type) {
 			case FORMATTED_COORDINATE:
 				return Math.round(data) + "° " + minutes + " '";
+			case LONG:
+				return format.format(dataLong);
 			default: 
 				return format.format(data);
 		}
@@ -54,8 +74,19 @@ public class Data {
 		switch (type) {
 			case FORMATTED_COORDINATE:
 				return getDecimalCoordinate();
+			case LONG:
+				return dataLong;
 			default:
 				return data;
+		}
+	}
+	
+	public long getDecimalLong() {
+		switch (type) {
+			case LONG:
+				return dataLong;
+			default:
+				return getDecimalLong();
 		}
 	}
 	

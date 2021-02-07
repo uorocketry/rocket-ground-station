@@ -97,12 +97,17 @@ public class DataHandler {
 		}
 	}
 	
-	public boolean set(int index, String currentData, JSONObject coordinateIndexes) {
+	public boolean set(int index, String currentData, JSONObject dataset) {
 		// Check for special cases first
 		boolean isFormattedCoordinate = false;
+		boolean isTimestamp = false;
 		try {
-			isFormattedCoordinate = coordinateIndexes.getBoolean("formattedCoordinates") && 
-					(coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index);
+			isTimestamp = dataset.getInt("timestampIndex") == index;
+			
+			JSONObject coordinateIndexes = dataset.getJSONObject("coordinateIndexes");
+			isFormattedCoordinate = coordinateIndexes.has("formattedCoordinates") 
+					&& coordinateIndexes.getBoolean("formattedCoordinates") 
+					&& (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index);
 		} catch (JSONException e) {}
 		
 		if (isFormattedCoordinate) {
@@ -119,8 +124,25 @@ public class DataHandler {
 			}
 			
 			data[index] = new Data(degrees, minutes);
-		} else {
+		} else if (isTimestamp) {
+			// Long case
+			long longData = -1;
 			
+			try {
+				longData = Long.parseLong(currentData);
+			} catch (NumberFormatException e) {
+				if (currentData.equals("ovf")) {
+					// ovf means overflow
+					longData = Long.MAX_VALUE;
+				} else {
+					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
+					
+					return false;
+				}
+			}
+			
+			data[index] = new Data(longData);
+		} else {
 			// Normal case
 			float floatData = -1;
 			

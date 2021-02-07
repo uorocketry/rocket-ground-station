@@ -44,6 +44,7 @@ public class Window extends JFrame {
 	private JPanel leftPanel;
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
+	JCheckBox webViewCheckBox;
 	JCheckBox simulationCheckBox;
 	
 	private JPanel chartDataPointsOptions;
@@ -64,10 +65,11 @@ public class Window extends JFrame {
 	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
 	public JTabbedPane sliderTabs;
+	JButton clearDataButton;
+	JButton hideComSelectorButton;
 	JButton hideBarsButton;
 	JButton pauseButton;
 	JButton latestButton;
-	JButton hideComSelectorButton;
 	JLabel savingToLabel;
 	
 	private List<JPanel> comPanels = new ArrayList<>();
@@ -126,6 +128,9 @@ public class Window extends JFrame {
 		
 		googleEarthCheckBox = new JCheckBox("Google Earth");
 		leftPanel.add(googleEarthCheckBox);
+		
+		webViewCheckBox = new JCheckBox("Web View");
+		leftPanel.add(webViewCheckBox);
 		
 		simulationCheckBox = new JCheckBox("Simulation");
 		leftPanel.add(simulationCheckBox);
@@ -212,6 +217,9 @@ public class Window extends JFrame {
 		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
+		
+		clearDataButton = new JButton("Clear Data");
+		eastSliderButtons.add(clearDataButton);
 		
 		hideComSelectorButton = new JButton("Hide Com Selector");
 		eastSliderButtons.add(hideComSelectorButton);
