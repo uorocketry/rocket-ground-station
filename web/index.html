@@ -105,47 +105,41 @@
 
             const updateMarkerDiv = document.getElementById("updateMarker");
 
-            const updateTime = 50;
+            const webSocket = new WebSocket("ws://localhost:4534");
+            webSocket.onopen = console.log;
+            webSocket.onerror = console.log;
+
             let lastUpdateMarker = Date.now();
-            while (true) {
+            webSocket.onmessage = (event) => {
                 const startTime = Date.now();
-                const result = await fetch("data/data.json");
-                if (result.ok) {
-                    try {
-                        const data = await result.json();
-                        const newLocation = new Microsoft.Maps.Location(data.latitude, data.longitude);
+                try {
+                    const data = JSON.parse(event.data);
+                    const newLocation = new Microsoft.Maps.Location(data.latitude, data.longitude);
 
-                        map.setView({
-                            center: newLocation
-                        });
+                    map.setView({
+                        center: newLocation
+                    });
 
-                        pin.setLocation(newLocation);
-                        lineVertices.push(newLocation);
-                        line.setLocations(lineVertices);
+                    pin.setLocation(newLocation);
+                    lineVertices.push(newLocation);
+                    line.setLocations(lineVertices);
 
-                        altitudeDiv.innerText = "Altitude: " + data.altitude + " m";
+                    altitudeDiv.innerText = "Altitude: " + data.altitude + " m";
 
-                        // Calculate downrange distance
-                        distanceDiv.innerText = "Distance: " + Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
-                                 newLocation, Microsoft.Maps.SpatialMath.DistanceUnits.Meters) + " m";
+                    // Calculate downrange distance
+                    distanceDiv.innerText = "Distance: " + Microsoft.Maps.SpatialMath.getDistanceTo(lineVertices[0],
+                                newLocation, Microsoft.Maps.SpatialMath.DistanceUnits.Meters) + " m";
 
-                        if (startTime - lastUpdateMarker > 5000) {
-                            lastUpdateMarker = startTime;
-                            if (updateMarkerDiv.innerText.length === 0) {
-                                updateMarkerDiv.innerText = ".";
-                            } else {
-                                updateMarkerDiv.innerText = "";
-                            }
+                    if (startTime - lastUpdateMarker > 5000) {
+                        lastUpdateMarker = startTime;
+                        if (updateMarkerDiv.innerText.length === 0) {
+                            updateMarkerDiv.innerText = ".";
+                        } else {
+                            updateMarkerDiv.innerText = "";
                         }
-                    } catch(e) { console.log(e)}
-                }
-
-                const endTime = Date.now();
-                if (endTime - startTime < updateTime) {
-                    // Wait until updateTime has passed
-                    await new Promise((resolve) => setTimeout(resolve, updateTime - (endTime - startTime)));
-                }
-            }
+                    }
+                } catch(e) { console.log(e)}
+            };
         }
     </script>
 

@@ -81,8 +81,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** Whether to update web view JSON file */
 	public static boolean webView = false;
-	/** Where the updating Google Earth kml file is stored */
-	public static final String WEB_VIEW_DATA_LOCATION = "web/data/data.json";
+	public static int WEBVIEW_PORT = 4534;
 	
 	/** Used for the web view */
 	WebViewUpdater webViewUpdater;
@@ -398,6 +397,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupWebView() { 
+		if (webViewUpdater != null) webViewUpdater.close();
 		webViewUpdater = new WebViewUpdater();
 	}
 	
@@ -444,7 +444,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 			if (webView) {
-				webViewUpdater.updateJSONFile(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
+				webViewUpdater.sendUpdate(allData, minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"));
 			}
 			
 			// Update every chart
