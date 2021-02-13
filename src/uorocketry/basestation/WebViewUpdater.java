@@ -1,13 +1,13 @@
 package uorocketry.basestation;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,14 +17,22 @@ import org.json.JSONObject;
  * @author Ajay
  *
  */
-public class WebViewUpdater {
+public class WebViewUpdater extends WebSocketServer {
+	
+	List<WebSocket> connections = new ArrayList<>();
+	
+	public WebViewUpdater() {
+		super(new InetSocketAddress(Main.WEBVIEW_PORT));
+		
+		start();
+	}
 
 	/**
-	 * Generates a json file from the data currentDataIndex
+	 * Generates a json from the data currentDataIndex
 	 * 
 	 * @param main
 	 */
-	public JSONObject generateJSONFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
+	public JSONObject generateJSON(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
 		JSONObject coordinateIndexes = dataSets.getJSONObject(0).getJSONObject("coordinateIndexes");
 		
 		JSONObject jsonObject = new JSONObject();
@@ -50,26 +58,52 @@ public class WebViewUpdater {
 	}
 	
 	/**
-	 * Updates the JSON file with the data up to currentDataIndex.
+	 * Sends updated data over the websocket channel
 	 * 
 	 * @param tableIndex
 	 * @param allData
 	 * @param currentDataIndex
 	 * @param dataSets
-	 * @param secondRun Is this a second run? This is true if it is being run from a task called by this function.
-	 * 		  The task is run to force Google Earth to update the display.
 	 */
-	public void updateJSONFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets, boolean secondRun) {
-		JSONObject jsonObject = generateJSONFile(allData, minDataIndex, currentDataIndex, dataSets);
+	public void sendUpdate(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
+		JSONObject jsonObject = generateJSON(allData, minDataIndex, currentDataIndex, dataSets);
 		if (jsonObject == null) return;
 		
 		String fileContent = jsonObject.toString();
 		
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(Main.WEB_VIEW_DATA_LOCATION), StandardCharsets.UTF_8))) {
-		   writer.write(fileContent);
+		for (WebSocket connection : connections) {
+			connection.send(fileContent);
+		}
+ 	}
+	
+	public void close() {
+		try {
+			super.stop();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		
+		connections.clear();
 	}
+	
+	@Override
+	public void onOpen(WebSocket conn, ClientHandshake handshake) { 
+		connections.add(conn);
+	}
+
+	@Override
+	public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+		connections.remove(conn);
+	}
+
+	@Override
+	public void onMessage(WebSocket conn, String message) { }
+
+	@Override
+	public void onError(WebSocket conn, Exception ex) { }
+
+	@Override
+	public void onStart() { }
 }
