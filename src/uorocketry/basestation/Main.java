@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -824,9 +823,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				updateUI();
 			}
 		} else if (e.getSource() == window.hideComSelectorButton) {
-			window.sidePanel.setVisible(!window.sidePanel.isVisible());
+			window.comPanelParent.setVisible(!window.comPanelParent.isVisible());
 			
-			if (window.sidePanel.isVisible()) {
+			if (window.comPanelParent.isVisible()) {
 				window.hideComSelectorButton.setText("Hide Com Selector");
 			} else {
 				window.hideComSelectorButton.setText("Show Com Selector");
