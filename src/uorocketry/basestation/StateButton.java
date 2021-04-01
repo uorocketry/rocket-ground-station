@@ -1,10 +1,14 @@
 package uorocketry.basestation;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -26,7 +30,8 @@ public class StateButton implements ActionListener {
 	/** Which state means this button has been complete */
 	int stateNumber;
 	
-	JButton button;
+	private JButton button;
+	private JPanel border;
 	
 	private List<SerialPort> activeSerialPorts;
 	
@@ -39,6 +44,11 @@ public class StateButton implements ActionListener {
 		
 		button = new JButton(name);
 		button.addActionListener(this);
+		button.setFont(new Font("Arial", Font.PLAIN, 20));
+		
+		border = new JPanel();
+		border.setBorder(BorderFactory.createTitledBorder(name));
+		border.add(button);
 	}
 
 	@Override
@@ -49,6 +59,10 @@ public class StateButton implements ActionListener {
 				serialPort.writeBytes(data, data.length);
 			}
 		}
+	}
+	
+	public JPanel getPanel() {
+		return border;
 	}
 
 }

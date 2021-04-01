@@ -82,8 +82,6 @@ public class Window extends JFrame {
 	
 	public JPanel stateSendingPanel;
 	private List<StateButton> stateButtons = new ArrayList<>();
-	private List<JPanel> statePanels = new ArrayList<>();
-	private List<JList<String>> stateSelectors = new ArrayList<>();
 	
 	JPanel centerChartPanel;
 	
@@ -264,7 +262,8 @@ public class Window extends JFrame {
 				JSONObject object = array.getJSONObject(i);
 				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), object.getString("data"), object.getInt("stateNumber"));
 				
-				stateSendingPanel.add(stateButton.button);
+				stateSendingPanel.add(stateButton.getPanel());
+				stateButtons.add(stateButton);
 			}
 			
 		} catch (JSONException e) {
