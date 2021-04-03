@@ -38,8 +38,11 @@ public class DataHandler {
 	 */
 	int tableIndex = 0;
 	
-	public DataHandler(int tableIndex) {
+	private JSONObject datasetConfig;
+	
+	public DataHandler(int tableIndex, JSONObject datasetConfig) {
 		this.tableIndex = tableIndex;
+		this.datasetConfig = datasetConfig;
 		
 		this.data = new Data[Main.dataLength.get(tableIndex)];
 		
@@ -59,37 +62,8 @@ public class DataHandler {
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
 			
-			// Hardcode for now TODO: Move this into config
-			if (i == data.length - 1 && labels[i].toLowerCase().contains("state")) {
-				switch (dataText) {
-				case "0":
-					dataText = "Init";
-					break;
-				case "1":
-					dataText = "Wait For Init";
-					break;
-				case "2":
-					dataText = "Wait For Launch";
-					break;
-				case "3":
-					dataText = "Powered Flight";
-					break;
-				case "4":
-					dataText = "Coast";
-					break;
-				case "5":
-					dataText = "Descent Phase 1";
-					break;
-				case "6":
-					dataText = "Descent Phase 2";
-					break;
-				case "7":
-					dataText = "Ground";
-					break;
-				case "8":
-					dataText = "Max States";
-					break;
-				}
+			if (i == data.length - 1 && datasetConfig.getInt("stateIndex") == i) {
+				dataText = datasetConfig.getJSONArray("states").getString((int) data[i].getDecimalValue());
 			}
 			
 			// Set data
@@ -97,14 +71,14 @@ public class DataHandler {
 		}
 	}
 	
-	public boolean set(int index, String currentData, JSONObject dataset) {
+	public boolean set(int index, String currentData) {
 		// Check for special cases first
 		boolean isFormattedCoordinate = false;
 		boolean isTimestamp = false;
 		try {
-			isTimestamp = dataset.getInt("timestampIndex") == index;
+			isTimestamp = datasetConfig.getInt("timestampIndex") == index;
 			
-			JSONObject coordinateIndexes = dataset.getJSONObject("coordinateIndexes");
+			JSONObject coordinateIndexes = datasetConfig.getJSONObject("coordinateIndexes");
 			isFormattedCoordinate = coordinateIndexes.has("formattedCoordinates") 
 					&& coordinateIndexes.getBoolean("formattedCoordinates") 
 					&& (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index);

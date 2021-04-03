@@ -641,7 +641,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public DataHandler parseData(String data, int tableIndex) {
-		DataHandler dataHandler = new DataHandler(tableIndex);
+		DataHandler dataHandler = new DataHandler(tableIndex, config.getJSONArray("datasets").getJSONObject(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
@@ -666,9 +666,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} catch (NumberFormatException | JSONException e) {}
 		
-		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			if (!dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex))) {
+			if (!dataHandler.set(i, splitData[i])) {
 				System.err.println("Failed to set data handler");
 
 				// Parsing failed
