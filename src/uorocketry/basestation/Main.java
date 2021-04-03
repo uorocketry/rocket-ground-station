@@ -436,6 +436,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				} else {
 					setTableToError(i, window.dataTables.get(i));
 				}
+				
+				if (window.stateButtons.size() > i) {
+					try {
+						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
+						for (StateButton stateButton: window.stateButtons.get(i)) {
+							stateButton.stateChanged((int) currentDataHandler.data[stateIndex].getDecimalValue());
+						}
+					} catch (JSONException e) {}
+				}
 			}
 			
 			if (googleEarth) {

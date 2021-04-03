@@ -81,7 +81,7 @@ public class Window extends JFrame {
 	public List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
 	
 	public JPanel stateSendingPanel;
-	private List<StateButton> stateButtons = new ArrayList<>();
+	public List<List<StateButton>> stateButtons = new ArrayList<>();
 	
 	JPanel centerChartPanel;
 	
@@ -258,14 +258,16 @@ public class Window extends JFrame {
 				stateSendingPanel.setLayout(new BoxLayout(stateSendingPanel, BoxLayout.Y_AXIS));
 			}
 			
+			List<StateButton> buttons = new ArrayList<StateButton>(array.length());
+			stateButtons.add(buttons);
+
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject object = array.getJSONObject(i);
-				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), object.getString("data"), object.getInt("stateNumber"));
+				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), object.getString("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
 				
 				stateSendingPanel.add(stateButton.getPanel());
-				stateButtons.add(stateButton);
+				buttons.add(stateButton);
 			}
-			
 		} catch (JSONException e) {
 			// No states then
 			stateSendingPanel.setVisible(false);
