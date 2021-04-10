@@ -250,7 +250,7 @@ public class Window extends JFrame {
 		}
 		
 		try {
-			JSONArray array = main.config.getJSONArray("states");
+			JSONArray array = main.config.getJSONArray("stateEvents");
 			
 			if (array.length() > 0) {
 				stateSendingPanel = new JPanel();
