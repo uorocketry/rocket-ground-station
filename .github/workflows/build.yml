@@ -1,0 +1,19 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    name: Create artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v1
+	  - name: Build
+	    run: ./gradlew build
+	  
+	  - uses: actions/upload-artifact@v1
+        with:
+          name: GroundStation
+          path: build/libs/GroundStation.jar
