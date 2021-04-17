@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -437,6 +436,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				} else {
 					setTableToError(i, window.dataTables.get(i));
 				}
+				
+				if (window.stateButtons.size() > i) {
+					try {
+						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
+						for (StateButton stateButton: window.stateButtons.get(i)) {
+							stateButton.stateChanged((int) currentDataHandler.data[stateIndex].getDecimalValue());
+						}
+					} catch (JSONException e) {}
+				}
 			}
 			
 			if (googleEarth) {
@@ -633,7 +641,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public DataHandler parseData(String data, int tableIndex) {
-		DataHandler dataHandler = new DataHandler(tableIndex);
+		DataHandler dataHandler = new DataHandler(tableIndex, config.getJSONArray("datasets").getJSONObject(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
@@ -658,9 +666,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} catch (NumberFormatException | JSONException e) {}
 		
-		JSONArray dataSets = config.getJSONArray("datasets");
 		for (int i = 0; i < splitData.length; i++) {
-			if (!dataHandler.set(i, splitData[i], dataSets.getJSONObject(tableIndex))) {
+			if (!dataHandler.set(i, splitData[i])) {
 				System.err.println("Failed to set data handler");
 
 				// Parsing failed
@@ -824,9 +831,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				updateUI();
 			}
 		} else if (e.getSource() == window.hideComSelectorButton) {
-			window.sidePanel.setVisible(!window.sidePanel.isVisible());
+			window.comPanelParent.setVisible(!window.comPanelParent.isVisible());
 			
-			if (window.sidePanel.isVisible()) {
+			if (window.comPanelParent.isVisible()) {
 				window.hideComSelectorButton.setText("Hide Com Selector");
 			} else {
 				window.hideComSelectorButton.setText("Show Com Selector");

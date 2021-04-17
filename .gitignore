@@ -111,3 +111,7 @@ data
 build
 builds
 
+# Intellij
+.idea
+BaseStation.iml
+

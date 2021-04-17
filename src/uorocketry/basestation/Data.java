@@ -81,12 +81,12 @@ public class Data {
 		}
 	}
 	
-	public long getDecimalLong() {
+	public long getLongValue() {
 		switch (type) {
 			case LONG:
 				return dataLong;
 			default:
-				return getDecimalLong();
+				return (long) getDecimalValue();
 		}
 	}
 	

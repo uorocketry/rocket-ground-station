@@ -29,6 +29,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import javax.swing.border.TitledBorder;
 import javax.swing.JSplitPane;
@@ -72,12 +74,14 @@ public class Window extends JFrame {
 	JButton latestButton;
 	JLabel savingToLabel;
 	
-	private List<JPanel> comPanels = new ArrayList<>();
-	List<JList<String>> comSelectors = new ArrayList<>();
-	List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
-
-	Vector<String> comSelectorData = new Vector<String>();
 	public JPanel sidePanel;
+	public JPanel comPanelParent;
+	private List<JPanel> comPanels = new ArrayList<>();
+	public List<JList<String>> comSelectors = new ArrayList<>();
+	public List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
+	
+	public JPanel stateSendingPanel;
+	public List<List<StateButton>> stateButtons = new ArrayList<>();
 	
 	JPanel centerChartPanel;
 	
@@ -235,10 +239,38 @@ public class Window extends JFrame {
 		
 		sidePanel = new JPanel();
 		getContentPane().add(sidePanel, BorderLayout.EAST);
-		sidePanel.setLayout(new GridLayout(2, 1, 0, 0));
+		sidePanel.setLayout(new BorderLayout());
+		
+		comPanelParent = new JPanel();
+		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
+		comPanelParent.setLayout(new GridLayout(2, 1, 0, 0));
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
 			addComSelectorPanel();
+		}
+		
+		try {
+			JSONArray array = main.config.getJSONArray("stateEvents");
+			
+			if (array.length() > 0) {
+				stateSendingPanel = new JPanel();
+				sidePanel.add(stateSendingPanel, BorderLayout.NORTH);
+				stateSendingPanel.setLayout(new BoxLayout(stateSendingPanel, BoxLayout.Y_AXIS));
+			}
+			
+			List<StateButton> buttons = new ArrayList<StateButton>(array.length());
+			stateButtons.add(buttons);
+
+			for (int i = 0; i < array.length(); i++) {
+				JSONObject object = array.getJSONObject(i);
+				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), object.getString("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
+				
+				stateSendingPanel.add(stateButton.getPanel());
+				buttons.add(stateButton);
+			}
+		} catch (JSONException e) {
+			// No states then
+			stateSendingPanel.setVisible(false);
 		}
 		
 		centerChartPanel = new JPanel();
@@ -318,7 +350,7 @@ public class Window extends JFrame {
 		comConnectionSuccessLabel.setOpaque(true);
 		comPanel.add(comConnectionSuccessLabel);
 		
-		sidePanel.add(comPanel);
+		comPanelParent.add(comPanel);
 		
 		comPanels.add(comPanel);
 		comSelectors.add(comSelector);
