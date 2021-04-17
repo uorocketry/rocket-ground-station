@@ -10,10 +10,10 @@ jobs:
     
     steps:
       - uses: actions/checkout@v1
-	  - name: Build
-	    run: ./gradlew build
-	  
-	  - uses: actions/upload-artifact@v1
+      - name: Build
+        run: ./gradlew build
+ 
+      - uses: actions/upload-artifact@v1
         with:
           name: GroundStation
           path: build/libs/GroundStation.jar
