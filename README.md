@@ -1,7 +1,5 @@
 # RocketBaseStation
 
-Work in progress UI for data coming from the rocket.
-
 ![Demo](https://user-images.githubusercontent.com/12688112/71053199-be5fbb80-211b-11ea-9bd0-936da904a2ce.gif)
 
 # Add labels
@@ -14,13 +12,13 @@ For convenience, you can rename the `data-example` folder to `data` to get the l
 
 `git clone`
 
-Load this folder in your preferred Java IDE (ex. Eclipse).
-
-Add the libraries from `libs`
+Import this as a Gradle project in your preferred IDE.
 
 Setup the labels as described above.
 
 Run `Main.java`
+
+Build with `./gradlew build`
 
 # Simulation
 
