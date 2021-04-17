@@ -270,7 +270,9 @@ public class Window extends JFrame {
 			}
 		} catch (JSONException e) {
 			// No states then
-			stateSendingPanel.setVisible(false);
+			if (stateSendingPanel != null) {
+				stateSendingPanel.setVisible(false);
+			}
 		}
 		
 		centerChartPanel = new JPanel();
