@@ -49,7 +49,8 @@ public class StateButton implements ActionListener {
 		this.activeSerialPorts = activeSerialPorts;
 		
 		this.name = name;
-		this.data = data.getBytes();
+		this.data = new byte[1];
+		this.data[0] = Byte.parseByte(data);
 		this.successStates = Helper.toIntArray(successStates);
 		this.availableStates = Helper.toIntArray(availableStates);
 		
