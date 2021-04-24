@@ -263,7 +263,7 @@ public class Window extends JFrame {
 
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject object = array.getJSONObject(i);
-				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), object.getString("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
+				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
 				
 				stateSendingPanel.add(stateButton.getPanel());
 				buttons.add(stateButton);
