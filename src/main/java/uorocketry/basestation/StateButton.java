@@ -45,11 +45,11 @@ public class StateButton implements ActionListener {
 	
 	private List<SerialPort> activeSerialPorts;
 	
-	public StateButton(List<SerialPort> activeSerialPorts, String name, String data, JSONArray successStates, JSONArray availableStates) {
+	public StateButton(List<SerialPort> activeSerialPorts, String name, byte data, JSONArray successStates, JSONArray availableStates) {
 		this.activeSerialPorts = activeSerialPorts;
 		
 		this.name = name;
-		this.data = data.getBytes();
+		this.data = new byte[] { data };
 		this.successStates = Helper.toIntArray(successStates);
 		this.availableStates = Helper.toIntArray(availableStates);
 		
