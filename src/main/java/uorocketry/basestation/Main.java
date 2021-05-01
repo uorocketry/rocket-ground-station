@@ -63,7 +63,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** How many data points are there. By default, it is the number of labels */
 	public static List<Integer> dataLength = new ArrayList<>(2);
 	/** Separator for the data */
-	public static final String SEPARATOR = ";";
+	public static final String SEPARATOR = ",";
 	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
 	public static final String SIM_DATA_LOCATION = "data/data";
 	public static final String SIM_DATA_EXTENSION = ".txt";
@@ -650,7 +650,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		String[] splitData = data.split(SEPARATOR);
 		if (splitData.length != dataHandler.data.length) {
 			//invalid data
-			System.err.println("Line with invalid data (Not the correct amount of data)");
+			System.err.println("Line with invalid data (Not the correct amount of data). It was " + splitData.length);
 			
 			return null;
 		}
