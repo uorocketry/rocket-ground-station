@@ -1,0 +1,50 @@
+{
+    "designedFor": "october sky 2020",
+    "datasets": [
+    	{
+    		"name": "Rocket",
+    		"color": "DD000000",
+    		"labels": [
+	            "Timestamp (ms)",
+	            "Current State",
+                "Roll",
+                "Pitch",
+	            "Yaw",
+                "Roll Accuracy",
+                "Pitch Accuracy",
+	            "Yaw Accuracy",
+                "Latitude",
+	            "Longitude",
+	            "GPS Altitude (m)",
+                "Baromotric Altitude (m)",
+                "Velocity N (m/s)",
+                "Velocity E (m/s)",
+                "Velocity D (m/s)",
+	            "Acceleration X (g)",
+	            "Acceleration Y (g)",
+	            "Acceleration Z (g)",
+	            "Solution Status",
+            	"Log Status"
+        	],
+        	"states": [
+        		"Init",
+        		"Wait For Init",
+        		"Wait For Launch",
+        		"Powered Flight",
+        		"Coast",
+        		"Descent Phase 1",
+        		"Descent Phase 2",
+        		"Ground",
+        		"Max States"
+        	],
+        	"coordinateIndexes": {
+	        	"altitude": 10,
+	        	"latitude": 8,
+	        	"longitude": 9
+	        },
+	        "timestampIndex": 1,
+	        "stateIndex": 19,
+            "seperator": ","
+        }
+    ]]
+}

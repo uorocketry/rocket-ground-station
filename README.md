@@ -6,7 +6,7 @@
 
 Make a folder called `data` and a file called `config.json` in data. This is a JSON file. Follow the format from `data-example/config.json`.
 
-For convenience, you can rename the `data-example` folder to `data` to get the labels.
+Rename the `data-example` folder to `data` and then rename one of the config files to `config.json`.
 
 # Usage
 

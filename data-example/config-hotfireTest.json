@@ -1,0 +1,71 @@
+{
+    "designedFor": "hotfire test",
+    "datasets": [
+    	{
+    		"name": "Rocket",
+    		"color": "DD000000",
+    		"labels": [
+	            "Timestamp (ms)",
+                "Current State",
+                "Valve 606",
+                "Valve 404",
+                "Valve 505"
+        	],
+        	"states": [
+        		"Init",
+        		"Wait For Init",
+        		"Wait For Filling",
+        		"Filling",
+        		"Wait For Ignition",
+        		"Ignition",
+        		"Full Burn",
+        		"Final Venting",
+        		"Done",
+                "Abort Filling",
+                "Abort Burn",
+                "Max States"
+        	],
+	        "timestampIndex": 0,
+	        "stateIndex": 1,
+            "seperator": ","
+        }
+    ],
+    "stateEvents": [
+    	{
+    		"name": "Start Filling",
+    		"data": 0,
+    		"availableStates": [2],
+    		"successStates": [3, 4, 5, 6, 7, 8, 9, 10]
+    	},
+    	{
+    		"name": "Stop Filling",
+    		"data": 1,
+    		"availableStates": [3],
+    		"successStates": [4, 5, 6, 7, 8, 9, 10]
+    	},
+    	{
+    		"name": "Ignition",
+    		"data": 2,
+    		"availableStates": [4],
+    		"successStates": [5, 6, 7, 8, 9, 10]
+    	},
+    	{
+    		"name": "Final Venting",
+    		"data": 3,
+    		"availableStates": [6, 9, 10],
+    		"successStates": [7, 8, 9, 10]
+    	},
+    	{
+    		"name": "Done",
+    		"data": 4,
+    		"availableStates": [7],
+    		"successStates": [8, 9, 10]
+    	},
+    	{
+    		"name": "Abort!",
+    		"data": 5,
+    		"availableStates": [2, 3, 4, 5, 6],
+    		"successStates": [9, 10]
+    	}
+    ]
+}
