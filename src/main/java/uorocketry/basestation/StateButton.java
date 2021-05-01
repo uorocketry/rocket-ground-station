@@ -15,6 +15,9 @@ import org.json.JSONArray;
 
 import com.fazecast.jSerialComm.SerialPort;
 
+import uorocketry.basestation.elements.connections.ComConnection;
+import uorocketry.basestation.elements.connections.ComConnectionHolder;
+
 /**
  * DOES NOT support multiple data sources 
  * (Hardcoded, fixable)
@@ -43,10 +46,10 @@ public class StateButton implements ActionListener {
 	private JPanel borderPanel;
 	private Border defaultButtonBorder;
 	
-	private List<SerialPort> activeSerialPorts;
+	private ComConnectionHolder comConnectionHolder;
 	
-	public StateButton(List<SerialPort> activeSerialPorts, String name, byte data, JSONArray successStates, JSONArray availableStates) {
-		this.activeSerialPorts = activeSerialPorts;
+	public StateButton(ComConnectionHolder comConnectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
+		this.comConnectionHolder = comConnectionHolder;
 		
 		this.name = name;
 		this.data = new byte[] { data };
@@ -66,7 +69,7 @@ public class StateButton implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == button) {
-			SerialPort serialPort = activeSerialPorts.get(TABLE_INDEX);
+			SerialPort serialPort = comConnectionHolder.get(TABLE_INDEX).getSerialPort();
 			if (serialPort != null) {
 				serialPort.writeBytes(data, data.length);
 			}

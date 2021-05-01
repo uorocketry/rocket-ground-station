@@ -52,10 +52,12 @@ import org.knowm.xchart.style.Styler.YAxisPosition;
 import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortEvent;
-import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
+import uorocketry.basestation.elements.connections.ComConnection;
+import uorocketry.basestation.elements.connections.ComConnectionHolder;
+import uorocketry.basestation.elements.connections.DataReciever;
+
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReciever, SnapPanelListener {
 	
 	/** Constants */
 	/** The location of the comma separated labels without the extension. */
@@ -120,13 +122,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean updatingUI = false;
 	
 	/** If not in a simulation, the serial ports being listened to */
-	List<SerialPort> activeSerialPorts = new ArrayList<SerialPort>(2);
+	ComConnectionHolder comConnectionHolder = new ComConnectionHolder();
 	
 	Window window;
-	
-	/** All the serial ports found */
-	SerialPort[] allSerialPorts;
-	List<Boolean> connectingToSerial = new ArrayList<Boolean>(2);
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -227,23 +225,21 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupSerialComs() {
-		allSerialPorts = SerialPort.getCommPorts();
+	    comConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 		
 		// Make array for the selector
-		String[] comSelectorData = new String[allSerialPorts.length];
+		String[] comSelectorData = new String[comConnectionHolder.getAllSerialPorts().length];
 		
-		for (int i = 0; i < allSerialPorts.length; i++) {
-			comSelectorData[i] = allSerialPorts[i].getDescriptivePortName();
+		for (int i = 0; i < comConnectionHolder.getAllSerialPorts().length; i++) {
+			comSelectorData[i] = comConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
 		}
 
-		for (JList<String> comSelector: window.comSelectors) {
-			comSelector.setListData(comSelectorData);
+		for (ComConnection comConnection: comConnectionHolder) {
+		    comConnection.getSelectorList().setListData(comSelectorData);
 		}
 		
 		// Create required lists
 		for (int i = 0; i < dataSourceCount; i++) {
-			activeSerialPorts.add(null);
-			connectingToSerial.add(false);
 			currentlyWriting.add(false);
 		}
 	}
@@ -302,36 +298,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		return savingToText.toString();
 	}
 	
-	public void initialisePort(int tableIndex, SerialPort serialPort) {
-		if (serialPort.isOpen() || connectingToSerial.get(tableIndex)) return;
-		
-		if (activeSerialPorts.get(tableIndex) != null && activeSerialPorts.get(tableIndex).isOpen()) {
-			// Switching ports, close the old one
-			activeSerialPorts.get(tableIndex).closePort();
-		}
-		
-		activeSerialPorts.set(tableIndex, serialPort);
-		
-		connectingToSerial.set(tableIndex, true);
-		
-		boolean open = serialPort.openPort();
-		
-		serialPort.setBaudRate(57600);
-		
-		if (open) {
-			window.comConnectionSuccessLabels.get(tableIndex).setText("Connected");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.green);
-		} else {
-			window.comConnectionSuccessLabels.get(tableIndex).setText("FAILED");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.red);
-		}
-		
-		// Setup listener
-		serialPort.addDataListener(this);
-		
-		connectingToSerial.set(tableIndex, false);
-	}
-	
 	public void setupUI() {
 		addChart();
 		
@@ -366,11 +332,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set simulation checkbox to be default
 		window.simulationCheckBox.setSelected(simulation);
-		
-		// Com selector
-		for (JList<String> comSelector: window.comSelectors) {
-			comSelector.addListSelectionListener(this);
-		}
 		
 		// Setup listeners for table
 		for (JTable dataTable : window.dataTables) {
@@ -645,6 +606,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
+		if (data.endsWith(",")) data = data.substring(0, data.length() - 1);
 		
 		// Semi-colon separated
 		String[] splitData = data.split(SEPARATOR);
@@ -774,49 +736,33 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	@Override
-	public int getListeningEvents() {
-		return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-	}
-	
-	@Override
-   public byte[] getMessageDelimiter() {
-		return "\n".getBytes(StandardCharsets.UTF_8);
-	}
+	public void recievedData(ComConnection connection, byte[] data) {
+	    String delimitedMessage = new String(data, StandardCharsets.UTF_8);
+        
+        allData.get(connection.getTableIndex()).add(parseData(delimitedMessage, connection.getTableIndex()));
+        
+        updateUI();
+        
+        // Add this message to the log file
+        logFileStringBuilder.append(delimitedMessage);
+        
+        // Get string
+        String logFileString = logFileStringBuilder.toString();
+        
+        if (!currentlyWriting.get(connection.getTableIndex())) {
+            currentlyWriting.set(connection.getTableIndex(), true);
 
-   @Override
-   public boolean delimiterIndicatesEndOfMessage() {
-	   return true; 
-   }
-
-	@Override
-	public void serialEvent(SerialPortEvent e) {
-		int tableIndex = activeSerialPorts.indexOf(e.getSerialPort());
-		
-		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
-		
-		allData.get(tableIndex).add(parseData(delimitedMessage, tableIndex));
-		
-		updateUI();
-		
-		// Add this message to the log file
-		logFileStringBuilder.append(delimitedMessage);
-		
-		// Get string
-		String logFileString = logFileStringBuilder.toString();
-		
-		if (!currentlyWriting.get(tableIndex)) {
-			currentlyWriting.set(tableIndex, true);
-
-			// Write to file
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(tableIndex)), StandardCharsets.UTF_8))) {
-			   writer.write(logFileString);
-			} catch (IOException err) {
-				err.printStackTrace();
-			}
-			
-			currentlyWriting.set(tableIndex, false);
-		}
-		
+            // Write to file
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                        LOG_FILE_SAVE_LOCATION + currentLogFileName.get(connection.getTableIndex()))
+                        , StandardCharsets.UTF_8))) {
+               writer.write(logFileString);
+            } catch (IOException err) {
+                err.printStackTrace();
+            }
+            
+            currentlyWriting.set(connection.getTableIndex(), false);
+        }
 	}
 
 	@Override
@@ -1100,36 +1046,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** For com selector JList */
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		if (e.getSource() instanceof JList && window.comSelectors.contains(e.getSource())) {
-			@SuppressWarnings("unchecked")
-			JList<String> comSelector = (JList<String>) e.getSource();
-			
-			int tableIndex = window.comSelectors.indexOf(comSelector);
-			
-			// Set to loading
-			window.comConnectionSuccessLabels.get(tableIndex).setText("Loading...");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.yellow);
-			
-			// Find what port it was
-			if (allSerialPorts != null) {
-				for (int i = 0; i < allSerialPorts.length; i++) {
-					// Check if this is the selected com selector
-					if (allSerialPorts[i].getDescriptivePortName().equals(comSelector.getSelectedValue())) {
-						final SerialPort newSerialPort = allSerialPorts[i];
-						
-						// Do it in an other thread
-						Thread thread = new Thread() {
-							public void run() {
-								initialisePort(tableIndex, newSerialPort);
-							}
-						};
-						thread.start();
-						
-						break;
-					}
-				}
-			}
-		} else if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
+		if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
 			for (int i = 0; i < window.dataTables.size(); i++) {
 				JTable dataTable = window.dataTables.get(i);
 				
