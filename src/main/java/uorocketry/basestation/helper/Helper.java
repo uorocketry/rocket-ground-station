@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.helper;
 
 import org.json.JSONArray;
 

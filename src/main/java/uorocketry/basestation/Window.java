@@ -34,8 +34,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uorocketry.basestation.elements.connections.ComConnection;
-import uorocketry.basestation.elements.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.control.StateButton;
+import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.panel.DataChart;
 
 public class Window extends JFrame {
 	
@@ -82,9 +84,9 @@ public class Window extends JFrame {
 	public JPanel stateSendingPanel;
 	public List<List<StateButton>> stateButtons = new ArrayList<>();
 	
-	JPanel centerChartPanel;
+	public JPanel centerChartPanel;
 	
-	ArrayList<DataChart> charts = new ArrayList<>();
+	public ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;

@@ -1,4 +1,4 @@
-package uorocketry.basestation.elements.connections;
+package uorocketry.basestation.connections;
 
 import java.awt.Color;
 import java.nio.charset.StandardCharsets;
@@ -87,7 +87,25 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
         connecting = false;
     }
     
+    @Override
+    public void serialEvent(SerialPortEvent e) {
+        if (dataReciever != null) dataReciever.recievedData(this, e.getReceivedData());
+    }
     
+    @Override
+    public int getListeningEvents() {
+        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+    }
+    
+    @Override
+    public byte[] getMessageDelimiter() {
+        return "\n".getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public boolean delimiterIndicatesEndOfMessage() {
+        return true; 
+    }
 
     public SerialPort getSerialPort() {
         return serialPort;
@@ -123,26 +141,6 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
 
     public JLabel getSuccessLabel() {
         return successLabel;
-    }
-
-    @Override
-    public void serialEvent(SerialPortEvent e) {
-        dataReciever.recievedData(this, e.getReceivedData());
-    }
-    
-    @Override
-    public int getListeningEvents() {
-        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-    }
-    
-    @Override
-    public byte[] getMessageDelimiter() {
-        return "\n".getBytes(StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public boolean delimiterIndicatesEndOfMessage() {
-        return true; 
     }
 
 }

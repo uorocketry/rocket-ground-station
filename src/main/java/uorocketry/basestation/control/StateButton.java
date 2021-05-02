@@ -1,10 +1,9 @@
-package uorocketry.basestation;
+package uorocketry.basestation.control;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -15,8 +14,8 @@ import org.json.JSONArray;
 
 import com.fazecast.jSerialComm.SerialPort;
 
-import uorocketry.basestation.elements.connections.ComConnection;
-import uorocketry.basestation.elements.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.helper.Helper;
 
 /**
  * DOES NOT support multiple data sources 

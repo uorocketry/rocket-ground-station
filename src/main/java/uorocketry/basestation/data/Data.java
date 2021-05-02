@@ -1,11 +1,11 @@
-package uorocketry.basestation;
+package uorocketry.basestation.data;
 
 import java.io.Console;
 import java.text.DecimalFormat;
 
 public class Data {
 	//the actual data point
-	float data;
+	public float data;
 	
 	long dataLong;
 	

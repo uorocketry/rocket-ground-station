@@ -1,4 +1,4 @@
-package uorocketry.basestation.elements.connections;
+package uorocketry.basestation.connections;
 
 import java.util.ArrayList;
 import java.util.HashMap;

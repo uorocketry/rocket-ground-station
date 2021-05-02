@@ -27,7 +27,6 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -53,9 +52,18 @@ import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 
-import uorocketry.basestation.elements.connections.ComConnection;
-import uorocketry.basestation.elements.connections.ComConnectionHolder;
-import uorocketry.basestation.elements.connections.DataReciever;
+import uorocketry.basestation.connections.ComConnection;
+import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.DataReciever;
+import uorocketry.basestation.control.StateButton;
+import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.data.DataType;
+import uorocketry.basestation.external.GoogleEarthUpdater;
+import uorocketry.basestation.external.WebViewUpdater;
+import uorocketry.basestation.panel.DataChart;
+import uorocketry.basestation.panel.SnapPanel;
+import uorocketry.basestation.panel.SnapPanelListener;
 
 public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReciever, SnapPanelListener {
 	
@@ -103,7 +111,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	List<List<DataHandler>> allData = new ArrayList<>(2);
+	public List<List<DataHandler>> allData = new ArrayList<>(2);
 	
 	List<String[]> labels = new ArrayList<>();
 	JSONObject config = null; 
@@ -124,7 +132,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** If not in a simulation, the serial ports being listened to */
 	ComConnectionHolder comConnectionHolder = new ComConnectionHolder();
 	
-	Window window;
+	public Window window;
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -141,7 +149,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean onlyShowLatestData = false;
 	
 	/** If true, clicking on data in a chart will hide it */
-	boolean dataDeletionMode = false;
+	public boolean dataDeletionMode = false;
 	
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
@@ -435,7 +443,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set first item to "Error"
 		tableModel.setValueAt("Parsing Error", 0, 0);
-		tableModel.setValueAt(currentDataIndexes, 0, 1);
+		tableModel.setValueAt(currentDataIndexes.get(index), 0, 1);
 		
 		for (int i = 1; i < dataLength.get(index); i++) {
 			// Set label

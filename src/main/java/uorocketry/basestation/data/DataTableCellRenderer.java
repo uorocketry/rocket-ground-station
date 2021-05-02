@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.data;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -10,10 +10,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 public class DataTableCellRenderer extends DefaultTableCellRenderer  {
 	private static final long serialVersionUID = -4019697511593716355L;
 
-	int coloredRow = -1;
-	Color color = new Color(0x80ffa2);
-	Color selectedBackgroundColor;
-	Color selectedForgroundColor;
+	public int coloredRow = -1;
+	public Color color = new Color(0x80ffa2);
+	public Color selectedBackgroundColor;
+	public Color selectedForgroundColor;
 	
 	public DataTableCellRenderer() {
 		super();
