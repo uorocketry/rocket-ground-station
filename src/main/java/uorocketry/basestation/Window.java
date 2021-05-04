@@ -125,7 +125,7 @@ public class Window extends JFrame {
 		leftPanel.add(dataTablePanel);
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
+			gererateTelemetryPanel(i, main.config.getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -284,38 +284,50 @@ public class Window extends JFrame {
 		setVisible(true);
 		
 	}
-	
-	public void addJTable(int tableIndex, JSONObject dataSet) {
-		JTable dataTable = new JTable(Main.dataLength.get(tableIndex), 2);
-		dataTable.setBorder(new LineBorder(new Color(0, 0, 0)));
-		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
-		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
-		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTable.setCellSelectionEnabled(true);
+
+
+	public void gererateTelemetryPanel(int tableIndex, JSONObject dataSet) {
 		
-		// Make non editable
-		dataTable.setDefaultEditor(Object.class, null);
-		
-		// Increase row height
-		dataTable.setRowHeight(30);
-		
-		// Adjust width
-		dataTable.getColumnModel().getColumn(0).setPreferredWidth(130);
-		dataTable.getColumnModel().getColumn(1).setPreferredWidth(130);
-		
-		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
-		
-		// Make outer title
 		JPanel borderPanel = new JPanel();
 		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
-		
-		borderPanel.add(dataTable);
-		
+		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
+
+		JTable rawTelemetryData = createTable(Main.dataLength.get(tableIndex), 2, 30, 130);
+		borderPanel.add(rawTelemetryData);
+
+		dataTables.add(rawTelemetryData);
+
+		JTable teletryInfo = createTable(3, 2, 30, 130);
+		borderPanel.add(teletryInfo);
+
 		dataTablePanel.add(borderPanel);
-		dataTables.add(dataTable);
 	}
-	
+
+	public JTable createTable(int rows, int columns, int height, int width) {
+
+		JTable table = new JTable(rows, columns);
+		table.setBorder(new LineBorder(new Color(0, 0, 0)));
+		table.setDefaultRenderer(Object.class, new DataTableCellRenderer());
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		table.setAlignmentY(Component.TOP_ALIGNMENT);
+		table.setAlignmentX(Component.LEFT_ALIGNMENT);
+		table.setCellSelectionEnabled(true);
+		
+		// Make non editable
+		table.setDefaultEditor(Object.class, null);
+		
+		// Increase row height
+		table.setRowHeight(height);
+		
+		// Adjust width
+		table.getColumnModel().getColumn(0).setPreferredWidth(width);
+		table.getColumnModel().getColumn(1).setPreferredWidth(width);
+		
+		table.setFont(new Font("Arial", Font.PLAIN, 15));
+
+		return table;
+	}
+		
 	public void addSlider(JSONObject dataSet) {
 		// Add sliders to tabbedPane
 		JPanel sliders = new JPanel();
