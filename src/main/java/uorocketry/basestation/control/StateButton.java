@@ -99,7 +99,7 @@ public class StateButton implements ActionListener, DataReciever {
 	    if (comConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
 	        sendAction();
 	        
-	        borderPanel.setBackground(new Color(166, 178, 255));
+	        borderPanel.setBackground(CLICKED_COLOR);
 	        timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
