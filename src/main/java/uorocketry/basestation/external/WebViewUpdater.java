@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.external;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -10,6 +10,10 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import uorocketry.basestation.Main;
+import uorocketry.basestation.data.Data;
+import uorocketry.basestation.data.DataHandler;
 
 /**
  * DOES NOT support multiple data sources

@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.external;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -13,6 +13,10 @@ import java.util.TimerTask;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import uorocketry.basestation.Main;
+import uorocketry.basestation.data.Data;
+import uorocketry.basestation.data.DataHandler;
 
 public class GoogleEarthUpdater {
 	
