@@ -15,7 +15,7 @@ import com.fazecast.jSerialComm.SerialPortMessageListener;
 
 public class ComConnection implements ListSelectionListener, SerialPortMessageListener {
     private ComConnectionHolder comConnectionHolder;
-    private DataReciever dataReciever;
+    private DataReciever[] dataRecievers;
 
     private SerialPort serialPort;
     private int tableIndex;
@@ -25,9 +25,10 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
     private JList<String> selectorList;
     private JLabel successLabel;
     
-    public ComConnection(ComConnectionHolder comConnectionHolder, DataReciever dataReciever, JPanel panel, JList<String> selectorList, JLabel successLabel) {
+    private final byte[] DELIMITER = "\n".getBytes(StandardCharsets.UTF_8);
+    
+    public ComConnection(ComConnectionHolder comConnectionHolder, JPanel panel, JList<String> selectorList, JLabel successLabel) {
         this.comConnectionHolder = comConnectionHolder;
-        this.dataReciever = dataReciever;
 
         this.panel = panel;
         this.selectorList = selectorList;
@@ -89,7 +90,11 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
     
     @Override
     public void serialEvent(SerialPortEvent e) {
-        if (dataReciever != null) dataReciever.recievedData(this, e.getReceivedData());
+        if (dataRecievers != null) {
+            for (DataReciever dataReciever: dataRecievers) {
+                dataReciever.recievedData(this, e.getReceivedData());
+            }
+        }
     }
     
     @Override
@@ -99,12 +104,33 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
     
     @Override
     public byte[] getMessageDelimiter() {
-        return "\n".getBytes(StandardCharsets.UTF_8);
+        return DELIMITER;
     }
 
     @Override
     public boolean delimiterIndicatesEndOfMessage() {
         return true; 
+    }
+    
+    public boolean bytesEqualWithoutDelimiter(byte[] a, byte[] b) {
+        if (a.length == 0 || b.length == 0 || 
+                a.length != b.length - DELIMITER.length) {
+            return false;
+        }
+            
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != b[i]) return false;
+        }
+        
+        for (int i = 0; i < DELIMITER.length; i++) {
+            if (DELIMITER[i] != b[a.length + i]) return false;
+        }
+        
+        return true;
+    }
+    
+    public void setDataRecievers(DataReciever... dataRecievers) {
+        this.dataRecievers = dataRecievers;
     }
 
     public SerialPort getSerialPort() {

@@ -24,8 +24,9 @@ public class ComConnectionHolder implements Iterable<ComConnection> {
         BUTTON_BOX
     }
     
-    public ComConnection add(Type type, DataReciever dataReciever, JPanel panel, JList<String> selectorList, JLabel successLabel) {
-        ComConnection comConnection = new ComConnection(this, dataReciever, panel, selectorList, successLabel);
+    public ComConnection add(Type type, DataReciever[] dataRecievers, JPanel panel, JList<String> selectorList, JLabel successLabel) {
+        ComConnection comConnection = new ComConnection(this, panel, selectorList, successLabel);
+        comConnection.setDataRecievers(dataRecievers);
         getList(type).add(comConnection);
 
         return comConnection;

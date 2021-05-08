@@ -35,6 +35,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.DataReciever;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.panel.DataChart;
@@ -254,8 +255,6 @@ public class Window extends JFrame {
 				stateSendingPanel = new JPanel();
 				sidePanel.add(stateSendingPanel, BorderLayout.NORTH);
 				stateSendingPanel.setLayout(new BoxLayout(stateSendingPanel, BoxLayout.Y_AXIS));
-				
-//				addComSelectorPanel("Button Box");
 			}
 			
 			List<StateButton> buttons = new ArrayList<StateButton>(array.length());
@@ -268,6 +267,10 @@ public class Window extends JFrame {
 				stateSendingPanel.add(stateButton.getPanel());
 				buttons.add(stateButton);
 			}
+			
+			if (buttons.size() > 0) {
+			    addComSelectorPanel("Button Box", buttons.stream().toArray(StateButton[]::new));
+            }
 		} catch (JSONException e) {
 			// No states then
 			if (stateSendingPanel != null) {
@@ -276,7 +279,7 @@ public class Window extends JFrame {
 		}
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
-            addComSelectorPanel(main.config.getJSONArray("datasets").getJSONObject(i));
+            addComSelectorPanel(main.config.getJSONArray("datasets").getJSONObject(i), main);
         }
 		comPanelParent.setLayout(new GridLayout(comPanelParent.getComponentCount(), 1, 0, 0));
 		
@@ -343,11 +346,11 @@ public class Window extends JFrame {
 		sliderTabs.add(sliders, dataSet.getString("name"));
 	}
 	
-	public void addComSelectorPanel(JSONObject dataSet) {
-	    addComSelectorPanel(dataSet.getString("name"));
+	public void addComSelectorPanel(JSONObject dataSet, DataReciever... dataRecievers) {
+	    addComSelectorPanel(dataSet.getString("name"), dataRecievers);
     }
 	
-	public void addComSelectorPanel(String name) {
+	public void addComSelectorPanel(String name, DataReciever... dataRecievers) {
 		JPanel comPanel = new JPanel();
 		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
 		comPanel.setBorder(BorderFactory.createTitledBorder(name));
@@ -364,7 +367,7 @@ public class Window extends JFrame {
 		
 		comPanelParent.add(comPanel);
 		
-		main.comConnectionHolder.add(ComConnectionHolder.Type.TABLE, main, comPanel,
+		main.comConnectionHolder.add(ComConnectionHolder.Type.TABLE, dataRecievers, comPanel,
 		        comSelector, comConnectionSuccessLabel);
 	}
 

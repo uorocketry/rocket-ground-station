@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -14,7 +15,9 @@ import org.json.JSONArray;
 
 import com.fazecast.jSerialComm.SerialPort;
 
+import uorocketry.basestation.connections.ComConnection;
 import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.DataReciever;
 import uorocketry.basestation.helper.Helper;
 
 /**
@@ -24,7 +27,7 @@ import uorocketry.basestation.helper.Helper;
  * @author Ajay
  *
  */
-public class StateButton implements ActionListener {
+public class StateButton implements ActionListener, DataReciever {
 	
 	// Always zero for now
 	private static final int TABLE_INDEX = 0;
@@ -64,28 +67,39 @@ public class StateButton implements ActionListener {
 		borderPanel.setBorder(BorderFactory.createTitledBorder(name));
 		borderPanel.add(button);
 	}
+	
+	public void sendAction() {
+        SerialPort serialPort = comConnectionHolder.get(TABLE_INDEX).getSerialPort();
+        if (serialPort != null) {
+            serialPort.writeBytes(data, data.length);
+        }
+    }
+	
+	public void stateChanged(int newState) {
+        if (Helper.arrayIncludes(availableStates, newState)) {
+            button.setForeground(AVAILABLE_COLOR);
+        } else if (Helper.arrayIncludes(successStates, newState)) {
+            button.setForeground(SUCCESS_COLOR);
+
+        } else {
+            button.setForeground(INACTIVE_COLOR);
+        }
+    }
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == button) {
-			SerialPort serialPort = comConnectionHolder.get(TABLE_INDEX).getSerialPort();
-			if (serialPort != null) {
-				serialPort.writeBytes(data, data.length);
-			}
+		    sendAction();
 		}
 	}
 	
-	public void stateChanged(int newState) {
-		if (Helper.arrayIncludes(availableStates, newState)) {
-			button.setForeground(AVAILABLE_COLOR);
-		} else if (Helper.arrayIncludes(successStates, newState)) {
-			button.setForeground(SUCCESS_COLOR);
-
-		} else {
-			button.setForeground(INACTIVE_COLOR);
-
-		}
-	}
+	@Override
+    public void recievedData(ComConnection connection, byte[] data) {
+	    if (comConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
+	        sendAction();
+	        button.getModel().setPressed(true);
+	    }
+    }
 	
 	public JPanel getPanel() {
 		return borderPanel;
