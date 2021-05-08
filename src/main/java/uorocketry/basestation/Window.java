@@ -73,6 +73,7 @@ public class Window extends JFrame {
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
 	public JTabbedPane sliderTabs;
 	JButton clearDataButton;
+	JButton refreshComSelectorButton;
 	JButton hideComSelectorButton;
 	JButton hideBarsButton;
 	JButton pauseButton;
@@ -228,6 +229,9 @@ public class Window extends JFrame {
 		
 		clearDataButton = new JButton("Clear Data");
 		eastSliderButtons.add(clearDataButton);
+		
+		refreshComSelectorButton = new JButton("Refresh Com Selector");
+        eastSliderButtons.add(refreshComSelectorButton);
 		
 		hideComSelectorButton = new JButton("Hide Com Selector");
 		eastSliderButtons.add(hideComSelectorButton);
