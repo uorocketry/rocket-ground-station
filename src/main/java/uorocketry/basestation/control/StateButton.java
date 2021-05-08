@@ -5,6 +5,8 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -35,6 +37,7 @@ public class StateButton implements ActionListener, DataReciever {
 	private static final Color AVAILABLE_COLOR = new Color(0, 33, 115);
 	private static final Color SUCCESS_COLOR = new Color(3, 176, 0);
 	private static final Color INACTIVE_COLOR = new Color(79, 79, 79);
+    private static final Color CLICKED_COLOR = new Color(166, 178, 255);
 	
 	String name;
 	/** What data to send */
@@ -46,8 +49,8 @@ public class StateButton implements ActionListener, DataReciever {
 	
 	private JButton button;
 	private JPanel borderPanel;
-	private Border defaultButtonBorder;
-	
+    private Timer timer = new Timer();
+
 	private ComConnectionHolder comConnectionHolder;
 	
 	public StateButton(ComConnectionHolder comConnectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
@@ -61,7 +64,6 @@ public class StateButton implements ActionListener, DataReciever {
 		button = new JButton(name);
 		button.addActionListener(this);
 		button.setFont(new Font("Arial", Font.PLAIN, 20));
-		defaultButtonBorder = button.getBorder();
 		
 		borderPanel = new JPanel();
 		borderPanel.setBorder(BorderFactory.createTitledBorder(name));
@@ -80,7 +82,6 @@ public class StateButton implements ActionListener, DataReciever {
             button.setForeground(AVAILABLE_COLOR);
         } else if (Helper.arrayIncludes(successStates, newState)) {
             button.setForeground(SUCCESS_COLOR);
-
         } else {
             button.setForeground(INACTIVE_COLOR);
         }
@@ -97,7 +98,14 @@ public class StateButton implements ActionListener, DataReciever {
     public void recievedData(ComConnection connection, byte[] data) {
 	    if (comConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
 	        sendAction();
-	        button.getModel().setPressed(true);
+	        
+	        borderPanel.setBackground(new Color(166, 178, 255));
+	        timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    borderPanel.setBackground(null);
+                }
+            }, 750);
 	    }
     }
 	
