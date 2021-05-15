@@ -153,8 +153,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
-	/** Is the log file being currently updated */
-	ArrayList<Boolean> currentlyWriting = new ArrayList<Boolean>(2);
 	
 	public static void main(String[] args) {
 		// Find different possible commands
@@ -224,7 +222,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Setup com ports if not a simulation
 		if (!simulation) {
-			setupSerialComs();
+			setupSerialComList();
 			
 			setupLogFileName();
 		}
@@ -232,7 +230,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		updateUI();
 	}
 	
-	public void setupSerialComs() {
+	public void setupSerialComList() {
 	    comConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 		
 		// Make array for the selector
@@ -244,11 +242,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 		for (ComConnection comConnection: comConnectionHolder) {
 		    comConnection.getSelectorList().setListData(comSelectorData);
-		}
-		
-		// Create required lists
-		for (int i = 0; i < dataSourceCount; i++) {
-			currentlyWriting.add(false);
 		}
 	}
 	
@@ -317,6 +310,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Buttons
 		window.clearDataButton.addActionListener(this);
+		window.refreshComSelectorButton.addActionListener(this);
 		window.hideComSelectorButton.addActionListener(this);
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
@@ -757,8 +751,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
         // Get string
         String logFileString = logFileStringBuilder.toString();
         
-        if (!currentlyWriting.get(connection.getTableIndex())) {
-            currentlyWriting.set(connection.getTableIndex(), true);
+        if (connection.isWriting()) {
+            connection.setWriting(true);
 
             // Write to file
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
@@ -769,7 +763,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
                 err.printStackTrace();
             }
             
-            currentlyWriting.set(connection.getTableIndex(), false);
+            connection.setWriting(false);
         }
 	}
 
@@ -784,7 +778,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				updateUI();
 			}
-		} else if (e.getSource() == window.hideComSelectorButton) {
+		} else if (e.getSource() == window.refreshComSelectorButton) {
+            setupSerialComList();
+        }  else if (e.getSource() == window.hideComSelectorButton) {
 			window.comPanelParent.setVisible(!window.comPanelParent.isVisible());
 			
 			if (window.comPanelParent.isVisible()) {

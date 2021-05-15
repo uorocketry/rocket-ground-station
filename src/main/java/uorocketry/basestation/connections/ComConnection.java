@@ -1,6 +1,8 @@
 package uorocketry.basestation.connections;
 
 import java.awt.Color;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.nio.charset.StandardCharsets;
 
 import javax.swing.JLabel;
@@ -13,17 +15,19 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class ComConnection implements ListSelectionListener, SerialPortMessageListener {
+public class ComConnection implements ListSelectionListener, MouseListener, SerialPortMessageListener {
     private ComConnectionHolder comConnectionHolder;
     private DataReciever[] dataRecievers;
 
     private SerialPort serialPort;
     private int tableIndex;
     private boolean connecting;
+    private boolean writing;
     
     private JPanel panel;
     private JList<String> selectorList;
     private JLabel successLabel;
+    boolean ignoreNextValueChange;
     
     private final byte[] DELIMITER = "\n".getBytes(StandardCharsets.UTF_8);
     
@@ -35,31 +39,54 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
         this.successLabel = successLabel;
         
         selectorList.addListSelectionListener(this);
+        selectorList.addMouseListener(this);
     }
     
     @Override
     public void valueChanged(ListSelectionEvent e) {
+        if (ignoreNextValueChange) {
+            ignoreNextValueChange = false;
+            return;
+        }
+        
         if (e.getSource() == selectorList) {
-            // Set to loading
-            successLabel.setText("Loading...");
-            successLabel.setBackground(Color.yellow);
-            
             // Find what port it was
             if (comConnectionHolder.getAllSerialPorts() != null) {
-                for (int i = 0; i < comConnectionHolder.getAllSerialPorts().length; i++) {
-                    // Check if this is the selected com selector
-                    if (comConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName().equals(selectorList.getSelectedValue())) {
-                        final SerialPort newSerialPort = comConnectionHolder.getAllSerialPorts()[i];
-                        
-                        new Thread(() -> this.initialisePort(newSerialPort)).start();
-                        break;
+                if (selectorList.getSelectedIndex() != -1) {
+                    for (int i = 0; i < comConnectionHolder.getAllSerialPorts().length; i++) {
+                        // Check if this is the selected com selector
+                        String name = comConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+                        if (name.equals(selectorList.getSelectedValue())) {
+                            final SerialPort newSerialPort = comConnectionHolder.getAllSerialPorts()[i];
+                            
+                            if (serialPort == null || !serialPort.isOpen() 
+                                    || !newSerialPort.getDescriptivePortName().equals(serialPort.getDescriptivePortName())) {
+                                // Set to loading
+                                successLabel.setText("Loading...");
+                                successLabel.setBackground(Color.yellow);
+                                
+                                new Thread(() -> this.initialisePort(newSerialPort, name)).start();
+                            }
+                            
+                            break;
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < comConnectionHolder.getAllSerialPorts().length; i++) {
+                        // Check if this is the selected com selector
+                        String name = comConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+                        if (name.equals(serialPort.getDescriptivePortName())) {
+                            selectorList.setSelectedIndex(i);
+                            
+                            break;
+                        }
                     }
                 }
             }
         }
     }
     
-    public void initialisePort(SerialPort newSerialPort) {
+    public void initialisePort(SerialPort newSerialPort, String name) {
         if (newSerialPort.isOpen() || connecting) return;
         
         if (serialPort != null && serialPort.isOpen()) {
@@ -94,6 +121,18 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
             for (DataReciever dataReciever: dataRecievers) {
                 dataReciever.recievedData(this, e.getReceivedData());
             }
+        }
+    }
+    
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            ignoreNextValueChange = true;
+            selectorList.clearSelection();
+            serialPort.closePort();
+            
+            successLabel.setText("Disconnected");
+            successLabel.setBackground(null);
         }
     }
     
@@ -156,6 +195,14 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
     public void setConnecting(boolean connecting) {
         this.connecting = connecting;
     }
+    
+    public boolean isWriting() {
+        return writing;
+    }
+
+    public void setWriting(boolean writing) {
+        this.writing = writing;
+    }
 
     public JPanel getPanel() {
         return panel;
@@ -167,6 +214,26 @@ public class ComConnection implements ListSelectionListener, SerialPortMessageLi
 
     public JLabel getSuccessLabel() {
         return successLabel;
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        
     }
 
 }
