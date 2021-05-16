@@ -28,9 +28,9 @@ jobs:
         run: cp data-example/config-hotfireTest.json builds/hotfire-test/data/config.json
       
       - name: Zip october sky
-        run: cd ./builds/october-sky ; zip -r ../../builds/GroundStationWithOctoberSkyConfig.zip *
+        run: cd ./builds/october-sky; zip -r ../../builds/GroundStationWithOctoberSkyConfig.zip *
       - name: Zip hotfire test
-        run: cd ./builds/october-sky ; zip -r ../../builds/GroundStationWithHotfireConfig.zip *
+        run: cd ./builds/hotfire-test; zip -r ../../builds/GroundStationWithHotfireConfig.zip *
  
       - name: Upload GroundStationWithOctoberSkyConfig.zip to release
         uses: Shopify/upload-to-release@master
