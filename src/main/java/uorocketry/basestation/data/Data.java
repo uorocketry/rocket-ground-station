@@ -1,6 +1,5 @@
 package uorocketry.basestation.data;
 
-import java.io.Console;
 import java.text.DecimalFormat;
 
 public class Data {
@@ -62,7 +61,7 @@ public class Data {
 	public String getFormattedString() {
 		switch (type) {
 			case FORMATTED_COORDINATE:
-				return Math.round(data) + "° " + minutes + " '";
+				return Math.round(data) + "Â° " + minutes + " '";
 			case LONG:
 				return format.format(dataLong);
 			default: 
