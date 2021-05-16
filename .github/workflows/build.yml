@@ -17,3 +17,24 @@ jobs:
         with:
           name: GroundStation
           path: build/libs/GroundStation.jar
+      
+      - name: Create directories
+        run: mkdir -p builds/october-sky/data builds/hotfire-test/data
+      - name: Copy kml file
+        run: cp _GoogleEarthView.kml builds/october-sky/_GoogleEarthView.kml; cp _GoogleEarthView.kml builds/hotfire-test/_GoogleEarthView.kml;
+      - name: Copy jar file
+        run: cp build/libs/GroundStation.jar builds/october-sky/GroundStation.jar; cp build/libs/GroundStation.jar builds/hotfire-test/GroundStation.jar
+        
+      - name: Copy october sky config file
+        run: cp data-example/config-octoberSky.json builds/october-sky/data/config.json
+      - name: Copy hotfire test config file
+        run: cp data-example/config-hotfireTest.json builds/hotfire-test/data/config.json
+      
+      - uses: actions/upload-artifact@v1
+        with:
+          name: GroundStationWithOctoberSkyConfig.zip
+          path: builds/october-sky
+      - uses: actions/upload-artifact@v1
+        with:
+          name: GroundStationWithHotfireConfig.zip
+          path: builds/hotfire-test
