@@ -406,7 +406,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 						for (StateButton stateButton: window.stateButtons.get(i)) {
 						    Float value = currentDataHandler.data[stateIndex].getDecimalValue();
 						    if (value != null) {
-		                          stateButton.stateChanged(value.intValue());
+						        stateButton.stateChanged(value.intValue());
 						    }
 						}
 					} catch (JSONException e) {}
@@ -631,7 +631,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			    Float value = lastDataPointDataHandler.data[timestampIndex].getDecimalValue();
 			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
 			        // Treat as invalid data
-	                return null;
+			        return null;
 			    }
 			}
 		} catch (NumberFormatException | JSONException e) {}
