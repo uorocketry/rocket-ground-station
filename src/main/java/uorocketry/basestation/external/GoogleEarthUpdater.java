@@ -154,7 +154,7 @@ public class GoogleEarthUpdater {
 			}
 		} catch (JSONException e) {}
 		
-		if (longitudeData.data != 0 && latitudeData.data != 0) {
+		if (longitudeData.data != 0 && latitudeData.data != 0 && longitudeData.getDecimalValue() != null && latitudeData.getDecimalValue() != null) {
 			return prefixString + longitudeData.getDecimalValue() + "," + latitudeData.getDecimalValue() + "," + altitudeData.data;
 		}
 		

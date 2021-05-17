@@ -404,7 +404,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					try {
 						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
-							stateButton.stateChanged((int) currentDataHandler.data[stateIndex].getDecimalValue());
+						    Float value = currentDataHandler.data[stateIndex].getDecimalValue();
+						    if (value != null) {
+		                          stateButton.stateChanged(value.intValue());
+						    }
 						}
 					} catch (JSONException e) {}
 				}
@@ -624,9 +627,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			DataHandler lastDataPointDataHandler = findLastValidDataPoint(allData.get(tableIndex));
 			
 			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
-			if (lastDataPointDataHandler != null && Float.parseFloat(splitData[timestampIndex]) < lastDataPointDataHandler.data[timestampIndex].getDecimalValue()) {
-				// Treat as invalid data
-				return null;
+			if (lastDataPointDataHandler != null) {
+			    Float value = lastDataPointDataHandler.data[timestampIndex].getDecimalValue();
+			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
+			        // Treat as invalid data
+	                return null;
+			    }
 			}
 		} catch (NumberFormatException | JSONException e) {}
 		

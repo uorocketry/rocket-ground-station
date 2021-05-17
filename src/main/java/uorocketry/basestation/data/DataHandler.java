@@ -64,8 +64,8 @@ public class DataHandler {
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
 			
-			if (i == data.length - 1 && datasetConfig.getInt("stateIndex") == i) {
-				dataText = datasetConfig.getJSONArray("states").getString((int) data[i].getDecimalValue());
+			if (i == data.length - 1 && datasetConfig.getInt("stateIndex") == i && data[i].getDecimalValue() != null) {
+				dataText = datasetConfig.getJSONArray("states").getString(data[i].getDecimalValue().intValue());
 			}
 			
 			// Set data
@@ -102,14 +102,14 @@ public class DataHandler {
 			data[index] = new Data(degrees, minutes);
 		} else if (isTimestamp) {
 			// Long case
-			long longData = -1;
+			Long longData = -1L;
 			
 			try {
 				longData = Long.parseLong(currentData);
 			} catch (NumberFormatException e) {
-				if (currentData.equals("ovf")) {
+				if (currentData.equals("ovf") || currentData.contentEquals("nan")) {
 					// ovf means overflow
-					longData = Long.MAX_VALUE;
+					longData = null;
 				} else {
 					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
 					
@@ -120,14 +120,14 @@ public class DataHandler {
 			data[index] = new Data(longData);
 		} else {
 			// Normal case
-			float floatData = -1;
+		    Float floatData = -1f;
 			
 			try {
 				floatData = Float.parseFloat(currentData);
 			} catch (NumberFormatException e) {
-				if (currentData.equals("ovf")) {
+				if (currentData.equals("ovf") || currentData.contentEquals("nan")) {
 					// ovf means overflow
-					floatData = Float.MAX_VALUE;
+					floatData = null;
 				} else {
 					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
 					
