@@ -121,7 +121,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Index of the minimum data point being looked at */
 	ArrayList<Integer> minDataIndexes = new ArrayList<>(2);
 	
-	/** If {@link currentDataIndex} should be set to the latest message */
+	/** If {@link this.currentDataIndexes} should be set to the latest message */
 	boolean latest = true;
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
@@ -409,7 +409,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 						        stateButton.stateChanged(value.intValue());
 						    }
 						}
-					} catch (JSONException e) {}
+					} catch (JSONException ignored) {}
 				}
 			}
 			
@@ -853,16 +853,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			onlyShowLatestData = window.onlyShowLatestDataCheckBox.isSelected();
 		} else if (e.getSource() == window.setMaxDataPointsButton) {
 			try {
-				int maxDataPoints = Integer.parseInt(window.maxDataPointsTextField.getText());
-				maxDataPointsDisplayed = maxDataPoints;
-			} catch (NumberFormatException err) {}
+				maxDataPointsDisplayed = Integer.parseInt(window.maxDataPointsTextField.getText());
+			} catch (NumberFormatException ignored) {}
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (int tableIndex = 0; tableIndex < allData.size(); tableIndex++) {
-				List<DataHandler> dataHandlers = allData.get(tableIndex);
-				
-				for (DataHandler dataHandler: dataHandlers) {
+			for (List<DataHandler> dataHandlers : allData) {
+				for (DataHandler dataHandler : dataHandlers) {
 					// See if the hidden list needs to be cleared
 					if (dataHandler != null && !dataHandler.hiddenDataTypes.isEmpty()) {
 						dataHandler.hiddenDataTypes.clear();
@@ -951,12 +948,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				JSONObject loadedLayout = null;
 				try {
 					loadedLayout = new JSONObject(new String(Files.readAllBytes(saveFile.toPath()), StandardCharsets.UTF_8));
-				} catch (JSONException e1) {
-					e1.printStackTrace();
-				} catch (IOException e1) {
+				} catch (JSONException | IOException e1) {
 					e1.printStackTrace();
 				}
-				
+
 				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
 				
 				// Clear current charts
@@ -1020,6 +1015,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		//noinspection SuspiciousNameCombination
 		firstChartStyler.setYAxisGroupPosition(1, YAxisPosition.Right);
 
 		// Series

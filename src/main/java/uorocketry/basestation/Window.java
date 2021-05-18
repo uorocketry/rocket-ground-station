@@ -88,7 +88,7 @@ public class Window extends JFrame {
 	
 	public JPanel centerChartPanel;
 	
-	public ArrayList<DataChart> charts = new ArrayList<>();
+	public final ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
