@@ -107,9 +107,10 @@ local.properties
 # End of https://www.gitignore.io/api/eclipse
 
 # Project Specific
-data
+/data
 build
 builds
+web/data
 
 # Intellij
 .idea

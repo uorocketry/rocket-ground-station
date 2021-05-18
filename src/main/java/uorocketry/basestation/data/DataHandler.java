@@ -64,7 +64,7 @@ public class DataHandler {
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
 			
-			if (i == data.length - 1 && datasetConfig.getInt("stateIndex") == i && data[i].getDecimalValue() != null) {
+			if (datasetConfig.getInt("stateIndex") == i && data[i].getDecimalValue() != null) {
 				dataText = datasetConfig.getJSONArray("states").getString(data[i].getDecimalValue().intValue());
 			}
 			
