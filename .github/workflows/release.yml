@@ -14,6 +14,14 @@ jobs:
       - uses: actions/checkout@v1
       - name: Build
         run: ./gradlew build
+
+      - name: Upload GroundStation.jar to release
+        uses: Shopify/upload-to-release@master
+        with:
+          args: build/libs/GroundStation.jar
+          name: GroundStation.jar
+          path: ./build/libs/GroundStation.jar
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Create directories
         run: mkdir -p builds/october-sky/data builds/hotfire-test/data
