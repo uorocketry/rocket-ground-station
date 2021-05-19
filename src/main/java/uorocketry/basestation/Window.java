@@ -34,7 +34,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.Connection;
+import uorocketry.basestation.connections.ConnectionHolder;
 import uorocketry.basestation.connections.DataReciever;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
@@ -266,14 +267,14 @@ public class Window extends JFrame {
 
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject object = array.getJSONObject(i);
-				StateButton stateButton = new StateButton(main.comConnectionHolder, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
+				StateButton stateButton = new StateButton(main.connectionHolder, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
 				
 				stateSendingPanel.add(stateButton.getPanel());
 				buttons.add(stateButton);
 			}
 			
 			if (buttons.size() > 0) {
-			    addComSelectorPanel("Button Box", buttons.stream().toArray(StateButton[]::new));
+			    addComSelectorPanel(ConnectionHolder.Type.BUTTON_BOX, "Button Box", buttons.stream().toArray(StateButton[]::new));
             }
 		} catch (JSONException e) {
 			// No states then
@@ -351,28 +352,13 @@ public class Window extends JFrame {
 	}
 	
 	public void addComSelectorPanel(JSONObject dataSet, DataReciever... dataRecievers) {
-	    addComSelectorPanel(dataSet.getString("name"), dataRecievers);
+	    addComSelectorPanel(ConnectionHolder.Type.TABLE, dataSet.getString("name"), dataRecievers);
     }
 	
-	public void addComSelectorPanel(String name, DataReciever... dataRecievers) {
-		JPanel comPanel = new JPanel();
-		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
-		comPanel.setBorder(BorderFactory.createTitledBorder(name));
-		
-		JList<String> comSelector = new JList<String>();
-		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		comPanel.add(comSelector);
-		
-		JLabel comConnectionSuccessLabel = new JLabel();
-		comConnectionSuccessLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		comConnectionSuccessLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		comConnectionSuccessLabel.setOpaque(true);
-		comPanel.add(comConnectionSuccessLabel);
-		
-		comPanelParent.add(comPanel);
-		
-		main.comConnectionHolder.add(ComConnectionHolder.Type.TABLE, dataRecievers, comPanel,
-		        comSelector, comConnectionSuccessLabel);
+	public void addComSelectorPanel(ConnectionHolder.Type type, String name, DataReciever... dataRecievers) {
+		Connection connection = main.connectionHolder.add(type, dataRecievers, name);
+
+		comPanelParent.add(connection.getPanel());
 	}
 
 }

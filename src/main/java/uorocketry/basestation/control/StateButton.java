@@ -4,21 +4,19 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.border.Border;
 
 import org.json.JSONArray;
 
 import com.fazecast.jSerialComm.SerialPort;
 
-import uorocketry.basestation.connections.ComConnection;
-import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.Connection;
+import uorocketry.basestation.connections.ConnectionHolder;
 import uorocketry.basestation.connections.DataReciever;
 import uorocketry.basestation.helper.Helper;
 
@@ -51,10 +49,10 @@ public class StateButton implements ActionListener, DataReciever {
 	private JPanel borderPanel;
     private Timer timer = new Timer();
 
-	private ComConnectionHolder comConnectionHolder;
+	private ConnectionHolder connectionHolder;
 	
-	public StateButton(ComConnectionHolder comConnectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
-		this.comConnectionHolder = comConnectionHolder;
+	public StateButton(ConnectionHolder connectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
+		this.connectionHolder = connectionHolder;
 		
 		this.name = name;
 		this.data = new byte[] { data };
@@ -71,7 +69,7 @@ public class StateButton implements ActionListener, DataReciever {
 	}
 	
 	public void sendAction() {
-        SerialPort serialPort = comConnectionHolder.get(TABLE_INDEX).getSerialPort();
+        SerialPort serialPort = connectionHolder.get(TABLE_INDEX).getSerialPort();
         if (serialPort != null) {
             serialPort.writeBytes(data, data.length);
         }
@@ -95,8 +93,8 @@ public class StateButton implements ActionListener, DataReciever {
 	}
 	
 	@Override
-    public void recievedData(ComConnection connection, byte[] data) {
-	    if (comConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
+    public void recievedData(Connection connection, byte[] data) {
+	    if (connectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
 	        sendAction();
 	        
 	        borderPanel.setBackground(CLICKED_COLOR);

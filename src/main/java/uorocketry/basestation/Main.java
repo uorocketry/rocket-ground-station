@@ -52,8 +52,8 @@ import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 
-import uorocketry.basestation.connections.ComConnection;
-import uorocketry.basestation.connections.ComConnectionHolder;
+import uorocketry.basestation.connections.Connection;
+import uorocketry.basestation.connections.ConnectionHolder;
 import uorocketry.basestation.connections.DataReciever;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataHandler;
@@ -130,7 +130,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean updatingUI = false;
 	
 	/** If not in a simulation, the serial ports being listened to */
-	ComConnectionHolder comConnectionHolder = new ComConnectionHolder();
+	ConnectionHolder connectionHolder = new ConnectionHolder();
 	
 	public Window window;
 	
@@ -220,28 +220,24 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			window.savingToLabel.setText("");
 		}
 		
-		// Setup com ports if not a simulation
-		if (!simulation) {
-			setupSerialComList();
-			
-			setupLogFileName();
-		}
-		
+		setupSerialComList();
+		setupLogFileName();
+
 		updateUI();
 	}
 	
 	public void setupSerialComList() {
-	    comConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
+	    connectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 		
 		// Make array for the selector
-		String[] comSelectorData = new String[comConnectionHolder.getAllSerialPorts().length];
+		String[] comSelectorData = new String[connectionHolder.getAllSerialPorts().length];
 		
-		for (int i = 0; i < comConnectionHolder.getAllSerialPorts().length; i++) {
-			comSelectorData[i] = comConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+		for (int i = 0; i < connectionHolder.getAllSerialPorts().length; i++) {
+			comSelectorData[i] = connectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
 		}
 
-		for (ComConnection comConnection: comConnectionHolder) {
-		    comConnection.getSelectorList().setListData(comSelectorData);
+		for (Connection connection : connectionHolder) {
+		    connection.getSelectorList().setListData(comSelectorData);
 		}
 	}
 	
@@ -744,7 +740,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	@Override
-	public void recievedData(ComConnection connection, byte[] data) {
+	public void recievedData(Connection connection, byte[] data) {
 	    String delimitedMessage = new String(data, StandardCharsets.UTF_8);
         
         allData.get(connection.getTableIndex()).add(parseData(delimitedMessage, connection.getTableIndex()));
