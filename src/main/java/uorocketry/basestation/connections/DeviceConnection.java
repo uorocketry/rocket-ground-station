@@ -51,11 +51,12 @@ public class DeviceConnection implements ListSelectionListener, MouseListener, C
     
     @Override
     public void valueChanged(ListSelectionEvent e) {
+        if (e.getValueIsAdjusting()) return;
         if (ignoreNextValueChange) {
             ignoreNextValueChange = false;
             return;
         }
-        
+
         if (e.getSource() == selectorList) {
             // Find what port it was
             if (deviceConnectionHolder.getAllSerialPorts() != null) {
