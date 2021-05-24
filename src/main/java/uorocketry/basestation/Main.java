@@ -52,9 +52,9 @@ import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 
-import uorocketry.basestation.connections.Connection;
-import uorocketry.basestation.connections.ConnectionHolder;
-import uorocketry.basestation.connections.DataReciever;
+import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.connections.DeviceConnectionHolder;
+import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataHandler;
 import uorocketry.basestation.data.DataTableCellRenderer;
@@ -65,7 +65,7 @@ import uorocketry.basestation.panel.DataChart;
 import uorocketry.basestation.panel.SnapPanel;
 import uorocketry.basestation.panel.SnapPanelListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReciever, SnapPanelListener {
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
 	
 	/** Constants */
 	/** The location of the comma separated labels without the extension. */
@@ -130,7 +130,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean updatingUI = false;
 	
 	/** If not in a simulation, the serial ports being listened to */
-	ConnectionHolder connectionHolder = new ConnectionHolder();
+	DeviceConnectionHolder deviceConnectionHolder = new DeviceConnectionHolder();
 	
 	public Window window;
 	
@@ -227,17 +227,17 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupSerialComList() {
-	    connectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
+	    deviceConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 		
 		// Make array for the selector
-		String[] comSelectorData = new String[connectionHolder.getAllSerialPorts().length];
+		String[] comSelectorData = new String[deviceConnectionHolder.getAllSerialPorts().length];
 		
-		for (int i = 0; i < connectionHolder.getAllSerialPorts().length; i++) {
-			comSelectorData[i] = connectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+		for (int i = 0; i < deviceConnectionHolder.getAllSerialPorts().length; i++) {
+			comSelectorData[i] = deviceConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
 		}
 
-		for (Connection connection : connectionHolder) {
-		    connection.getSelectorList().setListData(comSelectorData);
+		for (DeviceConnection deviceConnection : deviceConnectionHolder) {
+		    deviceConnection.getSelectorList().setListData(comSelectorData);
 		}
 	}
 	
@@ -396,7 +396,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					setTableToError(i, window.dataTables.get(i));
 				}
 				
-				if (window.stateButtons.size() > i) {
+				if (window.stateButtons.size() > i && currentDataHandler != null) {
 					try {
 						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
@@ -626,7 +626,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (lastDataPointDataHandler != null) {
 			    Float value = lastDataPointDataHandler.data[timestampIndex].getDecimalValue();
 			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
-			        // Treat as invalid data
+					System.err.println("Timestamp just went backwards");
+
+					// Treat as invalid data
 			        return null;
 			    }
 			}
@@ -640,7 +642,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				return null;
 			}
 		}
-		
+
 		return dataHandler;
 	}
 	
@@ -740,10 +742,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	@Override
-	public void recievedData(Connection connection, byte[] data) {
+	public void receivedData(DeviceConnection deviceConnection, byte[] data) {
 	    String delimitedMessage = new String(data, StandardCharsets.UTF_8);
         
-        allData.get(connection.getTableIndex()).add(parseData(delimitedMessage, connection.getTableIndex()));
+        allData.get(deviceConnection.getTableIndex()).add(parseData(delimitedMessage, deviceConnection.getTableIndex()));
         
         updateUI();
         
@@ -753,19 +755,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
         // Get string
         String logFileString = logFileStringBuilder.toString();
         
-        if (connection.isWriting()) {
-            connection.setWriting(true);
+        if (deviceConnection.isWriting()) {
+            deviceConnection.setWriting(true);
 
             // Write to file
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
-                        LOG_FILE_SAVE_LOCATION + currentLogFileName.get(connection.getTableIndex()))
+                        LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()))
                         , StandardCharsets.UTF_8))) {
                writer.write(logFileString);
             } catch (IOException err) {
                 err.printStackTrace();
             }
             
-            connection.setWriting(false);
+            deviceConnection.setWriting(false);
         }
 	}
 

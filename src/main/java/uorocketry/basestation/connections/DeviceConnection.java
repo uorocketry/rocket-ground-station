@@ -1,36 +1,32 @@
 package uorocketry.basestation.connections;
 
+import com.fazecast.jSerialComm.SerialPort;
+
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.nio.charset.StandardCharsets;
 
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+public class DeviceConnection implements ListSelectionListener, MouseListener, ConnectionMethodListener {
+    private DeviceConnectionHolder deviceConnectionHolder;
+    private DataReceiver[] dataReceivers;
 
-import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortEvent;
-import com.fazecast.jSerialComm.SerialPortMessageListener;
-
-public class Connection implements ListSelectionListener, MouseListener, SerialPortMessageListener {
-    private ConnectionHolder connectionHolder;
-    private DataReciever[] dataRecievers;
-
-    private SerialPort serialPort;
+    private ConnectionMethod connectionMethod;
     private int tableIndex;
-    private boolean connecting;
     private boolean writing;
     
     private JPanel panel;
     private JList<String> selectorList;
     private JLabel successLabel;
     boolean ignoreNextValueChange;
-    
+
     private final byte[] DELIMITER = "\n".getBytes(StandardCharsets.UTF_8);
-    
-    public Connection(ConnectionHolder connectionHolder, String name) {
-        this.connectionHolder = connectionHolder;
+
+    public DeviceConnection(DeviceConnectionHolder deviceConnectionHolder, String name) {
+        this.deviceConnectionHolder = deviceConnectionHolder;
 
         createUI(name);
     }
@@ -62,31 +58,31 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
         
         if (e.getSource() == selectorList) {
             // Find what port it was
-            if (connectionHolder.getAllSerialPorts() != null) {
+            if (deviceConnectionHolder.getAllSerialPorts() != null) {
                 if (selectorList.getSelectedIndex() != -1) {
-                    for (int i = 0; i < connectionHolder.getAllSerialPorts().length; i++) {
+                    for (int i = 0; i < deviceConnectionHolder.getAllSerialPorts().length; i++) {
                         // Check if this is the selected com selector
-                        String name = connectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+                        String name = deviceConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
                         if (name.equals(selectorList.getSelectedValue())) {
-                            final SerialPort newSerialPort = connectionHolder.getAllSerialPorts()[i];
+                            final SerialPort newSerialPort = deviceConnectionHolder.getAllSerialPorts()[i];
                             
-                            if (serialPort == null || !serialPort.isOpen() 
-                                    || !newSerialPort.getDescriptivePortName().equals(serialPort.getDescriptivePortName())) {
+                            if (!isSerialOpen()
+                                    || !newSerialPort.getDescriptivePortName().equals(getSerialConnection().getDescriptivePortName())) {
                                 // Set to loading
                                 successLabel.setText("Loading...");
                                 successLabel.setBackground(Color.yellow);
-                                
-                                new Thread(() -> this.initialisePort(newSerialPort, name)).start();
+
+                                new Thread(() -> this.initSerialPort(newSerialPort)).start();
                             }
                             
                             break;
                         }
                     }
-                } else {
-                    for (int i = 0; i < connectionHolder.getAllSerialPorts().length; i++) {
+                } else if (isSerialOpen()) {
+                    for (int i = 0; i < deviceConnectionHolder.getAllSerialPorts().length; i++) {
                         // Check if this is the selected com selector
-                        String name = connectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
-                        if (name.equals(serialPort.getDescriptivePortName())) {
+                        String name = deviceConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
+                        if (name.equals(getSerialConnection().getDescriptivePortName())) {
                             selectorList.setSelectedIndex(i);
                             
                             break;
@@ -96,41 +92,53 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
             }
         }
     }
-    
-    public void initialisePort(SerialPort newSerialPort, String name) {
-        if (newSerialPort.isOpen() || connecting) return;
-        
-        if (serialPort != null && serialPort.isOpen()) {
-            // Switching ports, close the old one
-            serialPort.closePort();
+
+    private boolean isConnectionOpen() {
+        return connectionMethod != null && connectionMethod.isOpen();
+    }
+
+    private boolean isSerialConnection() {
+        return connectionMethod != null && connectionMethod instanceof SerialConnectionMethod;
+    }
+
+    private boolean isSerialOpen() {
+        return isConnectionOpen() && isSerialConnection();
+    }
+
+    private SerialConnectionMethod getSerialConnection() {
+        if (isSerialOpen()) {
+            return (SerialConnectionMethod) connectionMethod;
         }
-        
-        connecting = true;
-        serialPort = newSerialPort;
-        
-        boolean open = serialPort.openPort();
-        
-        serialPort.setBaudRate(57600);
-        
-        if (open) {
+
+        return null;
+    }
+    
+    public void initSerialPort(SerialPort newSerialPort) {
+        if (newSerialPort.isOpen() || (isSerialConnection() && connectionMethod.isConnecting())) return;
+
+        if (isSerialOpen()) {
+            // Switching ports, close the old one
+            connectionMethod.close();
+        }
+
+        connectionMethod = new SerialConnectionMethod(newSerialPort);
+        connectionMethod.setConnectionMethodListener(this);
+
+        boolean isOpen = connectionMethod.open();
+        if (isOpen) {
             successLabel.setText("Connected");
             successLabel.setBackground(Color.green);
         } else {
             successLabel.setText("FAILED");
             successLabel.setBackground(Color.red);
         }
-        
-        // Setup listener
-        serialPort.addDataListener(this);
-        
-        connecting = false;
     }
-    
+
     @Override
-    public void serialEvent(SerialPortEvent e) {
-        if (dataRecievers != null) {
-            for (DataReciever dataReciever: dataRecievers) {
-                dataReciever.recievedData(this, e.getReceivedData());
+    public void receivedData(byte[] data) {
+        if (dataReceivers != null) {
+            for (DataReceiver dataReceiver : dataReceivers) {
+                dataReceiver.receivedData(this, data);
             }
         }
     }
@@ -140,26 +148,17 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
         if (e.getButton() == MouseEvent.BUTTON3) {
             ignoreNextValueChange = true;
             selectorList.clearSelection();
-            serialPort.closePort();
+            if (connectionMethod != null) connectionMethod.close();
             
             successLabel.setText("Disconnected");
             successLabel.setBackground(null);
         }
     }
-    
-    @Override
-    public int getListeningEvents() {
-        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-    }
-    
-    @Override
-    public byte[] getMessageDelimiter() {
-        return DELIMITER;
-    }
 
-    @Override
-    public boolean delimiterIndicatesEndOfMessage() {
-        return true; 
+    public void writeBytes(byte[] data) {
+        if (isConnectionOpen()) {
+            connectionMethod.writeBytes(data);
+        }
     }
     
     public boolean bytesEqualWithoutDelimiter(byte[] a, byte[] b) {
@@ -179,16 +178,8 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
         return true;
     }
     
-    public void setDataRecievers(DataReciever... dataRecievers) {
-        this.dataRecievers = dataRecievers;
-    }
-
-    public SerialPort getSerialPort() {
-        return serialPort;
-    }
-
-    public void setSerialPort(SerialPort serialPort) {
-        this.serialPort = serialPort;
+    public void setDataReceivers(DataReceiver... dataReceivers) {
+        this.dataReceivers = dataReceivers;
     }
 
     public int getTableIndex() {
@@ -197,14 +188,6 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
 
     public void setTableIndex(int tableIndex) {
         this.tableIndex = tableIndex;
-    }
-    
-    public boolean isConnecting() {
-        return connecting;
-    }
-
-    public void setConnecting(boolean connecting) {
-        this.connecting = connecting;
     }
     
     public boolean isWriting() {
@@ -228,24 +211,15 @@ public class Connection implements ListSelectionListener, MouseListener, SerialP
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-        
-    }
+    public void mouseEntered(MouseEvent e) { }
 
     @Override
-    public void mouseExited(MouseEvent e) {
-        
-    }
+    public void mouseExited(MouseEvent e) { }
 
     @Override
-    public void mousePressed(MouseEvent e) {
-        
-    }
+    public void mousePressed(MouseEvent e) { }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
-        
-    }
-
+    public void mouseReleased(MouseEvent e) { }
 }
 

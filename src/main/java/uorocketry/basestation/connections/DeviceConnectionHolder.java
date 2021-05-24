@@ -6,15 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-
 import com.fazecast.jSerialComm.SerialPort;
 
-public class ConnectionHolder implements Iterable<Connection> {
+public class DeviceConnectionHolder implements Iterable<DeviceConnection> {
     /** Connection data and related UI */
-    private Map<Type, List<Connection>> connections = new HashMap<>();
+    private Map<Type, List<DeviceConnection>> connections = new HashMap<>();
     
     /** All the serial ports found */
     private SerialPort[] allSerialPorts;
@@ -24,20 +20,20 @@ public class ConnectionHolder implements Iterable<Connection> {
         BUTTON_BOX
     }
     
-    public Connection add(Type type, DataReciever[] dataRecievers, String name) {
-        Connection connection = new Connection(this, name);
-        connection.setDataRecievers(dataRecievers);
-        getList(type).add(connection);
+    public DeviceConnection add(Type type, DataReceiver[] dataReceivers, String name) {
+        DeviceConnection deviceConnection = new DeviceConnection(this, name);
+        deviceConnection.setDataReceivers(dataReceivers);
+        getList(type).add(deviceConnection);
 
-        return connection;
+        return deviceConnection;
     }
     
-    public Connection get(int tableIndex) {
+    public DeviceConnection get(int tableIndex) {
         return getList(Type.TABLE).get(tableIndex);
     }
     
-    private List<Connection> getList(Type type) {
-        List<Connection> result = connections.get(type);
+    private List<DeviceConnection> getList(Type type) {
+        List<DeviceConnection> result = connections.get(type);
         if (result != null) {
             return result;
         } else {
@@ -49,8 +45,8 @@ public class ConnectionHolder implements Iterable<Connection> {
     }
     
     @Override
-    public Iterator<Connection> iterator() {
-        return new ArrayList<List<Connection>>(connections.values()).parallelStream().flatMap(List::stream).iterator();
+    public Iterator<DeviceConnection> iterator() {
+        return new ArrayList<List<DeviceConnection>>(connections.values()).parallelStream().flatMap(List::stream).iterator();
     }
     
     public SerialPort[] getAllSerialPorts() {
