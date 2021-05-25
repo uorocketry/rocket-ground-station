@@ -1,6 +1,9 @@
 package uorocketry.basestation.connections;
 
 import com.fazecast.jSerialComm.SerialPort;
+import uorocketry.basestation.connections.method.ConnectionMethod;
+import uorocketry.basestation.connections.method.ConnectionMethodListener;
+import uorocketry.basestation.connections.method.SerialConnectionMethod;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;

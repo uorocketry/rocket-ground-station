@@ -1,4 +1,4 @@
-package uorocketry.basestation.connections;
+package uorocketry.basestation.connections.method;
 
 public interface ConnectionMethodListener {
 

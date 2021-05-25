@@ -1,4 +1,4 @@
-package uorocketry.basestation.connections;
+package uorocketry.basestation.connections.method;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
