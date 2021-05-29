@@ -4,22 +4,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.border.Border;
 
 import org.json.JSONArray;
 
-import com.fazecast.jSerialComm.SerialPort;
-
-import uorocketry.basestation.connections.ComConnection;
-import uorocketry.basestation.connections.ComConnectionHolder;
-import uorocketry.basestation.connections.DataReciever;
+import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.connections.DeviceConnectionHolder;
+import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.helper.Helper;
 
 /**
@@ -29,7 +25,7 @@ import uorocketry.basestation.helper.Helper;
  * @author Ajay
  *
  */
-public class StateButton implements ActionListener, DataReciever {
+public class StateButton implements ActionListener, DataReceiver {
 	
 	// Always zero for now
 	private static final int TABLE_INDEX = 0;
@@ -51,10 +47,10 @@ public class StateButton implements ActionListener, DataReciever {
 	private JPanel borderPanel;
     private Timer timer = new Timer();
 
-	private ComConnectionHolder comConnectionHolder;
+	private DeviceConnectionHolder deviceConnectionHolder;
 	
-	public StateButton(ComConnectionHolder comConnectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
-		this.comConnectionHolder = comConnectionHolder;
+	public StateButton(DeviceConnectionHolder deviceConnectionHolder, String name, byte data, JSONArray successStates, JSONArray availableStates) {
+		this.deviceConnectionHolder = deviceConnectionHolder;
 		
 		this.name = name;
 		this.data = new byte[] { data };
@@ -71,10 +67,7 @@ public class StateButton implements ActionListener, DataReciever {
 	}
 	
 	public void sendAction() {
-        SerialPort serialPort = comConnectionHolder.get(TABLE_INDEX).getSerialPort();
-        if (serialPort != null) {
-            serialPort.writeBytes(data, data.length);
-        }
+		deviceConnectionHolder.get(TABLE_INDEX).writeBytes(data);
     }
 	
 	public void stateChanged(int newState) {
@@ -95,8 +88,8 @@ public class StateButton implements ActionListener, DataReciever {
 	}
 	
 	@Override
-    public void recievedData(ComConnection connection, byte[] data) {
-	    if (comConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
+    public void receivedData(DeviceConnection deviceConnection, byte[] data) {
+	    if (deviceConnectionHolder.get(TABLE_INDEX).bytesEqualWithoutDelimiter(this.data, data)) {
 	        sendAction();
 	        
 	        borderPanel.setBackground(CLICKED_COLOR);

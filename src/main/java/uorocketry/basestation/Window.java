@@ -15,7 +15,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -24,7 +23,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
@@ -34,8 +32,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uorocketry.basestation.connections.ComConnectionHolder;
-import uorocketry.basestation.connections.DataReciever;
+import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.connections.DeviceConnectionHolder;
+import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.panel.DataChart;
@@ -266,14 +265,14 @@ public class Window extends JFrame {
 
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject object = array.getJSONObject(i);
-				StateButton stateButton = new StateButton(main.comConnectionHolder, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
+				StateButton stateButton = new StateButton(main.deviceConnectionHolder, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
 				
 				stateSendingPanel.add(stateButton.getPanel());
 				buttons.add(stateButton);
 			}
 			
 			if (buttons.size() > 0) {
-			    addComSelectorPanel("Button Box", buttons.stream().toArray(StateButton[]::new));
+			    addComSelectorPanel(DeviceConnectionHolder.Type.BUTTON_BOX, "Button Box", buttons.stream().toArray(StateButton[]::new));
             }
 		} catch (JSONException e) {
 			// No states then
@@ -350,29 +349,14 @@ public class Window extends JFrame {
 		sliderTabs.add(sliders, dataSet.getString("name"));
 	}
 	
-	public void addComSelectorPanel(JSONObject dataSet, DataReciever... dataRecievers) {
-	    addComSelectorPanel(dataSet.getString("name"), dataRecievers);
+	public void addComSelectorPanel(JSONObject dataSet, DataReceiver... dataReceivers) {
+	    addComSelectorPanel(DeviceConnectionHolder.Type.TABLE, dataSet.getString("name"), dataReceivers);
     }
 	
-	public void addComSelectorPanel(String name, DataReciever... dataRecievers) {
-		JPanel comPanel = new JPanel();
-		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
-		comPanel.setBorder(BorderFactory.createTitledBorder(name));
-		
-		JList<String> comSelector = new JList<String>();
-		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		comPanel.add(comSelector);
-		
-		JLabel comConnectionSuccessLabel = new JLabel();
-		comConnectionSuccessLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		comConnectionSuccessLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		comConnectionSuccessLabel.setOpaque(true);
-		comPanel.add(comConnectionSuccessLabel);
-		
-		comPanelParent.add(comPanel);
-		
-		main.comConnectionHolder.add(ComConnectionHolder.Type.TABLE, dataRecievers, comPanel,
-		        comSelector, comConnectionSuccessLabel);
+	public void addComSelectorPanel(DeviceConnectionHolder.Type type, String name, DataReceiver... dataReceivers) {
+		DeviceConnection deviceConnection = main.deviceConnectionHolder.add(type, dataReceivers, name);
+
+		comPanelParent.add(deviceConnection.getPanel());
 	}
 
 }

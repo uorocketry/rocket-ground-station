@@ -6,15 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-
 import com.fazecast.jSerialComm.SerialPort;
 
-public class ComConnectionHolder implements Iterable<ComConnection> {
+public class DeviceConnectionHolder implements Iterable<DeviceConnection> {
     /** Connection data and related UI */
-    private Map<Type, List<ComConnection>> connections = new HashMap<>();
+    private Map<Type, List<DeviceConnection>> connections = new HashMap<>();
     
     /** All the serial ports found */
     private SerialPort[] allSerialPorts;
@@ -24,20 +20,20 @@ public class ComConnectionHolder implements Iterable<ComConnection> {
         BUTTON_BOX
     }
     
-    public ComConnection add(Type type, DataReciever[] dataRecievers, JPanel panel, JList<String> selectorList, JLabel successLabel) {
-        ComConnection comConnection = new ComConnection(this, panel, selectorList, successLabel);
-        comConnection.setDataRecievers(dataRecievers);
-        getList(type).add(comConnection);
+    public DeviceConnection add(Type type, DataReceiver[] dataReceivers, String name) {
+        DeviceConnection deviceConnection = new DeviceConnection(this, name);
+        deviceConnection.setDataReceivers(dataReceivers);
+        getList(type).add(deviceConnection);
 
-        return comConnection;
+        return deviceConnection;
     }
     
-    public ComConnection get(int tableIndex) {
+    public DeviceConnection get(int tableIndex) {
         return getList(Type.TABLE).get(tableIndex);
     }
     
-    private List<ComConnection> getList(Type type) {
-        List<ComConnection> result = connections.get(type);
+    private List<DeviceConnection> getList(Type type) {
+        List<DeviceConnection> result = connections.get(type);
         if (result != null) {
             return result;
         } else {
@@ -49,8 +45,8 @@ public class ComConnectionHolder implements Iterable<ComConnection> {
     }
     
     @Override
-    public Iterator<ComConnection> iterator() {
-        return new ArrayList<List<ComConnection>>(connections.values()).parallelStream().flatMap(List::stream).iterator();
+    public Iterator<DeviceConnection> iterator() {
+        return new ArrayList<List<DeviceConnection>>(connections.values()).parallelStream().flatMap(List::stream).iterator();
     }
     
     public SerialPort[] getAllSerialPorts() {
