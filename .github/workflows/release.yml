@@ -1,0 +1,57 @@
+name: Upload Release Builds
+
+on: 
+  release:
+    types: [published]
+
+jobs:
+
+  build:
+    name: Upload Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build
+        run: ./gradlew build
+
+      - name: Upload GroundStation.jar to release
+        uses: Shopify/upload-to-release@master
+        with:
+          args: build/libs/GroundStation.jar
+          name: GroundStation.jar
+          path: ./build/libs/GroundStation.jar
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Create directories
+        run: mkdir -p builds/october-sky/data builds/hotfire-test/data
+      - name: Copy kml file
+        run: cp _GoogleEarthView.kml builds/october-sky/_GoogleEarthView.kml; cp _GoogleEarthView.kml builds/hotfire-test/_GoogleEarthView.kml;
+      - name: Copy jar file
+        run: cp build/libs/GroundStation.jar builds/october-sky/GroundStation.jar; cp build/libs/GroundStation.jar builds/hotfire-test/GroundStation.jar
+        
+      - name: Copy october sky config file
+        run: cp data-example/config-octoberSky.json builds/october-sky/data/config.json
+      - name: Copy hotfire test config file
+        run: cp data-example/config-hotfireTest.json builds/hotfire-test/data/config.json
+      
+      - name: Zip october sky
+        run: cd ./builds/october-sky; zip -r ../../builds/GroundStationWithOctoberSkyConfig.zip *
+      - name: Zip hotfire test
+        run: cd ./builds/hotfire-test; zip -r ../../builds/GroundStationWithHotfireConfig.zip *
+ 
+      - name: Upload GroundStationWithOctoberSkyConfig.zip to release
+        uses: Shopify/upload-to-release@master
+        with:
+          args: builds/GroundStationWithOctoberSkyConfig.zip
+          name: GroundStationWithOctoberSkyConfig.zip
+          path: ./builds/GroundStationWithOctoberSkyConfig.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload GroundStationWithHotfireConfig.zip to release
+        uses: Shopify/upload-to-release@master
+        with:
+          args: builds/GroundStationWithHotfireConfig.zip
+          name: GroundStationWithHotfireConfig.zip
+          path: ./builds/GroundStationWithHotfireConfig.zip
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          

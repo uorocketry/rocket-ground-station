@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.panel;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -9,6 +9,9 @@ import java.awt.event.MouseMotionListener;
 import java.util.List;
 
 import javax.swing.JPanel;
+
+import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataType;
 
 /**
  * Makes JPanel have the ability to snap and move in an absolute layout
@@ -22,8 +25,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	// Used to check for double clicks
 	long lastClickTime = 0;
 	
-	DataChart chart;
-	JPanel panel;
+	public DataChart chart;
+	public JPanel panel;
 	
 	SnapPanelListener snapPanelListener;
 	
@@ -35,10 +38,10 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	boolean resizeTop = false;
 	
 	/** Stores the bounds (x, y, width, height) in a relative way (less than 1) to be converted to the real screen bounds. */
-	double relX;
-	double relY;
-	double relWidth;
-	double relHeight;
+	public double relX;
+	public double relY;
+	public double relWidth;
+	public double relHeight;
 	
 	public SnapPanel(DataChart chart) {
 		this.chart = chart;

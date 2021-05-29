@@ -27,7 +27,6 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
@@ -52,10 +51,21 @@ import org.knowm.xchart.style.Styler.YAxisPosition;
 import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortEvent;
-import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, SerialPortMessageListener, SnapPanelListener {
+import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.connections.DeviceConnectionHolder;
+import uorocketry.basestation.connections.DataReceiver;
+import uorocketry.basestation.control.StateButton;
+import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.data.DataType;
+import uorocketry.basestation.external.GoogleEarthUpdater;
+import uorocketry.basestation.external.WebViewUpdater;
+import uorocketry.basestation.panel.DataChart;
+import uorocketry.basestation.panel.SnapPanel;
+import uorocketry.basestation.panel.SnapPanelListener;
+
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
 	
 	/** Constants */
 	/** The location of the comma separated labels without the extension. */
@@ -101,7 +111,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	List<List<DataHandler>> allData = new ArrayList<>(2);
+	public List<List<DataHandler>> allData = new ArrayList<>(2);
 	
 	List<String[]> labels = new ArrayList<>();
 	JSONObject config = null; 
@@ -111,7 +121,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Index of the minimum data point being looked at */
 	ArrayList<Integer> minDataIndexes = new ArrayList<>(2);
 	
-	/** If {@link currentDataIndex} should be set to the latest message */
+	/** If {@link this.currentDataIndexes} should be set to the latest message */
 	boolean latest = true;
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
@@ -120,13 +130,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean updatingUI = false;
 	
 	/** If not in a simulation, the serial ports being listened to */
-	List<SerialPort> activeSerialPorts = new ArrayList<SerialPort>(2);
+	DeviceConnectionHolder deviceConnectionHolder = new DeviceConnectionHolder();
 	
-	Window window;
-	
-	/** All the serial ports found */
-	SerialPort[] allSerialPorts;
-	List<Boolean> connectingToSerial = new ArrayList<Boolean>(2);
+	public Window window;
 	
 	/** The chart last clicked */
 	DataChart selectedChart;
@@ -143,12 +149,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean onlyShowLatestData = false;
 	
 	/** If true, clicking on data in a chart will hide it */
-	boolean dataDeletionMode = false;
+	public boolean dataDeletionMode = false;
 	
 	/** What will be written to the log file */
 	StringBuilder logFileStringBuilder = new StringBuilder();
-	/** Is the log file being currently updated */
-	ArrayList<Boolean> currentlyWriting = new ArrayList<Boolean>(2);
 	
 	public static void main(String[] args) {
 		// Find different possible commands
@@ -216,35 +220,24 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			window.savingToLabel.setText("");
 		}
 		
-		// Setup com ports if not a simulation
-		if (!simulation) {
-			setupSerialComs();
-			
-			setupLogFileName();
-		}
-		
+		setupSerialComList();
+		setupLogFileName();
+
 		updateUI();
 	}
 	
-	public void setupSerialComs() {
-		allSerialPorts = SerialPort.getCommPorts();
+	public void setupSerialComList() {
+	    deviceConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 		
 		// Make array for the selector
-		String[] comSelectorData = new String[allSerialPorts.length];
+		String[] comSelectorData = new String[deviceConnectionHolder.getAllSerialPorts().length];
 		
-		for (int i = 0; i < allSerialPorts.length; i++) {
-			comSelectorData[i] = allSerialPorts[i].getDescriptivePortName();
+		for (int i = 0; i < deviceConnectionHolder.getAllSerialPorts().length; i++) {
+			comSelectorData[i] = deviceConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
 		}
 
-		for (JList<String> comSelector: window.comSelectors) {
-			comSelector.setListData(comSelectorData);
-		}
-		
-		// Create required lists
-		for (int i = 0; i < dataSourceCount; i++) {
-			activeSerialPorts.add(null);
-			connectingToSerial.add(false);
-			currentlyWriting.add(false);
+		for (DeviceConnection deviceConnection : deviceConnectionHolder) {
+		    deviceConnection.getSelectorList().setListData(comSelectorData);
 		}
 	}
 	
@@ -302,36 +295,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		return savingToText.toString();
 	}
 	
-	public void initialisePort(int tableIndex, SerialPort serialPort) {
-		if (serialPort.isOpen() || connectingToSerial.get(tableIndex)) return;
-		
-		if (activeSerialPorts.get(tableIndex) != null && activeSerialPorts.get(tableIndex).isOpen()) {
-			// Switching ports, close the old one
-			activeSerialPorts.get(tableIndex).closePort();
-		}
-		
-		activeSerialPorts.set(tableIndex, serialPort);
-		
-		connectingToSerial.set(tableIndex, true);
-		
-		boolean open = serialPort.openPort();
-		
-		serialPort.setBaudRate(57600);
-		
-		if (open) {
-			window.comConnectionSuccessLabels.get(tableIndex).setText("Connected");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.green);
-		} else {
-			window.comConnectionSuccessLabels.get(tableIndex).setText("FAILED");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.red);
-		}
-		
-		// Setup listener
-		serialPort.addDataListener(this);
-		
-		connectingToSerial.set(tableIndex, false);
-	}
-	
 	public void setupUI() {
 		addChart();
 		
@@ -343,6 +306,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Buttons
 		window.clearDataButton.addActionListener(this);
+		window.refreshComSelectorButton.addActionListener(this);
 		window.hideComSelectorButton.addActionListener(this);
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
@@ -366,11 +330,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set simulation checkbox to be default
 		window.simulationCheckBox.setSelected(simulation);
-		
-		// Com selector
-		for (JList<String> comSelector: window.comSelectors) {
-			comSelector.addListSelectionListener(this);
-		}
 		
 		// Setup listeners for table
 		for (JTable dataTable : window.dataTables) {
@@ -437,13 +396,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					setTableToError(i, window.dataTables.get(i));
 				}
 				
-				if (window.stateButtons.size() > i) {
+				if (window.stateButtons.size() > i && currentDataHandler != null) {
 					try {
 						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
-							stateButton.stateChanged((int) currentDataHandler.data[stateIndex].getDecimalValue());
+						    Float value = currentDataHandler.data[stateIndex].getDecimalValue();
+						    if (value != null) {
+						        stateButton.stateChanged(value.intValue());
+						    }
 						}
-					} catch (JSONException e) {}
+					} catch (JSONException ignored) {}
 				}
 			}
 			
@@ -474,7 +436,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set first item to "Error"
 		tableModel.setValueAt("Parsing Error", 0, 0);
-		tableModel.setValueAt(currentDataIndexes, 0, 1);
+		tableModel.setValueAt(currentDataIndexes.get(index), 0, 1);
 		
 		for (int i = 1; i < dataLength.get(index); i++) {
 			// Set label
@@ -645,6 +607,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
+		if (data.endsWith(",")) data = data.substring(0, data.length() - 1);
 		
 		// Semi-colon separated
 		String[] splitData = data.split(SEPARATOR);
@@ -660,9 +623,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			DataHandler lastDataPointDataHandler = findLastValidDataPoint(allData.get(tableIndex));
 			
 			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
-			if (lastDataPointDataHandler != null && Float.parseFloat(splitData[timestampIndex]) < lastDataPointDataHandler.data[timestampIndex].getDecimalValue()) {
-				// Treat as invalid data
-				return null;
+			if (lastDataPointDataHandler != null) {
+			    Float value = lastDataPointDataHandler.data[timestampIndex].getDecimalValue();
+			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
+					System.err.println("Timestamp just went backwards");
+
+					// Treat as invalid data
+			        return null;
+			    }
 			}
 		} catch (NumberFormatException | JSONException e) {}
 		
@@ -674,7 +642,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				return null;
 			}
 		}
-		
+
 		return dataHandler;
 	}
 	
@@ -774,49 +742,33 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	@Override
-	public int getListeningEvents() {
-		return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-	}
-	
-	@Override
-   public byte[] getMessageDelimiter() {
-		return "\n".getBytes(StandardCharsets.UTF_8);
-	}
+	public void receivedData(DeviceConnection deviceConnection, byte[] data) {
+	    String delimitedMessage = new String(data, StandardCharsets.UTF_8);
+        
+        allData.get(deviceConnection.getTableIndex()).add(parseData(delimitedMessage, deviceConnection.getTableIndex()));
+        
+        updateUI();
+        
+        // Add this message to the log file
+        logFileStringBuilder.append(delimitedMessage);
+        
+        // Get string
+        String logFileString = logFileStringBuilder.toString();
+        
+        if (deviceConnection.isWriting()) {
+            deviceConnection.setWriting(true);
 
-   @Override
-   public boolean delimiterIndicatesEndOfMessage() {
-	   return true; 
-   }
-
-	@Override
-	public void serialEvent(SerialPortEvent e) {
-		int tableIndex = activeSerialPorts.indexOf(e.getSerialPort());
-		
-		String delimitedMessage = new String(e.getReceivedData(), StandardCharsets.UTF_8);
-		
-		allData.get(tableIndex).add(parseData(delimitedMessage, tableIndex));
-		
-		updateUI();
-		
-		// Add this message to the log file
-		logFileStringBuilder.append(delimitedMessage);
-		
-		// Get string
-		String logFileString = logFileStringBuilder.toString();
-		
-		if (!currentlyWriting.get(tableIndex)) {
-			currentlyWriting.set(tableIndex, true);
-
-			// Write to file
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(tableIndex)), StandardCharsets.UTF_8))) {
-			   writer.write(logFileString);
-			} catch (IOException err) {
-				err.printStackTrace();
-			}
-			
-			currentlyWriting.set(tableIndex, false);
-		}
-		
+            // Write to file
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                        LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()))
+                        , StandardCharsets.UTF_8))) {
+               writer.write(logFileString);
+            } catch (IOException err) {
+                err.printStackTrace();
+            }
+            
+            deviceConnection.setWriting(false);
+        }
 	}
 
 	@Override
@@ -830,7 +782,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				updateUI();
 			}
-		} else if (e.getSource() == window.hideComSelectorButton) {
+		} else if (e.getSource() == window.refreshComSelectorButton) {
+            setupSerialComList();
+        }  else if (e.getSource() == window.hideComSelectorButton) {
 			window.comPanelParent.setVisible(!window.comPanelParent.isVisible());
 			
 			if (window.comPanelParent.isVisible()) {
@@ -897,16 +851,13 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			onlyShowLatestData = window.onlyShowLatestDataCheckBox.isSelected();
 		} else if (e.getSource() == window.setMaxDataPointsButton) {
 			try {
-				int maxDataPoints = Integer.parseInt(window.maxDataPointsTextField.getText());
-				maxDataPointsDisplayed = maxDataPoints;
-			} catch (NumberFormatException err) {}
+				maxDataPointsDisplayed = Integer.parseInt(window.maxDataPointsTextField.getText());
+			} catch (NumberFormatException ignored) {}
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (int tableIndex = 0; tableIndex < allData.size(); tableIndex++) {
-				List<DataHandler> dataHandlers = allData.get(tableIndex);
-				
-				for (DataHandler dataHandler: dataHandlers) {
+			for (List<DataHandler> dataHandlers : allData) {
+				for (DataHandler dataHandler : dataHandlers) {
 					// See if the hidden list needs to be cleared
 					if (dataHandler != null && !dataHandler.hiddenDataTypes.isEmpty()) {
 						dataHandler.hiddenDataTypes.clear();
@@ -995,12 +946,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				JSONObject loadedLayout = null;
 				try {
 					loadedLayout = new JSONObject(new String(Files.readAllBytes(saveFile.toPath()), StandardCharsets.UTF_8));
-				} catch (JSONException e1) {
-					e1.printStackTrace();
-				} catch (IOException e1) {
+				} catch (JSONException | IOException e1) {
 					e1.printStackTrace();
 				}
-				
+
 				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
 				
 				// Clear current charts
@@ -1064,6 +1013,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
+		//noinspection SuspiciousNameCombination
 		firstChartStyler.setYAxisGroupPosition(1, YAxisPosition.Right);
 
 		// Series
@@ -1100,36 +1050,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** For com selector JList */
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		if (e.getSource() instanceof JList && window.comSelectors.contains(e.getSource())) {
-			@SuppressWarnings("unchecked")
-			JList<String> comSelector = (JList<String>) e.getSource();
-			
-			int tableIndex = window.comSelectors.indexOf(comSelector);
-			
-			// Set to loading
-			window.comConnectionSuccessLabels.get(tableIndex).setText("Loading...");
-			window.comConnectionSuccessLabels.get(tableIndex).setBackground(Color.yellow);
-			
-			// Find what port it was
-			if (allSerialPorts != null) {
-				for (int i = 0; i < allSerialPorts.length; i++) {
-					// Check if this is the selected com selector
-					if (allSerialPorts[i].getDescriptivePortName().equals(comSelector.getSelectedValue())) {
-						final SerialPort newSerialPort = allSerialPorts[i];
-						
-						// Do it in an other thread
-						Thread thread = new Thread() {
-							public void run() {
-								initialisePort(tableIndex, newSerialPort);
-							}
-						};
-						thread.start();
-						
-						break;
-					}
-				}
-			}
-		} else if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
+		if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
 			for (int i = 0; i < window.dataTables.size(); i++) {
 				JTable dataTable = window.dataTables.get(i);
 				

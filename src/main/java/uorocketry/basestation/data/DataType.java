@@ -1,8 +1,8 @@
-package uorocketry.basestation;
+package uorocketry.basestation.data;
 
 public class DataType {
-	int index;
-	int tableIndex;
+	public int index;
+	public int tableIndex;
 	
 	public DataType(int index, int tableIndex) {
 		this.index = index;

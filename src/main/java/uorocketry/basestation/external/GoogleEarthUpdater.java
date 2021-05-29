@@ -1,4 +1,4 @@
-package uorocketry.basestation;
+package uorocketry.basestation.external;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -13,6 +13,10 @@ import java.util.TimerTask;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import uorocketry.basestation.Main;
+import uorocketry.basestation.data.Data;
+import uorocketry.basestation.data.DataHandler;
 
 public class GoogleEarthUpdater {
 	
@@ -150,7 +154,7 @@ public class GoogleEarthUpdater {
 			}
 		} catch (JSONException e) {}
 		
-		if (longitudeData.data != 0 && latitudeData.data != 0) {
+		if (longitudeData.data != 0 && latitudeData.data != 0 && longitudeData.getDecimalValue() != null && latitudeData.getDecimalValue() != null) {
 			return prefixString + longitudeData.getDecimalValue() + "," + latitudeData.getDecimalValue() + "," + altitudeData.data;
 		}
 		

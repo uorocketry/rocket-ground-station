@@ -1,13 +1,12 @@
-package uorocketry.basestation;
+package uorocketry.basestation.data;
 
-import java.io.Console;
 import java.text.DecimalFormat;
 
 public class Data {
 	//the actual data point
-	float data;
+	public Float data;
 	
-	long dataLong;
+	Long dataLong;
 	
 	//used for special data types
 	float minutes;
@@ -22,7 +21,7 @@ public class Data {
 		FORMATTED_COORDINATE
 	}
 	
-	public Data(float data) {
+	public Data(Float data) {
 		this.data = data;
 		
 		type = Types.NORMAL;
@@ -36,7 +35,7 @@ public class Data {
 	 * 
 	 * @param data
 	 */
-	public Data(long data) {
+	public Data(Long data) {
 		this.dataLong = data;
 		
 		type = Types.LONG;
@@ -62,31 +61,32 @@ public class Data {
 	public String getFormattedString() {
 		switch (type) {
 			case FORMATTED_COORDINATE:
-				return Math.round(data) + "° " + minutes + " '";
+				return Math.round(data) + "Â° " + minutes + " '";
 			case LONG:
-				return format.format(dataLong);
+				return dataLong != null ? format.format(dataLong) : "null";
 			default: 
-				return format.format(data);
+				return data != null ? format.format(data) : "null";
 		}
 	}
 	
-	public float getDecimalValue() {
+	public Float getDecimalValue() {
 		switch (type) {
 			case FORMATTED_COORDINATE:
 				return getDecimalCoordinate();
 			case LONG:
-				return dataLong;
+				return dataLong != null ? dataLong.floatValue() : null;
 			default:
 				return data;
 		}
 	}
 	
-	public long getLongValue() {
+	public Long getLongValue() {
 		switch (type) {
 			case LONG:
 				return dataLong;
 			default:
-				return (long) getDecimalValue();
+			    Float value = getDecimalValue();
+				return value != null ? value.longValue() : null;
 		}
 	}
 	

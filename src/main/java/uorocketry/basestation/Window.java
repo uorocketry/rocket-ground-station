@@ -3,13 +3,11 @@ package uorocketry.basestation;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -17,28 +15,34 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import javax.swing.border.TitledBorder;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
+
+import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.connections.DeviceConnectionHolder;
+import uorocketry.basestation.connections.DataReceiver;
+import uorocketry.basestation.control.StateButton;
+import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.panel.DataChart;
 
 public class Window extends JFrame {
 	
 	private static final long serialVersionUID = -5397816377154627951L;
+	private Main main;
 	
 	private JPanel dataTablePanel;
 	ArrayList<JTable> dataTables = new ArrayList<>();
@@ -68,6 +72,7 @@ public class Window extends JFrame {
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
 	public JTabbedPane sliderTabs;
 	JButton clearDataButton;
+	JButton refreshComSelectorButton;
 	JButton hideComSelectorButton;
 	JButton hideBarsButton;
 	JButton pauseButton;
@@ -76,16 +81,13 @@ public class Window extends JFrame {
 	
 	public JPanel sidePanel;
 	public JPanel comPanelParent;
-	private List<JPanel> comPanels = new ArrayList<>();
-	public List<JList<String>> comSelectors = new ArrayList<>();
-	public List<JLabel> comConnectionSuccessLabels = new ArrayList<>();
 	
 	public JPanel stateSendingPanel;
 	public List<List<StateButton>> stateButtons = new ArrayList<>();
 	
-	JPanel centerChartPanel;
+	public JPanel centerChartPanel;
 	
-	ArrayList<DataChart> charts = new ArrayList<>();
+	public final ArrayList<DataChart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
@@ -96,6 +98,8 @@ public class Window extends JFrame {
 	private JSplitPane splitPane;
 	
 	public Window(Main main) {
+	    this.main = main;
+	    
 		// Set look and feel
 		try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -225,6 +229,9 @@ public class Window extends JFrame {
 		clearDataButton = new JButton("Clear Data");
 		eastSliderButtons.add(clearDataButton);
 		
+		refreshComSelectorButton = new JButton("Refresh Com Selector");
+        eastSliderButtons.add(refreshComSelectorButton);
+		
 		hideComSelectorButton = new JButton("Hide Com Selector");
 		eastSliderButtons.add(hideComSelectorButton);
 		
@@ -243,11 +250,6 @@ public class Window extends JFrame {
 		
 		comPanelParent = new JPanel();
 		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
-		comPanelParent.setLayout(new GridLayout(2, 1, 0, 0));
-		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addComSelectorPanel();
-		}
 		
 		try {
 			JSONArray array = main.config.getJSONArray("stateEvents");
@@ -263,17 +265,26 @@ public class Window extends JFrame {
 
 			for (int i = 0; i < array.length(); i++) {
 				JSONObject object = array.getJSONObject(i);
-				StateButton stateButton = new StateButton(main.activeSerialPorts, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
+				StateButton stateButton = new StateButton(main.deviceConnectionHolder, object.getString("name"), (byte) object.getInt("data"), object.getJSONArray("successStates"), object.getJSONArray("availableStates"));
 				
 				stateSendingPanel.add(stateButton.getPanel());
 				buttons.add(stateButton);
 			}
+			
+			if (buttons.size() > 0) {
+			    addComSelectorPanel(DeviceConnectionHolder.Type.BUTTON_BOX, "Button Box", buttons.stream().toArray(StateButton[]::new));
+            }
 		} catch (JSONException e) {
 			// No states then
 			if (stateSendingPanel != null) {
 				stateSendingPanel.setVisible(false);
 			}
 		}
+		
+		for (int i = 0; i < Main.dataSourceCount; i++) {
+            addComSelectorPanel(main.config.getJSONArray("datasets").getJSONObject(i), main);
+        }
+		comPanelParent.setLayout(new GridLayout(comPanelParent.getComponentCount(), 1, 0, 0));
 		
 		centerChartPanel = new JPanel();
 		
@@ -350,25 +361,14 @@ public class Window extends JFrame {
 		sliderTabs.add(sliders, dataSet.getString("name"));
 	}
 	
-	public void addComSelectorPanel() {
-		JPanel comPanel = new JPanel();
-		comPanel.setLayout(new BoxLayout(comPanel, BoxLayout.Y_AXIS));
-		
-		JList<String> comSelector = new JList<String>();
-		comSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		comPanel.add(comSelector);
-		
-		JLabel comConnectionSuccessLabel = new JLabel();
-		comConnectionSuccessLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		comConnectionSuccessLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		comConnectionSuccessLabel.setOpaque(true);
-		comPanel.add(comConnectionSuccessLabel);
-		
-		comPanelParent.add(comPanel);
-		
-		comPanels.add(comPanel);
-		comSelectors.add(comSelector);
-		comConnectionSuccessLabels.add(comConnectionSuccessLabel);
+	public void addComSelectorPanel(JSONObject dataSet, DataReceiver... dataReceivers) {
+	    addComSelectorPanel(DeviceConnectionHolder.Type.TABLE, dataSet.getString("name"), dataReceivers);
+    }
+	
+	public void addComSelectorPanel(DeviceConnectionHolder.Type type, String name, DataReceiver... dataReceivers) {
+		DeviceConnection deviceConnection = main.deviceConnectionHolder.add(type, dataReceivers, name);
+
+		comPanelParent.add(deviceConnection.getPanel());
 	}
 
 }
