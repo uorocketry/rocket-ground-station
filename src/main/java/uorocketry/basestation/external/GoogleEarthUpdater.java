@@ -16,7 +16,7 @@ import org.json.JSONObject;
 
 import uorocketry.basestation.Main;
 import uorocketry.basestation.data.Data;
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
 
 public class GoogleEarthUpdater {
 	
@@ -35,7 +35,7 @@ public class GoogleEarthUpdater {
 	 * 
 	 * @param main
 	 */
-	public String generateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
+	public String generateKMLFile(List<List<DataHolder>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
 		StringBuilder content = new StringBuilder();
 		
 		content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
@@ -106,7 +106,7 @@ public class GoogleEarthUpdater {
 	 * @param secondRun Is this a second run? This is true if it is being run from a task called by this function.
 	 * 		  The task is run to force Google Earth to update the display.
 	 */
-	public void updateKMLFile(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets, boolean secondRun) {
+	public void updateKMLFile(List<List<DataHolder>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets, boolean secondRun) {
 		if (!secondRun) {
 			if (mapRefreshTaskTimer != null) {
 				// No need to update again that recently
@@ -139,7 +139,7 @@ public class GoogleEarthUpdater {
 		}
 	}
 	
-	public String getCoordinateString(DataHandler dataPoint, JSONObject coordinateIndexes) {
+	public String getCoordinateString(DataHolder dataPoint, JSONObject coordinateIndexes) {
 		if (dataPoint == null) return null;
 		
 		Data altitudeData = dataPoint.data[coordinateIndexes.getInt("altitude")];

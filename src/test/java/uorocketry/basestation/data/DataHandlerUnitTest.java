@@ -12,7 +12,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DataHandlerUnitTest {
+public class DataHolderUnitTest {
 
     @Test
     public void updateTableUI() {
@@ -27,19 +27,19 @@ public class DataHandlerUnitTest {
         String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
         Main.dataLength = Collections.singletonList(labels.length);
 
-        DataHandler dataHandler = new DataHandler(0, datasetConfig);
-        dataHandler.hiddenDataTypes.add(new DataType(2, 0));
+        DataHolder dataHolder = new DataHolder(0, datasetConfig);
+        dataHolder.hiddenDataTypes.add(new DataType(2, 0));
 
-        dataHandler.set(0, "102020399293"); // has to be long (timestamp)
-        dataHandler.set(1, "1");
-        dataHandler.set(2, "2");
-        dataHandler.set(3, "ovf");
-        dataHandler.set(4, "nan");
-        dataHandler.set(5, "5.2");
-        dataHandler.set(6, "2321.34");
+        dataHolder.set(0, "102020399293"); // has to be long (timestamp)
+        dataHolder.set(1, "1");
+        dataHolder.set(2, "2");
+        dataHolder.set(3, "ovf");
+        dataHolder.set(4, "nan");
+        dataHolder.set(5, "5.2");
+        dataHolder.set(6, "2321.34");
 
         JTable table = new JTable(labels.length, 2);
-        dataHandler.updateTableUIWithData(table, labels);
+        dataHolder.updateTableUIWithData(table, labels);
 
         TableModel tableModel = table.getModel();
 

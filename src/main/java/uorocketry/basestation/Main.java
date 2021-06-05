@@ -56,7 +56,7 @@ import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
 import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.data.DataType;
 import uorocketry.basestation.external.GoogleEarthUpdater;
@@ -111,7 +111,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
-	public List<List<DataHandler>> allData = new ArrayList<>(2);
+	public List<List<DataHolder>> allData = new ArrayList<>(2);
 	
 	List<String[]> labels = new ArrayList<>();
 	JSONObject config = null; 
@@ -388,19 +388,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					}
 				}
 				
-				DataHandler currentDataHandler = allData.get(i).get(currentDataIndexes.get(i));
+				DataHolder currentDataHolder = allData.get(i).get(currentDataIndexes.get(i));
 				
-				if (currentDataHandler != null) {
-					currentDataHandler.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
+				if (currentDataHolder != null) {
+					currentDataHolder.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
 				} else {
 					setTableToError(i, window.dataTables.get(i));
 				}
 				
-				if (window.stateButtons.size() > i && currentDataHandler != null) {
+				if (window.stateButtons.size() > i && currentDataHolder != null) {
 					try {
 						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
-						    Float value = currentDataHandler.data[stateIndex].getDecimalValue();
+						    Float value = currentDataHolder.data[stateIndex].getDecimalValue();
 						    if (value != null) {
 						        stateButton.stateChanged(value.intValue());
 						    }
@@ -471,9 +471,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 				
-				DataHandler data = allData.get(chart.yType.tableIndex).get(i);
+				DataHolder data = allData.get(chart.yType.tableIndex).get(i);
 				
-				DataHandler other = allData.get(chart.xTypes[0].tableIndex).get(i);
+				DataHolder other = allData.get(chart.xTypes[0].tableIndex).get(i);
 				
 				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
 					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
@@ -495,7 +495,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			for (int j = minDataIndex; j <= maxDataIndex; j++) {
 				if (allData.get(chart.yType.tableIndex).size() == 0) continue;
 
-				DataHandler data = allData.get(chart.xTypes[i].tableIndex).get(j);
+				DataHolder data = allData.get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
 					// Ensures that not too many data points are displayed
@@ -583,8 +583,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 		}
 		
-		List<DataHandler> dataHandlers = new ArrayList<DataHandler>();
-		allData.set(index, dataHandlers);
+		List<DataHolder> dataHolders = new ArrayList<DataHolder>();
+		allData.set(index, dataHolders);
 		
 		try {
 			try {
@@ -592,7 +592,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 			    while ((line = br.readLine()) != null) {
 			        // Parse this line and add it as a data point
-			    	dataHandlers.add(parseData(line, index));
+			    	dataHolders.add(parseData(line, index));
 			    }
 			} finally {
 			    br.close();
@@ -602,8 +602,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 	}
 	
-	public DataHandler parseData(String data, int tableIndex) {
-		DataHandler dataHandler = new DataHandler(tableIndex, config.getJSONArray("datasets").getJSONObject(tableIndex));
+	public DataHolder parseData(String data, int tableIndex) {
+		DataHolder dataHolder = new DataHolder(tableIndex, config.getJSONArray("datasets").getJSONObject(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|\\\\r\\\\n'", "");
@@ -611,20 +611,21 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Semi-colon separated
 		String[] splitData = data.split(SEPARATOR);
-		if (splitData.length != dataHandler.data.length) {
+		if (splitData.length != dataHolder.data.length) {
 			//invalid data
 			System.err.println("Line with invalid data (Not the correct amount of data). It was " + splitData.length);
 			
 			return null;
 		}
 		
+		// TODO: Potentially remove and test this
 		// Ensure that the timestamp has not gone back in time
 		try {
-			DataHandler lastDataPointDataHandler = findLastValidDataPoint(allData.get(tableIndex));
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allData.get(tableIndex));
 			
 			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
-			if (lastDataPointDataHandler != null) {
-			    Float value = lastDataPointDataHandler.data[timestampIndex].getDecimalValue();
+			if (lastDataPointDataHolder != null) {
+			    Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
 			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
 					System.err.println("Timestamp just went backwards");
 
@@ -635,7 +636,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} catch (NumberFormatException | JSONException e) {}
 		
 		for (int i = 0; i < splitData.length; i++) {
-			if (!dataHandler.set(i, splitData[i])) {
+			if (!dataHolder.set(i, splitData[i])) {
 				System.err.println("Failed to set data handler");
 
 				// Parsing failed
@@ -643,16 +644,16 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 
-		return dataHandler;
+		return dataHolder;
 	}
 	
 	/**
 	 * Find last non null data point
 	 * 
 	 * @param currentTableData
-	 * @return DataHandler if found, null otherwise
+	 * @return DataHolder if found, null otherwise
 	 */
-	private DataHandler findLastValidDataPoint(List<DataHandler> currentTableData) {
+	private DataHolder findLastValidDataPoint(List<DataHolder> currentTableData) {
 		for (int i = currentTableData.size() - 1; i >= 0; i--) {
 			if (currentTableData.get(i) != null) {
 				return currentTableData.get(i);
@@ -856,11 +857,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (List<DataHandler> dataHandlers : allData) {
-				for (DataHandler dataHandler : dataHandlers) {
+			for (List<DataHolder> dataHolders : allData) {
+				for (DataHolder dataHolder : dataHolders) {
 					// See if the hidden list needs to be cleared
-					if (dataHandler != null && !dataHandler.hiddenDataTypes.isEmpty()) {
-						dataHandler.hiddenDataTypes.clear();
+					if (dataHolder != null && !dataHolder.hiddenDataTypes.isEmpty()) {
+						dataHolder.hiddenDataTypes.clear();
 					}
 				}
 			}

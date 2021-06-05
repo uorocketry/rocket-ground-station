@@ -10,7 +10,7 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
 import uorocketry.basestation.data.DataType;
 
 /**
@@ -203,21 +203,21 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			// Find all data points near the click
 			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
 				DataType currentType = chart.xTypes[xTypeIndex];
-				List<DataHandler> dataHandlers = chart.main.allData.get(currentType.tableIndex);
+				List<DataHolder> dataHolders = chart.main.allData.get(currentType.tableIndex);
 				
 				// Y axis depends on the which data is being checked
 				double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY(), xTypeIndex);
 				double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0, xTypeIndex) - 
 						chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight(), xTypeIndex));
 				
-				for (DataHandler dataHandler: dataHandlers) {
+				for (DataHolder dataHolder: dataHolders) {
 					// See if click is anywhere near this point
-					if (dataHandler != null && Math.abs(dataHandler.data[chart.yType.index].data - xMousePos) < chartSizeX / 100
-						&& Math.abs(dataHandler.data[currentType.index].data - yMousePos) < chartSizeY / 100
-						&& !dataHandler.hiddenDataTypes.contains(currentType)) {
+					if (dataHolder != null && Math.abs(dataHolder.data[chart.yType.index].data - xMousePos) < chartSizeX / 100
+						&& Math.abs(dataHolder.data[currentType.index].data - yMousePos) < chartSizeY / 100
+						&& !dataHolder.hiddenDataTypes.contains(currentType)) {
 						
 						// Hide this point
-						dataHandler.hiddenDataTypes.add(new DataType(currentType.index, currentType.tableIndex));
+						dataHolder.hiddenDataTypes.add(new DataType(currentType.index, currentType.tableIndex));
 					}
 				}
 			}

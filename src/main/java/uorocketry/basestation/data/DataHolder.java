@@ -11,26 +11,13 @@ import org.json.JSONObject;
 
 import uorocketry.basestation.Main;
 
-public class DataHandler {
-	
-    public static final DataType TIMESTAMP = new DataType(0, 0);
-	public static final DataType ALTITUDE = new DataType(1, 0);
-	public static final DataType LATITUDE = new DataType(2, 0);
-	public static final DataType LONGITUDE = new DataType(3, 0);
-	public static final DataType PITCH = new DataType(4, 0);
-	public static final DataType ROLL = new DataType(5, 0);
-	public static final DataType YAW = new DataType(6, 0);
-	public static final DataType ACCELX = new DataType(7, 0);
-	public static final DataType ACCELY = new DataType(8, 0);
-	public static final DataType ACCELZ = new DataType(9, 0);
-	public static final DataType VELOCITY = new DataType(10, 0);
-	public static final DataType BRAKE_PERCENTAGE = new DataType(10, 0);
-	public static final DataType ACTUAL_BRAKE_VALUE = new DataType(12, 0);
-	public static final DataType GPS_FIX = new DataType(13, 0);
-	public static final DataType GPS_FIX_QUALITY = new DataType(14, 0);
+public class DataHolder {
 	
 	public Data[] data;
 	public DataType[] types;
+
+	public static final DataType TIMESTAMP = new DataType(0, 0);
+	public static final DataType ALTITUDE = new DataType(1, 0);
 	
 	/** Which of this data should be hidden for any reason */
 	public List<DataType> hiddenDataTypes = new LinkedList<DataType>();
@@ -42,7 +29,7 @@ public class DataHandler {
 	
 	private JSONObject datasetConfig;
 	
-	public DataHandler(int tableIndex, JSONObject datasetConfig) {
+	public DataHolder(int tableIndex, JSONObject datasetConfig) {
 		this.tableIndex = tableIndex;
 		this.datasetConfig = datasetConfig;
 		

@@ -4,7 +4,7 @@ import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 
 import uorocketry.basestation.Main;
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
 import uorocketry.basestation.data.DataType;
 
 public class DataChart {
@@ -19,8 +19,8 @@ public class DataChart {
 	// The active chart series on this chart
 	public String[] activeSeries = new String[0];
 	
-	public DataType[] xTypes = {DataHandler.ALTITUDE};
-	public DataType yType = DataHandler.TIMESTAMP;
+	public DataType[] xTypes = {DataHolder.ALTITUDE};
+	public DataType yType = DataHolder.TIMESTAMP;
 	
 	public DataChart(Main main, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
 		this.main = main;

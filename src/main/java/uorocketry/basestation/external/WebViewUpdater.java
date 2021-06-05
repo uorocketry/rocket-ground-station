@@ -13,7 +13,7 @@ import org.json.JSONObject;
 
 import uorocketry.basestation.Main;
 import uorocketry.basestation.data.Data;
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
 
 /**
  * DOES NOT support multiple data sources
@@ -36,16 +36,16 @@ public class WebViewUpdater extends WebSocketServer {
 	 * 
 	 * @param main
 	 */
-	public JSONObject generateJSON(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
+	public JSONObject generateJSON(List<List<DataHolder>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
 		JSONObject coordinateIndexes = dataSets.getJSONObject(0).getJSONObject("coordinateIndexes");
 		
 		JSONObject jsonObject = new JSONObject();
 		
 		int index = currentDataIndex.get(0);
-		List<DataHandler> currentDataList = allData.get(0);
+		List<DataHolder> currentDataList = allData.get(0);
 		if (currentDataList == null) return null;
 		
-		DataHandler dataPoint = currentDataList.get(index);
+		DataHolder dataPoint = currentDataList.get(index);
 		if (dataPoint == null) return null;
 		
 		Data altitudeData = dataPoint.data[coordinateIndexes.getInt("altitude")];
@@ -69,7 +69,7 @@ public class WebViewUpdater extends WebSocketServer {
 	 * @param currentDataIndex
 	 * @param dataSets
 	 */
-	public void sendUpdate(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
+	public void sendUpdate(List<List<DataHolder>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
 		JSONObject jsonObject = generateJSON(allData, minDataIndex, currentDataIndex, dataSets);
 		if (jsonObject == null) return;
 		
