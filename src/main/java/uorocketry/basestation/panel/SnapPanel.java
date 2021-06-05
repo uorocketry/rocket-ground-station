@@ -203,7 +203,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			// Find all data points near the click
 			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
 				DataType currentType = chart.xTypes[xTypeIndex];
-				List<DataHolder> dataHolders = chart.main.allData.get(currentType.tableIndex);
+				List<DataHolder> dataHolders = chart.main.dataProcessor.getAllData().get(currentType.tableIndex);
 				
 				// Y axis depends on the which data is being checked
 				double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY(), xTypeIndex);
