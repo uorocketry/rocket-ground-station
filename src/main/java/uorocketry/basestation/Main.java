@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -95,13 +96,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Used for the web view */
 	WebViewUpdater webViewUpdater;
 	
-	/** Where to save the log file */
-	public static final String LOG_FILE_SAVE_LOCATION = "data/";
-    public static final String DEFAULT_LOG_FILE_NAME = "log";
-    public static final String LOG_FILE_EXTENSION = ".txt";
-	/** Will have a number appended to the end to not overwrite old logs */
-	ArrayList<String> currentLogFileName = new ArrayList<String>(2);
-	
 	/** Used to limit displayed data points to speed up rendering */
 	public static int maxDataPointsDisplayed = 800;
 	
@@ -150,9 +144,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	/** If true, clicking on data in a chart will hide it */
 	public boolean dataDeletionMode = false;
-	
-	/** What will be written to the log file */
-	StringBuilder logFileStringBuilder = new StringBuilder();
 	
 	public static void main(String[] args) {
 		// Find different possible commands
@@ -241,57 +232,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	public void setupLogFileName() {
-		// Figure out file name for logging
-		File folder = new File(LOG_FILE_SAVE_LOCATION);
-		File[] listOfLogFiles = folder.listFiles();
-		Set<String> usedFileNames = new HashSet<String>();
+		dataProcessor.setupLogFileName();
 		
-		for (File file: listOfLogFiles) {
-			if (file.isFile() && file.getName().contains(DEFAULT_LOG_FILE_NAME)) {
-				usedFileNames.add(file.getName());
-			}
-		}
-		
-		int logIndex = 0;
-		
-		JSONArray dataSets = config.getJSONArray("datasets");
-		
-		// Find a suitable filename
-		for (int i = 0; i <= listOfLogFiles.length; i++) {
-			boolean containsFile = false;
-			for (int j = 0 ; j < dataSourceCount; j++) {
-				if (usedFileNames.contains(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(j).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION)) {
-					containsFile = true;
-					break;
-				}
-			}
-			
-			if (containsFile) {
-				logIndex++;
-			} else {
-				break;
-			}
-		}
-		
-		// Set the names
-		for (int i = 0 ; i < dataSourceCount; i++) {
-			currentLogFileName.add(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(i).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION);
-		}
-		
-		window.savingToLabel.setText("Saving to " + formattedSavingToLocations());
-	}
-	
-	public String formattedSavingToLocations() {
-		StringBuilder savingToText = new StringBuilder();
-		
-		// Add text for each file
-		for (int i = 0 ; i < dataSourceCount; i++) {
-			if (i != 0) savingToText.append(", ");
-			
-			savingToText.append(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(i));
-		}
-		
-		return savingToText.toString();
+		window.savingToLabel.setText("Saving to " + dataProcessor.formattedSavingToLocations());
 	}
 	
 	public void setupUI() {
@@ -580,10 +523,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			br = new BufferedReader(new FileReader(fileName));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+			return;
 		}
-		
-		List<DataHolder> dataHolders = new ArrayList<DataHolder>();
-		dataProcessor.getAllData().set(index, dataHolders);
 		
 		try {
 			try {
@@ -591,7 +532,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 			    while ((line = br.readLine()) != null) {
 			        // Parse this line and add it as a data point
-			    	dataHolders.add(dataProcessor.parseData(line, index));
+					dataProcessor.receivedData(index, line.getBytes(StandardCharsets.UTF_8));
 			    }
 			} finally {
 			    br.close();
@@ -682,32 +623,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	@Override
 	public void receivedData(DeviceConnection deviceConnection, byte[] data) {
-	    String delimitedMessage = new String(data, StandardCharsets.UTF_8);
-        
-        dataProcessor.getAllData().get(deviceConnection.getTableIndex()).add(dataProcessor.parseData(delimitedMessage, deviceConnection.getTableIndex()));
+		dataProcessor.receivedData(deviceConnection, data);
         
         updateUI();
-        
-        // Add this message to the log file
-        logFileStringBuilder.append(delimitedMessage);
-        
-        // Get string
-        String logFileString = logFileStringBuilder.toString();
-        
-        if (deviceConnection.isWriting()) {
-            deviceConnection.setWriting(true);
-
-            // Write to file
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
-                        LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()))
-                        , StandardCharsets.UTF_8))) {
-               writer.write(logFileString);
-            } catch (IOException err) {
-                err.printStackTrace();
-            }
-            
-            deviceConnection.setWriting(false);
-        }
 	}
 
 	@Override
@@ -774,7 +692,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
 				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + formattedSavingToLocations();
+						+ "The current data will be deleted from the UI. You can find it in " + dataProcessor.formattedSavingToLocations();
 			} else {
 				warningMessage = "Are you sure you would like to disable simulation mode?";
 			}

@@ -24,8 +24,9 @@ dependencies {
 	implementation	'org.json:json:20210307'
 	implementation	'org.knowm.xchart:xchart:3.6.1'
 	implementation	'org.java-websocket:Java-WebSocket:1.5.1'
+    implementation 'org.jetbrains:annotations:19.0.0'
 
-	testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 }
 
 test {
