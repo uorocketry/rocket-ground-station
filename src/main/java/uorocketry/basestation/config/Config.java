@@ -2,12 +2,31 @@ package uorocketry.basestation.config;
 
 import org.json.JSONObject;
 
-public interface Config {
-    Integer getDataLength(int index);
+import java.util.ArrayList;
+import java.util.List;
 
-    String[] getLabel(int index);
+public abstract class Config {
 
-    int getDataSourceCount();
+    /** How many data points are there. By default, it is the number of labels */
+    protected List<Integer> dataLength = new ArrayList<>(2);
+    protected List<String[]> labels = new ArrayList<>();
+    /** How many data sources to record data from. It is set when the config is loaded. */
+    protected int dataSourceCount = 1;
+    protected JSONObject configObject = null;
 
-    JSONObject getObject();
+    public Integer getDataLength(int index) {
+        return dataLength.get(index);
+    }
+
+    public String[] getLabel(int index) {
+        return labels.get(index);
+    }
+
+    public int getDataSourceCount() {
+        return dataSourceCount;
+    }
+
+    public JSONObject getObject() {
+        return configObject;
+    }
 }

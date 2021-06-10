@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FakeConfig implements Config {
+public class FakeConfig extends Config {
 
     protected List<Integer> dataLength;
     protected List<String[]> labels;

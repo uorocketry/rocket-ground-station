@@ -10,17 +10,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileConfig implements Config {
+public class FileConfig extends Config {
 
     /** The location of the comma separated labels without the extension. */
     public static final String CONFIG_LOCATION = "data/config.json";
-
-    /** How many data points are there. By default, it is the number of labels */
-    protected List<Integer> dataLength = new ArrayList<>(2);
-    protected List<String[]> labels = new ArrayList<>();
-    /** How many data sources to record data from. It is set when the config is loaded. */
-    protected int dataSourceCount = 1;
-    protected JSONObject configObject = null;
 
     /**
      * Run once at the beginning of simulation mode
@@ -64,21 +57,5 @@ public class FileConfig implements Config {
 
             dataLength.add(labelsArray.length);
         }
-    }
-
-    public Integer getDataLength(int index) {
-        return dataLength.get(index);
-    }
-
-    public String[] getLabel(int index) {
-        return labels.get(index);
-    }
-
-    public int getDataSourceCount() {
-        return dataSourceCount;
-    }
-
-    public JSONObject getObject() {
-        return configObject;
     }
 }
