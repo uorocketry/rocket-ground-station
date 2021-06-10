@@ -61,7 +61,7 @@ public class DataProcessor {
 		allReceivedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
 	}
 
-	private DataHolder parseData(int tableIndex, String data) {
+	protected DataHolder parseData(int tableIndex, String data) {
 		DataHolder dataHolder = new DataHolder(tableIndex, config.getObject().getJSONArray("datasets").getJSONObject(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
