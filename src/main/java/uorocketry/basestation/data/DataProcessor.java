@@ -78,7 +78,6 @@ public class DataProcessor {
 			return null;
 		}
 		
-		// TODO: Potentially remove and test this
 		// Ensure that the timestamp has not gone back in time
 		try {
 			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allReceivedData.get(tableIndex));
