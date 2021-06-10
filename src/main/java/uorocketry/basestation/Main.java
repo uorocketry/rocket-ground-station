@@ -45,6 +45,7 @@ import org.knowm.xchart.style.XYStyler;
 import com.fazecast.jSerialComm.SerialPort;
 
 import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.FileConfig;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
@@ -143,7 +144,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public Main() {
 		// Load labels
-		config = new Config();
+		config = new FileConfig();
 		
 		// Create window
 		window = new Window(this);
