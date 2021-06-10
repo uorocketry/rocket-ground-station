@@ -33,9 +33,9 @@ public class DataHolder {
 		this.tableIndex = tableIndex;
 		this.datasetConfig = datasetConfig;
 		
-		this.data = new Data[Main.dataLength.get(tableIndex)];
+		this.data = new Data[Main.config.getDataLength(tableIndex)];
 		
-		types = new DataType[Main.dataLength.get(tableIndex)];
+		types = new DataType[Main.config.getDataLength(tableIndex)];
 		for (int i = 0; i < types.length; i++) {
 			types[i] = new DataType(i, tableIndex);
 		}

@@ -4,11 +4,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import uorocketry.basestation.Main;
+import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.FakeConfig;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -25,7 +29,8 @@ public class DataHolderUnitTest {
         datasetConfig.put("states", jsonArray);
 
         String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
-        Main.dataLength = Collections.singletonList(labels.length);
+
+        Main.config = new FakeConfig(Collections.singletonList(labels.length), null, labels.length, null);
 
         DataHolder dataHolder = new DataHolder(0, datasetConfig);
         dataHolder.hiddenDataTypes.add(new DataType(2, 0));

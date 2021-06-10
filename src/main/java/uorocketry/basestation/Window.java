@@ -129,8 +129,8 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-			generateTelemetryPanel(i, main.config.getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < Main.config.getDataSourceCount(); i++) {
+			generateTelemetryPanel(i, main.config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -208,8 +208,8 @@ public class Window extends JFrame {
 		
 		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addSlider(main.config.getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < Main.config.getDataSourceCount(); i++) {
+			addSlider(main.config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		sliderSection.add(sliderTabs, BorderLayout.SOUTH);
@@ -253,7 +253,7 @@ public class Window extends JFrame {
 		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
 		
 		try {
-			JSONArray array = main.config.getJSONArray("stateEvents");
+			JSONArray array = main.config.getObject().getJSONArray("stateEvents");
 			
 			if (array.length() > 0) {
 				stateSendingPanel = new JPanel();
@@ -282,8 +282,8 @@ public class Window extends JFrame {
 			}
 		}
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-            addComSelectorPanel(main.config.getJSONArray("datasets").getJSONObject(i), main);
+		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
+            addComSelectorPanel(main.config.getObject().getJSONArray("datasets").getJSONObject(i), main);
         }
 		comPanelParent.setLayout(new GridLayout(comPanelParent.getComponentCount(), 1, 0, 0));
 		
@@ -303,7 +303,7 @@ public class Window extends JFrame {
 		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
 		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 
-		JTable receivedDataTable = createTable(Main.dataLength.get(tableIndex), 2, 30, 130);
+		JTable receivedDataTable = createTable(main.config.getDataLength(tableIndex), 2, 30, 130);
 		JTable connectionInfoTable = createTable(3, 2, 30, 130);
 		borderPanel.add(receivedDataTable);
 		borderPanel.add(connectionInfoTable);

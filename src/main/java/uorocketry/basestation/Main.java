@@ -46,6 +46,7 @@ import org.knowm.xchart.style.XYStyler;
 
 import com.fazecast.jSerialComm.SerialPort;
 
+import uorocketry.basestation.config.Config;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
@@ -64,11 +65,7 @@ import uorocketry.basestation.panel.TableHolder;
 public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
 	
 	/** Constants */
-	/** The location of the comma separated labels without the extension. */
-	public static final String CONFIG_LOCATION = "data/config.json";
-	/** How many data points are there. By default, it is the number of labels */
-	public static List<Integer> dataLength = new ArrayList<>(2);
-	
+
 	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
 	public static final String SIM_DATA_LOCATION = "data/data";
 	public static final String SIM_DATA_EXTENSION = ".txt";
@@ -79,7 +76,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public static boolean googleEarth = false;
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
-	
+
+	public static Config config;
+
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;
 	
@@ -93,16 +92,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Used to limit displayed data points to speed up rendering */
 	public static int maxDataPointsDisplayed = 800;
 	
-	/** How many data sources to record data from. It is set when the config is loaded. */
-	public static int dataSourceCount = 1;
-	
 	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
 	public static boolean simulation = false;
 	
 	public DataProcessor dataProcessor;
-	
-	List<String[]> labels = new ArrayList<>();
-	JSONObject config = null; 
 	
 	/** Index of the current data point being looked at */
 	ArrayList<Integer> currentDataIndexes = new ArrayList<>(2);
@@ -155,7 +148,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public Main() {
 		// Load labels
-		loadConfig();
+		config = new Config();
 		
 		// Create window
 		window = new Window(this);
@@ -182,40 +175,40 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 	
 	private void setupData() {
-		dataProcessor = new DataProcessor(config, dataSourceCount);
-		
-		currentDataIndexes = new ArrayList<>(dataSourceCount);
-		minDataIndexes = new ArrayList<>(dataSourceCount);
+		dataProcessor = new DataProcessor(config, window.dataTables);
 
-		for (int i = 0; i < dataSourceCount; i++) {
+		currentDataIndexes = new ArrayList<>(config.getDataSourceCount());
+		minDataIndexes = new ArrayList<>(config.getDataSourceCount());
+
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
 			// Add data indexes
 			currentDataIndexes.add(0);
 			minDataIndexes.add(0);
-			
+
 			// Reset sliders
 			window.maxSliders.get(i).setValue(0);
 			window.minSliders.get(i).setValue(0);
 		}
-		
+
 		// Load simulation data if necessary
 		if (simulation) {
 			loadSimulationData();
-			
+
 			window.savingToLabel.setText("");
 		}
-		
+
 		setupSerialComList();
 		setupLogFileName();
 
 		updateUI();
 	}
-	
+
 	public void setupSerialComList() {
 	    deviceConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
-		
+
 		// Make array for the selector
 		String[] comSelectorData = new String[deviceConnectionHolder.getAllSerialPorts().length];
-		
+
 		for (int i = 0; i < deviceConnectionHolder.getAllSerialPorts().length; i++) {
 			comSelectorData[i] = deviceConnectionHolder.getAllSerialPorts()[i].getDescriptivePortName();
 		}
@@ -224,22 +217,22 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		    deviceConnection.getSelectorList().setListData(comSelectorData);
 		}
 	}
-	
+
 	public void setupLogFileName() {
 		dataProcessor.setupLogFileName();
-		
+
 		window.savingToLabel.setText("Saving to " + dataProcessor.formattedSavingToLocations());
 	}
-	
+
 	public void setupUI() {
 		addChart();
-		
+
 		// Add slider listeners
-		for (int i = 0; i < dataSourceCount; i++) {
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
 			window.maxSliders.get(i).addChangeListener(this);
 			window.minSliders.get(i).addChangeListener(this);
 		}
-		
+
 		// Buttons
 		window.clearDataButton.addActionListener(this);
 		window.refreshComSelectorButton.addActionListener(this);
@@ -247,26 +240,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.hideBarsButton.addActionListener(this);
 		window.pauseButton.addActionListener(this);
 		window.latestButton.addActionListener(this);
-		
+
 		window.addChartButton.addActionListener(this);
-		
+
 		window.setMaxDataPointsButton.addActionListener(this);
-		
+
 		window.restoreDeletedData.addActionListener(this);
-		
+
 		window.saveLayout.addActionListener(this);
 		window.loadLayout.addActionListener(this);
-		
+
 		// Checkboxes
 		window.googleEarthCheckBox.addActionListener(this);
 		window.webViewCheckBox.addActionListener(this);
 		window.simulationCheckBox.addActionListener(this);
 		window.onlyShowLatestDataCheckBox.addActionListener(this);
 		window.dataDeletionModeCheckBox.addActionListener(this);
-		
+
 		// Set simulation checkbox to be default
 		window.simulationCheckBox.setSelected(simulation);
-		
+
 		// Setup listeners for table
 		for (TableHolder tableHolder : window.dataTables) {
 			tableHolder.getReceivedDataTable().getSelectionModel().addListSelectionListener(this);
@@ -277,65 +270,59 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		synchronized (window.charts) {
 			selectedChart = window.charts.get(0);
 			selectedChart.snapPanel.setSnapPanelListener(this);
-			
+
 			snapPanelSelected(selectedChart.snapPanel);
 		}
 	}
-	
+
 	public void setupGoogleEarth() {
 		googleEarthUpdater = new GoogleEarthUpdater();
-		
+
 		// Setup updater file
 //		googleEarthUpdater.createKMLUpdaterFile();
 	}
-	
-	public void setupWebView() { 
+
+	public void setupWebView() {
 		if (webViewUpdater != null) webViewUpdater.close();
 		webViewUpdater = new WebViewUpdater();
 	}
-	
+
 	public void updateUI() {
 		// If not ready yet
 		if (dataProcessor== null || dataProcessor.getAllRecievedData().size() == 0 || updatingUI) return;
-		
+
 		updatingUI = true;
-		
+
 		// Update UI on another thread
 		new Thread(this::updateUIInternal).start();
 	}
-	
+
 	private void updateUIInternal() {
 		try {
 			// Update every table's data
 			for (int i = 0; i < dataProcessor.getAllRecievedData().size(); i++) {
 				// If not ready yet
 				if (dataProcessor.getAllRecievedData().get(i).size() == 0) continue;
-				
+
 				// Don't change slider if paused
 				if (!paused) {
 					// Set max value of the sliders
 					window.maxSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
 					window.minSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
-					
+
 					// Move position to end
 					if (latest) {
 						window.maxSliders.get(i).setValue(dataProcessor.getAllRecievedData().get(i).size() - 1);
 					}
 				}
-				
-				DataHolder currentDataHolder = dataProcessor.getAllRecievedData().get(i).get(currentDataIndexes.get(i));
-				
-				if (currentDataHolder != null) {
-					currentDataHolder.updateTableUIWithData(window.dataTables.get(i).getReceivedDataTable(), labels.get(i));
-				} else {
-					setTableToError(i, window.dataTables.get(i).getReceivedDataTable());
-				}
-				
-				if (window.stateButtons.size() > i && currentDataHolder != null) {
+
+				DataHolder receivedData = dataProcessor.setTableTo(i, currentDataIndexes.get(i));
+
+				if (window.stateButtons.size() > i && receivedData != null) {
 					try {
-						int stateIndex = config.getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
+						int stateIndex = config.getObject().getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
-						    Float value = currentDataHolder.data[stateIndex].getDecimalValue();
+						    Float value = receivedData.data[stateIndex].getDecimalValue();
 						    if (value != null) {
 						        stateButton.stateChanged(value.intValue());
 						    }
@@ -343,15 +330,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					} catch (JSONException ignored) {}
 				}
 			}
-			
+
 			if (googleEarth) {
-				googleEarthUpdater.updateKMLFile(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
+				googleEarthUpdater.updateKMLFile(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"), false);
 			}
-			
+
 			if (webView) {
-				webViewUpdater.sendUpdate(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"));
+				webViewUpdater.sendUpdate(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"));
 			}
-			
+
 			// Update every chart
 			synchronized (window.charts) {
 				for (DataChart chart : window.charts) {
@@ -362,67 +349,51 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Don't let an exception while updating break the program
 			e.printStackTrace();
 		}
-		
+
 		updatingUI = false;
-	}
-	
-	public void setTableToError(int index, JTable table) {
-		TableModel tableModel = table.getModel();
-		
-		// Set first item to "Error"
-		tableModel.setValueAt("Parsing Error", 0, 0);
-		tableModel.setValueAt(currentDataIndexes.get(index), 0, 1);
-		
-		for (int i = 1; i < dataLength.get(index); i++) {
-			// Set label
-			tableModel.setValueAt("", i, 0);
-			
-			// Set data
-			tableModel.setValueAt("", i, 1);
-		}
 	}
 
 	/**
 	 * Update the chart with data up to currentDataIndex, and then call window.repaint()
-	 * 
+	 *
 	 * @param chart The chart to update
 	 */
 	public void updateChart(DataChart chart) {
 		// Update altitude chart
 		ArrayList<Float> altitudeDataX = new ArrayList<>();
 		ArrayList<ArrayList<Float>> altitudeDataY = new ArrayList<ArrayList<Float>>();
-		
+
 		// Add all array lists
 		for (int i = 0; i < chart.xTypes.length; i++) {
 			altitudeDataY.add(new ArrayList<Float>());
 		}
-		
+
 		// Add y axis
 		{
 			int maxDataIndex = currentDataIndexes.get(chart.yType.tableIndex);
 			int minDataIndex = minDataIndexes.get(chart.yType.tableIndex);
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
-			
+
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
 				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
-				
+
 				DataHolder data = dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).get(i);
-				
+
 				DataHolder other = dataProcessor.getAllRecievedData().get(chart.xTypes[0].tableIndex).get(i);
-				
+
 				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
 					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
 				}
 			}
 		}
-		
-		
+
+
 		// Add x axis
 		for (int i = 0; i < chart.xTypes.length; i++) {
 			// Used to limit the max number of data points displayed
 			float targetRatio = (float) maxDataPointsDisplayed / (currentDataIndexes.get(chart.xTypes[i].tableIndex) - minDataIndexes.get(chart.xTypes[i].tableIndex));
 			int dataPointsAdded = 0;
-			
+
 			int maxDataIndex = currentDataIndexes.get(chart.xTypes[i].tableIndex);
 			int minDataIndex = minDataIndexes.get(chart.xTypes[i].tableIndex);
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
@@ -431,15 +402,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
 
 				DataHolder data = dataProcessor.getAllRecievedData().get(chart.xTypes[i].tableIndex).get(j);
-				
+
 				if (data != null) {
 					// Ensures that not too many data points are displayed
 					// Always show data if only showing latest data (that is handled by changing the minSlider)
 					boolean shouldShowDataPoint = onlyShowLatestData || ((float) dataPointsAdded / j <= targetRatio);
-					
+
 					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index]) && shouldShowDataPoint ) {
 						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
-						
+
 						dataPointsAdded++;
 					} else if (!shouldShowDataPoint) {
 						// Hidden data
@@ -448,64 +419,64 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				}
 			}
 		}
-		
+
 		if (altitudeDataX.size() == 0) {
 			// Add default data
 			altitudeDataX.add(0f);
-			
+
 			for (int j = 0; j < chart.xTypes.length; j++) {
 				altitudeDataY.get(j).add(0f);
 			};
 		}
-		
+
 		String[] newActiveSeries = new String[chart.xTypes.length];
 		StringBuilder title = new StringBuilder();
-		
+
 		// Set Labels
 		for (int i = 0; i < chart.xTypes.length; i++) {
-			String xTypeTitle = labels.get(chart.xTypes[i].tableIndex)[chart.xTypes[i].index];
-			
+			String xTypeTitle = config.getLabel(chart.xTypes[i].tableIndex)[chart.xTypes[i].index];
+
 			if (title.length() != 0) title.append(", ");
 			title.append(xTypeTitle);
-			
+
 			chart.xyChart.setYAxisGroupTitle(i, xTypeTitle);
-			
+
 			XYSeries series = null;
-			
+
 			if (chart.activeSeries.length > i) {
 				series = chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			} else {
 				series = chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
 			}
-			
+
 			series.setLabel(xTypeTitle);
 			series.setYAxisGroup(i);
-			
+
 			newActiveSeries[i] = "series" + i;
 		}
-		
-		String yTypeTitle =  labels.get(chart.yType.tableIndex)[chart.yType.index];
-		
+
+		String yTypeTitle = config.getLabel(chart.yType.tableIndex)[chart.yType.index];
+
 		chart.xyChart.setTitle(title + " vs " + yTypeTitle);
-		
+
 		chart.xyChart.setXAxisTitle(yTypeTitle);
-		
+
 		// Remove extra series
 		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
 			chart.xyChart.removeSeries("series" + i);
 		}
-		
+
 		chart.activeSeries = newActiveSeries;
-		
+
 		window.repaint();
 	}
-	
-	/** 
+
+	/**
 	 * Run once at the beginning of simulation mode
 	 */
 	public void loadSimulationData() {
 		// Load simulation data
-		for (int i = 0; i < dataSourceCount; i++) {
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
 			loadSimulationData(i, SIM_DATA_LOCATION + i + SIM_DATA_EXTENSION);
 		}
 	}
@@ -532,50 +503,6 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
-		}
-	}
-	
-	/** 
-	 * Run once at the beginning of simulation mode
-	 */
-	public void loadConfig() {
-		loadConfig(CONFIG_LOCATION);
-	}
-	
-	public void loadConfig(String fileName) {
-		String configString = null;
-		try {
-			configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
-		} catch (IOException e) {
-			e.printStackTrace();
-			
-			JOptionPane.showMessageDialog(window, "The config file was not found in " + fileName + 
-					"\r\n\r\nIf you plan downloaded a release build, you might want to download the version with labels and sample data included.");
-			
-			return;
-		}
-		
-		config = new JSONObject(configString);
-		
-		JSONArray datasetsJSONArray = config.getJSONArray("datasets");
-		dataSourceCount = datasetsJSONArray.length();
-		
-		// Add all data
-		for (int i = 0; i < datasetsJSONArray.length(); i++) {
-			JSONObject currentDataset = datasetsJSONArray.getJSONObject(i);
-			
-			JSONArray labelsJsonArray = currentDataset.getJSONArray("labels");
-			
-			// Load labels
-			String[] labelsArray = new String[labelsJsonArray.length()];
-			
-			for (int j = 0; j < labelsArray.length; j++) {
-				labelsArray[j] = labelsJsonArray.getString(j);
-			}
-			
-			labels.add(labelsArray);
-			
-			dataLength.add(labelsArray.length);
 		}
 	}
 	

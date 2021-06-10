@@ -9,12 +9,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import uorocketry.basestation.config.Config;
 import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.panel.TableHolder;
+
+import javax.swing.*;
+import javax.swing.table.TableModel;
 
 public class DataProcessor {
 
 	private List<List<DataHolder>> allRecievedData;
-	private JSONObject config;
+	private Config config;
 
 	/** Where to save the log file */
 	public static final String LOG_FILE_SAVE_LOCATION = "data/";
@@ -24,14 +29,17 @@ public class DataProcessor {
 	final ArrayList<String> currentLogFileName;
 	final ArrayList<Queue<byte[]>> logQueues;
 
-	public DataProcessor(JSONObject config, int dataSourceCount) {
+	private ArrayList<TableHolder> dataTables;
+
+	public DataProcessor(Config config, ArrayList<TableHolder> dataTables) {
 		this.config = config;
+		this.dataTables = dataTables;
 
-		allRecievedData = new ArrayList<>(dataSourceCount);
-		currentLogFileName = new ArrayList<>(dataSourceCount);
-		logQueues = new ArrayList<>(dataSourceCount);
+		allRecievedData = new ArrayList<>(config.getDataSourceCount());
+		currentLogFileName = new ArrayList<>(config.getDataSourceCount());
+		logQueues = new ArrayList<>(config.getDataSourceCount());
 
-		for (int i = 0; i < dataSourceCount; i++) {
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
 			allRecievedData.add(new ArrayList<>());
 			logQueues.add(new ArrayDeque<>());
 		}
@@ -54,7 +62,7 @@ public class DataProcessor {
 	}
 
 	private DataHolder parseData(int tableIndex, String data) {
-		DataHolder dataHolder = new DataHolder(tableIndex, config.getJSONArray("datasets").getJSONObject(tableIndex));
+		DataHolder dataHolder = new DataHolder(tableIndex, config.getObject().getJSONArray("datasets").getJSONObject(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|(?:\\\\r\\\\n|\\r\\n)'?", "");
@@ -75,7 +83,7 @@ public class DataProcessor {
 		try {
 			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allRecievedData.get(tableIndex));
 			
-			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
+			int timestampIndex = config.getObject().getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
 			if (lastDataPointDataHolder != null) {
 			    Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
 			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
@@ -97,6 +105,40 @@ public class DataProcessor {
 		}
 
 		return dataHolder;
+	}
+
+	/**
+	 * Sets tables up for the given index
+	 *
+	 * @return The recieved DataHolder
+	 */
+	public DataHolder setTableTo(int tableIndex, int index) {
+		DataHolder currentDataHolder = allRecievedData.get(tableIndex).get(index);
+		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
+
+		if (currentDataHolder != null) {
+			currentDataHolder.updateTableUIWithData(receivedDataTable, config.getLabel(tableIndex));
+		} else {
+			setTableToError(index, receivedDataTable);
+		}
+
+		return currentDataHolder;
+	}
+
+	private void setTableToError(int index, JTable table) {
+		TableModel tableModel = table.getModel();
+
+		// Set first item to "Error"
+		tableModel.setValueAt("Parsing Error", 0, 0);
+		tableModel.setValueAt(index, 0, 1);
+
+		for (int i = 1; i < tableModel.getRowCount(); i++) {
+			// Set label
+			tableModel.setValueAt("", i, 0);
+
+			// Set data
+			tableModel.setValueAt("", i, 1);
+		}
 	}
 
 	/**
@@ -155,7 +197,7 @@ public class DataProcessor {
 
 		int logIndex = 0;
 
-		JSONArray dataSets = config.getJSONArray("datasets");
+		JSONArray dataSets = config.getObject().getJSONArray("datasets");
 
 		// Find a suitable filename
 		for (int i = 0; i <= listOfLogFiles.length; i++) {
