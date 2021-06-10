@@ -10,6 +10,7 @@ import org.json.JSONException;
 
 import uorocketry.basestation.config.Config;
 import uorocketry.basestation.connections.DeviceConnection;
+import uorocketry.basestation.panel.Chart;
 import uorocketry.basestation.panel.TableHolder;
 
 import javax.swing.*;
@@ -138,6 +139,11 @@ public class DataProcessor {
 			// Set data
 			tableModel.setValueAt("", i, 1);
 		}
+	}
+
+	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
+		// TODO: Choose a different allData list depending on the chart's preference
+		chart.update(allReceivedData, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
 	}
 
 	/**

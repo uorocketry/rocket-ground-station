@@ -99,8 +99,8 @@ public class GoogleEarthUpdater {
 	/**
 	 * Updates the KML file with the data up to currentDataIndex.
 	 * 
-	 * @param tableIndex
 	 * @param allData
+	 * @param minDataIndex
 	 * @param currentDataIndex
 	 * @param dataSets
 	 * @param secondRun Is this a second run? This is true if it is being run from a task called by this function.
@@ -154,8 +154,9 @@ public class GoogleEarthUpdater {
 			}
 		} catch (JSONException e) {}
 		
-		if (longitudeData.data != 0 && latitudeData.data != 0 && longitudeData.getDecimalValue() != null && latitudeData.getDecimalValue() != null) {
-			return prefixString + longitudeData.getDecimalValue() + "," + latitudeData.getDecimalValue() + "," + altitudeData.data;
+		if (longitudeData.getDecimalValue() != null && latitudeData.getDecimalValue() != null && altitudeData.getDecimalValue() != null
+				&& longitudeData.getDecimalValue() != 0 && latitudeData.getDecimalValue() != 0) {
+			return prefixString + longitudeData.getDecimalValue() + "," + latitudeData.getDecimalValue() + "," + altitudeData.getDecimalValue();
 		}
 		
 		return null;

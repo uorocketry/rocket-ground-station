@@ -55,10 +55,7 @@ import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.data.DataType;
 import uorocketry.basestation.external.GoogleEarthUpdater;
 import uorocketry.basestation.external.WebViewUpdater;
-import uorocketry.basestation.panel.DataChart;
-import uorocketry.basestation.panel.SnapPanel;
-import uorocketry.basestation.panel.SnapPanelListener;
-import uorocketry.basestation.panel.TableHolder;
+import uorocketry.basestation.panel.*;
 
 public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
 	
@@ -114,7 +111,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public Window window;
 	
 	/** The chart last clicked */
-	DataChart selectedChart;
+	Chart selectedChart;
 	Border selectionBorder = BorderFactory.createLineBorder(Color.blue);
 	
 	/** The width and height of the chart container to resize elements inside on resize. */
@@ -267,9 +264,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Setup Snap Panel system
 		synchronized (window.charts) {
 			selectedChart = window.charts.get(0);
-			selectedChart.snapPanel.setSnapPanelListener(this);
+			selectedChart.getSpanPanel().setSnapPanelListener(this);
 
-			snapPanelSelected(selectedChart.snapPanel);
+			snapPanelSelected(selectedChart.getSpanPanel());
 		}
 	}
 
@@ -339,7 +336,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 			// Update every chart
 			synchronized (window.charts) {
-				for (DataChart chart : window.charts) {
+				for (Chart chart : window.charts) {
 					updateChart(chart);
 				}
 			}
@@ -356,115 +353,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 *
 	 * @param chart The chart to update
 	 */
-	public void updateChart(DataChart chart) {
-		// Update altitude chart
-		ArrayList<Float> altitudeDataX = new ArrayList<>();
-		ArrayList<ArrayList<Float>> altitudeDataY = new ArrayList<ArrayList<Float>>();
+	public void updateChart(Chart chart) {
+		int maxDataIndex = currentDataIndexes.get(chart.getYType().tableIndex);
+		int minDataIndex = minDataIndexes.get(chart.getYType().tableIndex);
 
-		// Add all array lists
-		for (int i = 0; i < chart.xTypes.length; i++) {
-			altitudeDataY.add(new ArrayList<Float>());
-		}
-
-		// Add y axis
-		{
-			int maxDataIndex = currentDataIndexes.get(chart.yType.tableIndex);
-			int minDataIndex = minDataIndexes.get(chart.yType.tableIndex);
-			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
-
-			for (int i = minDataIndex; i <= maxDataIndex; i++) {
-				if (dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).size() == 0) continue;
-
-				DataHolder data = dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).get(i);
-
-				DataHolder other = dataProcessor.getAllReceivedData().get(chart.xTypes[0].tableIndex).get(i);
-
-				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
-					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
-				}
-			}
-		}
-
-
-		// Add x axis
-		for (int i = 0; i < chart.xTypes.length; i++) {
-			// Used to limit the max number of data points displayed
-			float targetRatio = (float) maxDataPointsDisplayed / (currentDataIndexes.get(chart.xTypes[i].tableIndex) - minDataIndexes.get(chart.xTypes[i].tableIndex));
-			int dataPointsAdded = 0;
-
-			int maxDataIndex = currentDataIndexes.get(chart.xTypes[i].tableIndex);
-			int minDataIndex = minDataIndexes.get(chart.xTypes[i].tableIndex);
-			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
-
-			for (int j = minDataIndex; j <= maxDataIndex; j++) {
-				if (dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).size() == 0) continue;
-
-				DataHolder data = dataProcessor.getAllReceivedData().get(chart.xTypes[i].tableIndex).get(j);
-
-				if (data != null) {
-					// Ensures that not too many data points are displayed
-					// Always show data if only showing latest data (that is handled by changing the minSlider)
-					boolean shouldShowDataPoint = onlyShowLatestData || ((float) dataPointsAdded / j <= targetRatio);
-
-					if (!data.hiddenDataTypes.contains(data.types[chart.xTypes[i].index]) && shouldShowDataPoint ) {
-						altitudeDataY.get(i).add(data.data[chart.xTypes[i].index].getDecimalValue());
-
-						dataPointsAdded++;
-					} else if (!shouldShowDataPoint) {
-						// Hidden data
-						altitudeDataY.get(i).add(null);
-					}
-				}
-			}
-		}
-
-		if (altitudeDataX.size() == 0) {
-			// Add default data
-			altitudeDataX.add(0f);
-
-			for (int j = 0; j < chart.xTypes.length; j++) {
-				altitudeDataY.get(j).add(0f);
-			};
-		}
-
-		String[] newActiveSeries = new String[chart.xTypes.length];
-		StringBuilder title = new StringBuilder();
-
-		// Set Labels
-		for (int i = 0; i < chart.xTypes.length; i++) {
-			String xTypeTitle = config.getLabel(chart.xTypes[i].tableIndex)[chart.xTypes[i].index];
-
-			if (title.length() != 0) title.append(", ");
-			title.append(xTypeTitle);
-
-			chart.xyChart.setYAxisGroupTitle(i, xTypeTitle);
-
-			XYSeries series = null;
-
-			if (chart.activeSeries.length > i) {
-				series = chart.xyChart.updateXYSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
-			} else {
-				series = chart.xyChart.addSeries("series" + i, altitudeDataX, altitudeDataY.get(i), null);
-			}
-
-			series.setLabel(xTypeTitle);
-			series.setYAxisGroup(i);
-
-			newActiveSeries[i] = "series" + i;
-		}
-
-		String yTypeTitle = config.getLabel(chart.yType.tableIndex)[chart.yType.index];
-
-		chart.xyChart.setTitle(title + " vs " + yTypeTitle);
-
-		chart.xyChart.setXAxisTitle(yTypeTitle);
-
-		// Remove extra series
-		for (int i = chart.xTypes.length; i < chart.activeSeries.length; i++) {
-			chart.xyChart.removeSeries("series" + i);
-		}
-
-		chart.activeSeries = newActiveSeries;
+		dataProcessor.updateChart(chart, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
 
 		window.repaint();
 	}
@@ -666,17 +559,17 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				JSONArray chartsArray = new JSONArray();
 				saveObject.put("charts", chartsArray);
 				
-				for (DataChart chart: window.charts) {
+				for (Chart chart: window.charts) {
 					JSONObject chartData = new JSONObject();
 					
-					chartData.put("x", chart.snapPanel.relX);
-					chartData.put("y", chart.snapPanel.relY);
-					chartData.put("width", chart.snapPanel.relWidth);
-					chartData.put("height", chart.snapPanel.relHeight);
+					chartData.put("x", chart.getSpanPanel().relX);
+					chartData.put("y", chart.getSpanPanel().relY);
+					chartData.put("width", chart.getSpanPanel().relWidth);
+					chartData.put("height", chart.getSpanPanel().relHeight);
 					
 					// Add xTypes
 					JSONArray xTypeArray = new JSONArray();
-					for (DataType dataType: chart.xTypes) {
+					for (DataType dataType: chart.getXTypes()) {
 						JSONObject xTypeData = new JSONObject();
 						
 						xTypeData.put("index", dataType.index);
@@ -688,8 +581,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					
 					// Add yType
 					JSONObject yTypeData = new JSONObject();
-					yTypeData.put("index", chart.yType.index);
-					yTypeData.put("tableIndex", chart.yType.tableIndex);
+					yTypeData.put("index", chart.getYType().index);
+					yTypeData.put("tableIndex", chart.getYType().tableIndex);
 					chartData.put("yType", yTypeData);
 					
 					chartsArray.put(chartData);
@@ -728,9 +621,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
 				
 				// Clear current charts
-				for (DataChart dataChart: window.charts) {
+				for (Chart dataChart: window.charts) {
 					// Remove from the UI
-					window.centerChartPanel.remove(dataChart.chartPanel);
+					window.centerChartPanel.remove(dataChart.getPanel());
 				}
 				
 				// Finally, remove it from the list
@@ -741,28 +634,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					
 					addChart(true);
 					
-					DataChart chart = window.charts.get(i);
+					Chart chart = window.charts.get(i);
 					
 					// Get location
-					chart.snapPanel.relX = chartData.getDouble("x");
-					chart.snapPanel.relY = chartData.getDouble("y");
-					chart.snapPanel.relWidth = chartData.getDouble("width");
-					chart.snapPanel.relHeight = chartData.getDouble("height");
+					chart.getSpanPanel().relX = chartData.getDouble("x");
+					chart.getSpanPanel().relY = chartData.getDouble("y");
+					chart.getSpanPanel().relWidth = chartData.getDouble("width");
+					chart.getSpanPanel().relHeight = chartData.getDouble("height");
 					
-					chart.snapPanel.updateBounds(window.centerChartPanel.getWidth(), window.centerChartPanel.getHeight());
+					chart.getSpanPanel().updateBounds(window.centerChartPanel.getWidth(), window.centerChartPanel.getHeight());
 					
 					// Get xTypes
 					JSONArray xTypeArray = chartData.getJSONArray("xTypes");
-					chart.xTypes = new DataType[xTypeArray.length()];
-					for (int j = 0; j < chart.xTypes.length; j++) {
+					chart.setXTypes(new DataType[xTypeArray.length()]);
+					for (int j = 0; j < chart.getXTypes().length; j++) {
 						JSONObject xTypeData = xTypeArray.getJSONObject(j);
 						
-						chart.xTypes[j] = new DataType(xTypeData.getInt("index"), xTypeData.getInt("tableIndex"));
+						chart.getXTypes()[j] = new DataType(xTypeData.getInt("index"), xTypeData.getInt("tableIndex"));
 					}
 					
 					// Add yType
 					JSONObject yTypeData = chartData.getJSONObject("yType");
-					chart.yType = new DataType(yTypeData.getInt("index"), yTypeData.getInt("tableIndex"));
+					chart.setYType(new DataType(yTypeData.getInt("index"), yTypeData.getInt("tableIndex")));
 				}
 				
 				updateUI();
@@ -800,7 +693,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		DataChart dataChart = new DataChart(this, xyChart, chartPanel);
 		
 		// Set default size
-		dataChart.snapPanel.setRelSize(600, 450);
+		dataChart.getSpanPanel().setRelSize(600, 450);
 		
 		// Add these default charts to the list
 		synchronized (window.charts) {
@@ -809,14 +702,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		
 		// Set to be selected
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
-		dataChart.snapPanel.setSnapPanelListener(this);
+		dataChart.getSpanPanel().setSnapPanelListener(this);
 		
-		if (selectedChart != null) selectedChart.chartPanel.setBorder(null);
+		if (selectedChart != null) selectedChart.getPanel().setBorder(null);
 		
 		if (!silent) {
 			selectedChart = dataChart;
 			
-			snapPanelSelected(selectedChart.snapPanel);
+			snapPanelSelected(selectedChart.getSpanPanel());
 			
 			updateUI();
 		}
@@ -827,7 +720,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void valueChanged(ListSelectionEvent e) {
 		if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
 			for (int i = 0; i < window.dataTables.size(); i++) {
-				JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
+				TableHolder tableHolder = window.dataTables.get(i);
+				JTable dataTable = tableHolder.getReceivedDataTable(); // Just this table for now
 				
 				if (e.getSource() == dataTable.getSelectionModel()) {
 					int[] selections = dataTable.getSelectedRows();
@@ -836,14 +730,14 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					moveSelectionsToNewTable(i, true);
 					
 					for (int j = 0; j < formattedSelections.length; j++) {
-						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(dataTable));
+						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(tableHolder));
 					}
 					
 					synchronized (window.charts) {
 						// Set chart to be based on this row
-						selectedChart.xTypes = formattedSelections;
+						selectedChart.setXTypes(formattedSelections);
 					}
-					
+
 					dataTable.setColumnSelectionInterval(0, 0);
 					
 					updateUI();
@@ -867,7 +761,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				
 				moveSelectionsToNewTable(i, false);
 				
-				selectedChart.yType = new DataType(row, i);
+				selectedChart.setYType(new DataType(row, i));
 				
 				((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
 				dataTable.repaint();
@@ -883,9 +777,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		boolean movingXType = false;
 		
 		// Clear previous selections
-		for (int j = 0; j < selectedChart.xTypes.length; j++) {
-			if (selectedChart.xTypes[j].tableIndex != newTableIndex) {
-				int currentTableIndex = selectedChart.xTypes[j].tableIndex;
+		for (int j = 0; j < selectedChart.getXTypes().length; j++) {
+			if (selectedChart.getXTypes()[j].tableIndex != newTableIndex) {
+				int currentTableIndex = selectedChart.getXTypes()[j].tableIndex;
 				
 				// Clear that table's selection
 				window.dataTables.get(currentTableIndex).getReceivedDataTable().clearSelection();
@@ -896,8 +790,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		if (movingXType && !changingX) {
-			selectedChart.xTypes = new DataType[1];
-			selectedChart.xTypes[0] = new DataType(1, newTableIndex);
+			selectedChart.setXTypes(new DataType[1]);
+			selectedChart.getXTypes()[0] = new DataType(1, newTableIndex);
 			
 			window.dataTables.get(newTableIndex).getReceivedDataTable().setRowSelectionInterval(1, 1);
 			window.dataTables.get(newTableIndex).getReceivedDataTable().setColumnSelectionInterval(0, 0);
@@ -905,9 +799,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 		
 		// Move yType selection if needed
-		if (selectedChart.yType.tableIndex != newTableIndex) {
+		if (selectedChart.getYType().tableIndex != newTableIndex) {
 			// Deselect the old one
-			JTable oldDataTable = window.dataTables.get(selectedChart.yType.tableIndex).getReceivedDataTable();
+			JTable oldDataTable = window.dataTables.get(selectedChart.getYType().tableIndex).getReceivedDataTable();
 			((DataTableCellRenderer) oldDataTable.getDefaultRenderer(Object.class)).coloredRow = -1;
 			oldDataTable.repaint();
 			
@@ -916,7 +810,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = 0;
 			dataTable.repaint();
 			
-			selectedChart.yType = new DataType(0, newTableIndex);
+			selectedChart.setYType(new DataType(0, newTableIndex));
 		}
 	}
 	
@@ -927,12 +821,12 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void snapPanelSelected(SnapPanel snapPanel) {
 		if (snapPanel.chart != null) {
 			// Remove border on old object
-			selectedChart.chartPanel.setBorder(null);
+			selectedChart.getPanel().setBorder(null);
 
 			selectedChart = snapPanel.chart;
 			
 			// Add border
-			selectedChart.chartPanel.setBorder(selectionBorder);
+			selectedChart.getPanel().setBorder(selectionBorder);
 			
 			// Add selections
 			ignoreSelections = true;
@@ -941,15 +835,15 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
 				
 				dataTable.clearSelection();
-				for (int j = 0; j < selectedChart.xTypes.length; j++) {
-					if (selectedChart.xTypes[j].tableIndex == i) {
-						dataTable.addRowSelectionInterval(selectedChart.xTypes[j].index, selectedChart.xTypes[j].index);
+				for (int j = 0; j < selectedChart.getXTypes().length; j++) {
+					if (selectedChart.getXTypes()[j].tableIndex == i) {
+						dataTable.addRowSelectionInterval(selectedChart.getXTypes()[j].index, selectedChart.getXTypes()[j].index);
 					}
 				}
 				
 				// Update yType
-				if (selectedChart.yType.tableIndex == i) {
-					((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.yType.index;
+				if (selectedChart.getYType().tableIndex == i) {
+					((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.getYType().index;
 				}
 				
 				window.repaint();
@@ -978,8 +872,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		int currentChartContainerHeight = window.centerChartPanel.getHeight();
 		
 		synchronized (window.charts) {
-			for (DataChart chart : window.charts) {
-				chart.snapPanel.containerResized(currentChartContainerWidth, currentChartContainerHeight);
+			for (Chart chart : window.charts) {
+				chart.getSpanPanel().containerResized(currentChartContainerWidth, currentChartContainerHeight);
 			}
 		}
 		

@@ -37,6 +37,7 @@ import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.panel.Chart;
 import uorocketry.basestation.panel.DataChart;
 import uorocketry.basestation.panel.TableHolder;
 
@@ -88,7 +89,7 @@ public class Window extends JFrame {
 	
 	public JPanel centerChartPanel;
 	
-	public final ArrayList<DataChart> charts = new ArrayList<>();
+	public final ArrayList<Chart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
