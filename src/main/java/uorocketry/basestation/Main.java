@@ -8,23 +8,16 @@ import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
@@ -66,6 +59,7 @@ import uorocketry.basestation.external.WebViewUpdater;
 import uorocketry.basestation.panel.DataChart;
 import uorocketry.basestation.panel.SnapPanel;
 import uorocketry.basestation.panel.SnapPanelListener;
+import uorocketry.basestation.panel.TableHolder;
 
 public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
 	
@@ -274,12 +268,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		window.simulationCheckBox.setSelected(simulation);
 		
 		// Setup listeners for table
-		for (JTable dataTable : window.dataTables) {
-			dataTable.getSelectionModel().addListSelectionListener(this);
-			dataTable.addMouseListener(this);
+		for (TableHolder tableHolder : window.dataTables) {
+			tableHolder.getReceivedDataTable().getSelectionModel().addListSelectionListener(this);
+			tableHolder.getReceivedDataTable().addMouseListener(this);
 		}
-		
-		
+
 		// Setup Snap Panel system
 		synchronized (window.charts) {
 			selectedChart = window.charts.get(0);
@@ -303,7 +296,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	public void updateUI() {
 		// If not ready yet
-		if (dataProcessor== null || dataProcessor.getAllData().size() == 0 || updatingUI) return;
+		if (dataProcessor== null || dataProcessor.getAllRecievedData().size() == 0 || updatingUI) return;
 		
 		updatingUI = true;
 		
@@ -314,28 +307,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	private void updateUIInternal() {
 		try {
 			// Update every table's data
-			for (int i = 0; i < dataProcessor.getAllData().size(); i++) {
+			for (int i = 0; i < dataProcessor.getAllRecievedData().size(); i++) {
 				// If not ready yet
-				if (dataProcessor.getAllData().get(i).size() == 0) continue;
+				if (dataProcessor.getAllRecievedData().get(i).size() == 0) continue;
 				
 				// Don't change slider if paused
 				if (!paused) {
 					// Set max value of the sliders
-					window.maxSliders.get(i).setMaximum(dataProcessor.getAllData().get(i).size() - 1);
-					window.minSliders.get(i).setMaximum(dataProcessor.getAllData().get(i).size() - 1);
+					window.maxSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
+					window.minSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
 					
 					// Move position to end
 					if (latest) {
-						window.maxSliders.get(i).setValue(dataProcessor.getAllData().get(i).size() - 1);
+						window.maxSliders.get(i).setValue(dataProcessor.getAllRecievedData().get(i).size() - 1);
 					}
 				}
 				
-				DataHolder currentDataHolder = dataProcessor.getAllData().get(i).get(currentDataIndexes.get(i));
+				DataHolder currentDataHolder = dataProcessor.getAllRecievedData().get(i).get(currentDataIndexes.get(i));
 				
 				if (currentDataHolder != null) {
-					currentDataHolder.updateTableUIWithData(window.dataTables.get(i), labels.get(i));
+					currentDataHolder.updateTableUIWithData(window.dataTables.get(i).getReceivedDataTable(), labels.get(i));
 				} else {
-					setTableToError(i, window.dataTables.get(i));
+					setTableToError(i, window.dataTables.get(i).getReceivedDataTable());
 				}
 				
 				if (window.stateButtons.size() > i && currentDataHolder != null) {
@@ -352,11 +345,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 			
 			if (googleEarth) {
-				googleEarthUpdater.updateKMLFile(dataProcessor.getAllData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
+				googleEarthUpdater.updateKMLFile(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"), false);
 			}
 			
 			if (webView) {
-				webViewUpdater.sendUpdate(dataProcessor.getAllData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"));
+				webViewUpdater.sendUpdate(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getJSONArray("datasets"));
 			}
 			
 			// Update every chart
@@ -411,11 +404,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 			
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
-				if (dataProcessor.getAllData().get(chart.yType.tableIndex).size() == 0) continue;
+				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
 				
-				DataHolder data = dataProcessor.getAllData().get(chart.yType.tableIndex).get(i);
+				DataHolder data = dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).get(i);
 				
-				DataHolder other = dataProcessor.getAllData().get(chart.xTypes[0].tableIndex).get(i);
+				DataHolder other = dataProcessor.getAllRecievedData().get(chart.xTypes[0].tableIndex).get(i);
 				
 				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
 					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
@@ -435,9 +428,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 
 			for (int j = minDataIndex; j <= maxDataIndex; j++) {
-				if (dataProcessor.getAllData().get(chart.yType.tableIndex).size() == 0) continue;
+				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
 
-				DataHolder data = dataProcessor.getAllData().get(chart.xTypes[i].tableIndex).get(j);
+				DataHolder data = dataProcessor.getAllRecievedData().get(chart.xTypes[i].tableIndex).get(j);
 				
 				if (data != null) {
 					// Ensures that not too many data points are displayed
@@ -633,8 +626,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (e.getSource() == window.clearDataButton) {
 			if (JOptionPane.showConfirmDialog(window, 
 					"Are you sure you would like to clear all the data?") == 0) {
-				for (int i = 0; i < dataProcessor.getAllData().size(); i++) {
-					dataProcessor.getAllData().get(i).clear();
+				for (int i = 0; i < dataProcessor.getAllRecievedData().size(); i++) {
+					dataProcessor.getAllRecievedData().get(i).clear();
 				}
 				
 				updateUI();
@@ -673,7 +666,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.latestButton.setText("Detach From Latest");
 				
 				for (int i = 0; i < window.maxSliders.size(); i++) {
-					window.maxSliders.get(i).setValue(dataProcessor.getAllData().get(0).size() - 1);	
+					window.maxSliders.get(i).setValue(dataProcessor.getAllRecievedData().get(0).size() - 1);
 				}
 			} else {
 				window.latestButton.setText("Latest");
@@ -713,7 +706,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (List<DataHolder> dataHolders : dataProcessor.getAllData()) {
+			for (List<DataHolder> dataHolders : dataProcessor.getAllRecievedData()) {
 				for (DataHolder dataHolder : dataHolders) {
 					// See if the hidden list needs to be cleared
 					if (dataHolder != null && !dataHolder.hiddenDataTypes.isEmpty()) {
@@ -909,7 +902,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void valueChanged(ListSelectionEvent e) {
 		if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
 			for (int i = 0; i < window.dataTables.size(); i++) {
-				JTable dataTable = window.dataTables.get(i);
+				JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
 				
 				if (e.getSource() == dataTable.getSelectionModel()) {
 					int[] selections = dataTable.getSelectedRows();
@@ -939,7 +932,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	@Override
 	public void mousePressed(MouseEvent e) {
 		for (int i = 0; i < window.dataTables.size(); i++) {
-			JTable dataTable = window.dataTables.get(i);
+			JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
 			
 			if (e.getSource() == dataTable && e.getButton() == MouseEvent.BUTTON3) {
 				// Left clicking the dataTable
@@ -970,8 +963,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				int currentTableIndex = selectedChart.xTypes[j].tableIndex;
 				
 				// Clear that table's selection
-				window.dataTables.get(currentTableIndex).clearSelection();
-				window.dataTables.get(currentTableIndex).repaint();
+				window.dataTables.get(currentTableIndex).getReceivedDataTable().clearSelection();
+				window.dataTables.get(currentTableIndex).getReceivedDataTable().repaint();
 				
 				movingXType = true;
 			}
@@ -981,20 +974,20 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			selectedChart.xTypes = new DataType[1];
 			selectedChart.xTypes[0] = new DataType(1, newTableIndex);
 			
-			window.dataTables.get(newTableIndex).setRowSelectionInterval(1, 1);
-			window.dataTables.get(newTableIndex).setColumnSelectionInterval(0, 0);
-			window.dataTables.get(newTableIndex).repaint();
+			window.dataTables.get(newTableIndex).getReceivedDataTable().setRowSelectionInterval(1, 1);
+			window.dataTables.get(newTableIndex).getReceivedDataTable().setColumnSelectionInterval(0, 0);
+			window.dataTables.get(newTableIndex).getReceivedDataTable().repaint();
 		}
 		
 		// Move yType selection if needed
 		if (selectedChart.yType.tableIndex != newTableIndex) {
 			// Deselect the old one
-			JTable oldDataTable = window.dataTables.get(selectedChart.yType.tableIndex);
+			JTable oldDataTable = window.dataTables.get(selectedChart.yType.tableIndex).getReceivedDataTable();
 			((DataTableCellRenderer) oldDataTable.getDefaultRenderer(Object.class)).coloredRow = -1;
 			oldDataTable.repaint();
 			
 			// Select this default selection
-			JTable dataTable = window.dataTables.get(newTableIndex);
+			JTable dataTable = window.dataTables.get(newTableIndex).getReceivedDataTable();
 			((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = 0;
 			dataTable.repaint();
 			
@@ -1020,7 +1013,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			ignoreSelections = true;
 			
 			for (int i = 0; i < window.dataTables.size(); i++) {
-				JTable dataTable = window.dataTables.get(i);
+				JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
 				
 				dataTable.clearSelection();
 				for (int j = 0; j < selectedChart.xTypes.length; j++) {

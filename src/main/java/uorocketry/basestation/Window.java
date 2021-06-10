@@ -38,6 +38,7 @@ import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.panel.DataChart;
+import uorocketry.basestation.panel.TableHolder;
 
 public class Window extends JFrame {
 	
@@ -45,8 +46,8 @@ public class Window extends JFrame {
 	private Main main;
 	
 	private JPanel dataTablePanel;
-	ArrayList<JTable> dataTables = new ArrayList<>();
-	
+	ArrayList<TableHolder> dataTables = new ArrayList<>();
+
 	private JPanel leftPanel;
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
@@ -129,7 +130,7 @@ public class Window extends JFrame {
 		leftPanel.add(dataTablePanel);
 		
 		for (int i = 0; i < Main.dataSourceCount; i++) {
-			gererateTelemetryPanel(i, main.config.getJSONArray("datasets").getJSONObject(i));
+			generateTelemetryPanel(i, main.config.getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -297,25 +298,22 @@ public class Window extends JFrame {
 	}
 
 
-	public void gererateTelemetryPanel(int tableIndex, JSONObject dataSet) {
-		
+	public void generateTelemetryPanel(int tableIndex, JSONObject dataSet) {
 		JPanel borderPanel = new JPanel();
 		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
 		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 
-		JTable rawTelemetryData = createTable(Main.dataLength.get(tableIndex), 2, 30, 130);
-		borderPanel.add(rawTelemetryData);
+		JTable receivedDataTable = createTable(Main.dataLength.get(tableIndex), 2, 30, 130);
+		JTable connectionInfoTable = createTable(3, 2, 30, 130);
+		borderPanel.add(receivedDataTable);
+		borderPanel.add(connectionInfoTable);
 
-		dataTables.add(rawTelemetryData);
-
-		JTable teletryInfo = createTable(3, 2, 30, 130);
-		borderPanel.add(teletryInfo);
+		dataTables.add(new TableHolder(receivedDataTable, connectionInfoTable));
 
 		dataTablePanel.add(borderPanel);
 	}
 
 	public JTable createTable(int rows, int columns, int height, int width) {
-
 		JTable table = new JTable(rows, columns);
 		table.setBorder(new LineBorder(new Color(0, 0, 0)));
 		table.setDefaultRenderer(Object.class, new DataTableCellRenderer());

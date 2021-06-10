@@ -9,12 +9,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.connections.DeviceConnection;
 
 public class DataProcessor {
 
-	private List<List<DataHolder>> allData;
+	private List<List<DataHolder>> allRecievedData;
 	private JSONObject config;
 
 	/** Where to save the log file */
@@ -28,12 +27,12 @@ public class DataProcessor {
 	public DataProcessor(JSONObject config, int dataSourceCount) {
 		this.config = config;
 
-		allData = new ArrayList<>(dataSourceCount);
+		allRecievedData = new ArrayList<>(dataSourceCount);
 		currentLogFileName = new ArrayList<>(dataSourceCount);
 		logQueues = new ArrayList<>(dataSourceCount);
 
 		for (int i = 0; i < dataSourceCount; i++) {
-			allData.add(new ArrayList<>());
+			allRecievedData.add(new ArrayList<>());
 			logQueues.add(new ArrayDeque<>());
 		}
 	}
@@ -51,7 +50,7 @@ public class DataProcessor {
 		//TODO: Determine whether a normal packet or RSSI packet before converting to string
 		String delimitedMessage = new String(data, StandardCharsets.UTF_8);
 
-		allData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
+		allRecievedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
 	}
 
 	private DataHolder parseData(int tableIndex, String data) {
@@ -74,7 +73,7 @@ public class DataProcessor {
 		// TODO: Potentially remove and test this
 		// Ensure that the timestamp has not gone back in time
 		try {
-			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allData.get(tableIndex));
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allRecievedData.get(tableIndex));
 			
 			int timestampIndex = config.getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
 			if (lastDataPointDataHolder != null) {
@@ -195,7 +194,7 @@ public class DataProcessor {
 	}
 
 	private int getDataSourceCount() {
-		return allData.size();
+		return allRecievedData.size();
 	}
 
 	/**
@@ -214,8 +213,8 @@ public class DataProcessor {
 		return null;
 	}
 
-    public List<List<DataHolder>> getAllData() {
-		return allData;
+    public List<List<DataHolder>> getAllRecievedData() {
+		return allRecievedData;
 	}
 
 
