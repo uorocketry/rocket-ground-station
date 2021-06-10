@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +29,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -289,7 +287,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	public void updateUI() {
 		// If not ready yet
-		if (dataProcessor== null || dataProcessor.getAllRecievedData().size() == 0 || updatingUI) return;
+		if (dataProcessor== null || dataProcessor.getAllReceivedData().size() == 0 || updatingUI) return;
 
 		updatingUI = true;
 
@@ -300,19 +298,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	private void updateUIInternal() {
 		try {
 			// Update every table's data
-			for (int i = 0; i < dataProcessor.getAllRecievedData().size(); i++) {
+			for (int i = 0; i < dataProcessor.getAllReceivedData().size(); i++) {
 				// If not ready yet
-				if (dataProcessor.getAllRecievedData().get(i).size() == 0) continue;
+				if (dataProcessor.getAllReceivedData().get(i).size() == 0) continue;
 
 				// Don't change slider if paused
 				if (!paused) {
 					// Set max value of the sliders
-					window.maxSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
-					window.minSliders.get(i).setMaximum(dataProcessor.getAllRecievedData().get(i).size() - 1);
+					window.maxSliders.get(i).setMaximum(dataProcessor.getAllReceivedData().get(i).size() - 1);
+					window.minSliders.get(i).setMaximum(dataProcessor.getAllReceivedData().get(i).size() - 1);
 
 					// Move position to end
 					if (latest) {
-						window.maxSliders.get(i).setValue(dataProcessor.getAllRecievedData().get(i).size() - 1);
+						window.maxSliders.get(i).setValue(dataProcessor.getAllReceivedData().get(i).size() - 1);
 					}
 				}
 
@@ -332,11 +330,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 
 			if (googleEarth) {
-				googleEarthUpdater.updateKMLFile(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"), false);
+				googleEarthUpdater.updateKMLFile(dataProcessor.getAllReceivedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"), false);
 			}
 
 			if (webView) {
-				webViewUpdater.sendUpdate(dataProcessor.getAllRecievedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"));
+				webViewUpdater.sendUpdate(dataProcessor.getAllReceivedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"));
 			}
 
 			// Update every chart
@@ -375,11 +373,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
-				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
+				if (dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).size() == 0) continue;
 
-				DataHolder data = dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).get(i);
+				DataHolder data = dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).get(i);
 
-				DataHolder other = dataProcessor.getAllRecievedData().get(chart.xTypes[0].tableIndex).get(i);
+				DataHolder other = dataProcessor.getAllReceivedData().get(chart.xTypes[0].tableIndex).get(i);
 
 				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[chart.xTypes[0].index]))) {
 					altitudeDataX.add(data.data[chart.yType.index].getDecimalValue());
@@ -399,9 +397,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
 
 			for (int j = minDataIndex; j <= maxDataIndex; j++) {
-				if (dataProcessor.getAllRecievedData().get(chart.yType.tableIndex).size() == 0) continue;
+				if (dataProcessor.getAllReceivedData().get(chart.yType.tableIndex).size() == 0) continue;
 
-				DataHolder data = dataProcessor.getAllRecievedData().get(chart.xTypes[i].tableIndex).get(j);
+				DataHolder data = dataProcessor.getAllReceivedData().get(chart.xTypes[i].tableIndex).get(j);
 
 				if (data != null) {
 					// Ensures that not too many data points are displayed
@@ -553,8 +551,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (e.getSource() == window.clearDataButton) {
 			if (JOptionPane.showConfirmDialog(window, 
 					"Are you sure you would like to clear all the data?") == 0) {
-				for (int i = 0; i < dataProcessor.getAllRecievedData().size(); i++) {
-					dataProcessor.getAllRecievedData().get(i).clear();
+				for (int i = 0; i < dataProcessor.getAllReceivedData().size(); i++) {
+					dataProcessor.getAllReceivedData().get(i).clear();
 				}
 				
 				updateUI();
@@ -593,7 +591,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.latestButton.setText("Detach From Latest");
 				
 				for (int i = 0; i < window.maxSliders.size(); i++) {
-					window.maxSliders.get(i).setValue(dataProcessor.getAllRecievedData().get(0).size() - 1);
+					window.maxSliders.get(i).setValue(dataProcessor.getAllReceivedData().get(0).size() - 1);
 				}
 			} else {
 				window.latestButton.setText("Latest");
@@ -633,7 +631,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (List<DataHolder> dataHolders : dataProcessor.getAllRecievedData()) {
+			for (List<DataHolder> dataHolders : dataProcessor.getAllReceivedData()) {
 				for (DataHolder dataHolder : dataHolders) {
 					// See if the hidden list needs to be cleared
 					if (dataHolder != null && !dataHolder.hiddenDataTypes.isEmpty()) {

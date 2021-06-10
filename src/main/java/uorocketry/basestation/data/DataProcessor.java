@@ -7,7 +7,6 @@ import java.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import uorocketry.basestation.config.Config;
 import uorocketry.basestation.connections.DeviceConnection;
@@ -18,7 +17,7 @@ import javax.swing.table.TableModel;
 
 public class DataProcessor {
 
-	private List<List<DataHolder>> allRecievedData;
+	private List<List<DataHolder>> allReceivedData;
 	private Config config;
 
 	/** Where to save the log file */
@@ -35,12 +34,12 @@ public class DataProcessor {
 		this.config = config;
 		this.dataTables = dataTables;
 
-		allRecievedData = new ArrayList<>(config.getDataSourceCount());
+		allReceivedData = new ArrayList<>(config.getDataSourceCount());
 		currentLogFileName = new ArrayList<>(config.getDataSourceCount());
 		logQueues = new ArrayList<>(config.getDataSourceCount());
 
 		for (int i = 0; i < config.getDataSourceCount(); i++) {
-			allRecievedData.add(new ArrayList<>());
+			allReceivedData.add(new ArrayList<>());
 			logQueues.add(new ArrayDeque<>());
 		}
 	}
@@ -58,7 +57,7 @@ public class DataProcessor {
 		//TODO: Determine whether a normal packet or RSSI packet before converting to string
 		String delimitedMessage = new String(data, StandardCharsets.UTF_8);
 
-		allRecievedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
+		allReceivedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
 	}
 
 	private DataHolder parseData(int tableIndex, String data) {
@@ -81,7 +80,7 @@ public class DataProcessor {
 		// TODO: Potentially remove and test this
 		// Ensure that the timestamp has not gone back in time
 		try {
-			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allRecievedData.get(tableIndex));
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allReceivedData.get(tableIndex));
 			
 			int timestampIndex = config.getObject().getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
 			if (lastDataPointDataHolder != null) {
@@ -113,7 +112,7 @@ public class DataProcessor {
 	 * @return The recieved DataHolder
 	 */
 	public DataHolder setTableTo(int tableIndex, int index) {
-		DataHolder currentDataHolder = allRecievedData.get(tableIndex).get(index);
+		DataHolder currentDataHolder = allReceivedData.get(tableIndex).get(index);
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
 
 		if (currentDataHolder != null) {
@@ -236,7 +235,7 @@ public class DataProcessor {
 	}
 
 	private int getDataSourceCount() {
-		return allRecievedData.size();
+		return allReceivedData.size();
 	}
 
 	/**
@@ -255,8 +254,8 @@ public class DataProcessor {
 		return null;
 	}
 
-    public List<List<DataHolder>> getAllRecievedData() {
-		return allRecievedData;
+    public List<List<DataHolder>> getAllReceivedData() {
+		return allReceivedData;
 	}
 
 
