@@ -73,7 +73,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 
-	public static Config config;
+	public Config config;
 
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;

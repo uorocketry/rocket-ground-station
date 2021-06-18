@@ -6,10 +6,9 @@ import java.util.List;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.jetbrains.annotations.Nullable;
 
-import uorocketry.basestation.Main;
+import uorocketry.basestation.config.DataSet;
 
 public class DataHolder {
 	
@@ -26,19 +25,33 @@ public class DataHolder {
 	 * This chooses which table this data is displayed in
 	 */
 	public int tableIndex = 0;
+
+	/**
+	 * Contains the available RSSI data at the time this notice was recieved if it exists.
+	 * This only is used with Radio, not TCP
+	 */
+	@Nullable
+	private DataHolder connectionInfoData;
+
+	private DataSet dataSet;
+
 	
-	private JSONObject datasetConfig;
-	
-	public DataHolder(int tableIndex, JSONObject datasetConfig) {
+	public DataHolder(int tableIndex, DataSet dataSet) {
 		this.tableIndex = tableIndex;
-		this.datasetConfig = datasetConfig;
+		this.dataSet = dataSet;
 		
-		this.data = new Data[Main.config.getDataLength(tableIndex)];
+		this.data = new Data[dataSet.getLabels().length];
 		
-		types = new DataType[Main.config.getDataLength(tableIndex)];
+		types = new DataType[dataSet.getLabels().length];
 		for (int i = 0; i < types.length; i++) {
 			types[i] = new DataType(i, tableIndex);
 		}
+	}
+
+	public DataHolder(int tableIndex, DataSet dataSet, DataHolder connectionInfoData) {
+		this(tableIndex, dataSet);
+
+		this.connectionInfoData = connectionInfoData;
 	}
 	
 	public void updateTableUIWithData(JTable table, String[] labels) {
@@ -50,9 +63,9 @@ public class DataHolder {
 			
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
-			
-			if (datasetConfig.getInt("stateIndex") == i && data[i].getDecimalValue() != null) {
-				dataText = datasetConfig.getJSONArray("states").getString(data[i].getDecimalValue().intValue());
+
+			if (dataSet.indexEquals("state", i) && data[i].getDecimalValue() != null) {
+				dataText = dataSet.getState(data[i].getDecimalValue().intValue());
 			}
 			
 			// Set data
@@ -62,17 +75,9 @@ public class DataHolder {
 	
 	public boolean set(int index, String currentData) {
 		// Check for special cases first
-		boolean isFormattedCoordinate = false;
-		boolean isTimestamp = false;
-		try {
-			isTimestamp = datasetConfig.getInt("timestampIndex") == index;
-			
-			JSONObject coordinateIndexes = datasetConfig.getJSONObject("coordinateIndexes");
-			isFormattedCoordinate = coordinateIndexes.has("formattedCoordinates") 
-					&& coordinateIndexes.getBoolean("formattedCoordinates") 
-					&& (coordinateIndexes.getInt("latitude") == index || coordinateIndexes.getInt("longitude") == index);
-		} catch (JSONException e) {}
-		
+		boolean isFormattedCoordinate =  dataSet.indexEquals("latitude", index) || dataSet.indexEquals("longitude", index);
+		boolean isTimestamp = dataSet.indexEquals("timestampIndex", index);
+
 		if (isFormattedCoordinate) {
 			// These need to be converted to decimal coordinates to be used
 			
@@ -126,5 +131,9 @@ public class DataHolder {
 		}
 		
 		return true;
+	}
+
+	public DataHolder getConnectionInfoData() {
+		return connectionInfoData;
 	}
 }

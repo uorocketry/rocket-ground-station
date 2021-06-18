@@ -37,6 +37,7 @@ import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.data.RssiProcessor;
 import uorocketry.basestation.panel.Chart;
 import uorocketry.basestation.panel.DataChart;
 import uorocketry.basestation.panel.TableHolder;
@@ -130,7 +131,7 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
 		
-		for (int i = 0; i < Main.config.getDataSourceCount(); i++) {
+		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
 			generateTelemetryPanel(i, main.config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
@@ -209,7 +210,7 @@ public class Window extends JFrame {
 		
 		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		for (int i = 0; i < Main.config.getDataSourceCount(); i++) {
+		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
 			addSlider(main.config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
@@ -305,7 +306,7 @@ public class Window extends JFrame {
 		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 
 		JTable receivedDataTable = createTable(main.config.getDataLength(tableIndex), 2, 30, 130);
-		JTable connectionInfoTable = createTable(3, 2, 30, 130);
+		JTable connectionInfoTable = createTable(RssiProcessor.labels.length, 2, 30, 130);
 		borderPanel.add(receivedDataTable);
 		borderPanel.add(connectionInfoTable);
 

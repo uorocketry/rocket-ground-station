@@ -23,7 +23,7 @@ public class FakeConfig extends Config {
         return dataLength.get(index);
     }
 
-    public String[] getLabel(int index) {
+    public String[] getLabels(int index) {
         return labels.get(index);
     }
 

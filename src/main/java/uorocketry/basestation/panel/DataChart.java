@@ -123,7 +123,7 @@ public class DataChart implements Chart {
 
 		// Set Labels
 		for (int i = 0; i < xTypes.length; i++) {
-			String xTypeTitle = config.getLabel(xTypes[i].tableIndex)[xTypes[i].index];
+			String xTypeTitle = config.getLabels(xTypes[i].tableIndex)[xTypes[i].index];
 
 			if (title.length() != 0) title.append(", ");
 			title.append(xTypeTitle);
@@ -144,7 +144,7 @@ public class DataChart implements Chart {
 			newActiveSeries[i] = "series" + i;
 		}
 
-		String yTypeTitle = config.getLabel(yType.tableIndex)[yType.index];
+		String yTypeTitle = config.getLabels(yType.tableIndex)[yType.index];
 
 		xyChart.setTitle(title + " vs " + yTypeTitle);
 
