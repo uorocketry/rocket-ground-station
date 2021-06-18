@@ -29,9 +29,9 @@ public class DataChart implements Chart {
 	private DataType[] xTypes = {DataHolder.ALTITUDE};
 	private DataType yType = DataHolder.TIMESTAMP;
 	
-	public DataChart(Main main, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
+	public DataChart(Main main, Config config, XYChart xyChart, XChartPanel<XYChart> chartPanel) {
 		this.main = main;
-		this.config = main.config;
+		this.config = config;
 		
 		this.xyChart = xyChart;
 		this.chartPanel = chartPanel;
@@ -44,8 +44,8 @@ public class DataChart implements Chart {
 		}
 	}
 	
-	public DataChart(Main main, XYChart xyChart, XChartPanel<XYChart> chartPanel, DataType[] xTypes) {
-		this(main, xyChart, chartPanel);
+	public DataChart(Main main, Config config, XYChart xyChart, XChartPanel<XYChart> chartPanel, DataType[] xTypes) {
+		this(main, config, xyChart, chartPanel);
 
 		this.xTypes = xTypes;
 	}

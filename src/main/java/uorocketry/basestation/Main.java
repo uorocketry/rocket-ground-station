@@ -73,7 +73,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** Where the updating Google Earth kml file is stored */
 	public static final String GOOGLE_EARTH_DATA_LOCATION = "data/positions.kml";
 
-	public Config config;
+	private Config config;
 
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;
@@ -147,7 +147,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		config = new FileConfig();
 		
 		// Create window
-		window = new Window(this);
+		window = new Window(this, config);
 		
 		window.addComponentListener(this);
 		
@@ -691,7 +691,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
 		
-		DataChart dataChart = new DataChart(this, xyChart, chartPanel);
+		DataChart dataChart = new DataChart(this, config, xyChart, chartPanel);
 		
 		// Set default size
 		dataChart.getSpanPanel().setRelSize(600, 450);

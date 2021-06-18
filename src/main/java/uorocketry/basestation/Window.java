@@ -32,6 +32,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import uorocketry.basestation.config.Config;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
@@ -46,7 +47,8 @@ public class Window extends JFrame {
 	
 	private static final long serialVersionUID = -5397816377154627951L;
 	private Main main;
-	
+	private Config config;
+
 	private JPanel dataTablePanel;
 	ArrayList<TableHolder> dataTables = new ArrayList<>();
 
@@ -100,8 +102,9 @@ public class Window extends JFrame {
 	JButton loadLayout;
 	private JSplitPane splitPane;
 	
-	public Window(Main main) {
+	public Window(Main main, Config config) {
 	    this.main = main;
+	    this.config = config;
 	    
 		// Set look and feel
 		try {
@@ -131,8 +134,8 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
 		
-		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
-			generateTelemetryPanel(i, main.config.getObject().getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+			generateTelemetryPanel(i, config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -210,8 +213,8 @@ public class Window extends JFrame {
 		
 		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
-			addSlider(main.config.getObject().getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+			addSlider(config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		sliderSection.add(sliderTabs, BorderLayout.SOUTH);
@@ -255,7 +258,7 @@ public class Window extends JFrame {
 		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
 		
 		try {
-			JSONArray array = main.config.getObject().getJSONArray("stateEvents");
+			JSONArray array = config.getObject().getJSONArray("stateEvents");
 			
 			if (array.length() > 0) {
 				stateSendingPanel = new JPanel();
@@ -284,8 +287,8 @@ public class Window extends JFrame {
 			}
 		}
 		
-		for (int i = 0; i < main.config.getDataSourceCount(); i++) {
-            addComSelectorPanel(main.config.getObject().getJSONArray("datasets").getJSONObject(i), main);
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+            addComSelectorPanel(config.getObject().getJSONArray("datasets").getJSONObject(i), main);
         }
 		comPanelParent.setLayout(new GridLayout(comPanelParent.getComponentCount(), 1, 0, 0));
 		
@@ -305,7 +308,7 @@ public class Window extends JFrame {
 		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
 		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 
-		JTable receivedDataTable = createTable(main.config.getDataLength(tableIndex), 2, 30, 130);
+		JTable receivedDataTable = createTable(config.getDataLength(tableIndex), 2, 30, 130);
 		JTable connectionInfoTable = createTable(RssiProcessor.labels.length, 2, 30, 130);
 		borderPanel.add(receivedDataTable);
 		borderPanel.add(connectionInfoTable);
