@@ -53,7 +53,7 @@ public class DataProcessor {
 			logQueues.add(new ArrayDeque<>());
 
 			rssiDataSets.add(new DataSet(mainConfig.getDataSet(i).getName() + " RSSI",
-					"", RssiProcessor.labels, null, null, SEPARATOR));
+					mainConfig.getDataSet(i).getColor(), RssiProcessor.labels, null, null, SEPARATOR));
 		}
 	}
 

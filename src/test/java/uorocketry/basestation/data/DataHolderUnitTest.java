@@ -5,14 +5,13 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import uorocketry.basestation.Main;
 import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
 import uorocketry.basestation.config.FakeConfig;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -20,19 +19,15 @@ public class DataHolderUnitTest {
 
     @Test
     public void updateTableUI() {
-        JSONObject datasetConfig = new JSONObject();
-        datasetConfig.put("timestampIndex", 0);
-        datasetConfig.put("stateIndex", 1);
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put("First State");
-        jsonArray.put("Second State");
-        datasetConfig.put("states", jsonArray);
-
         String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
+        String[] states = new String[] {"First State", "Second State"};
+        Map<String, Integer> indexes = new HashMap<>();
+        indexes.put("timestamp", 0);
+        indexes.put("state", 1);
 
-        Main.config = new FakeConfig(Collections.singletonList(labels.length), null, labels.length, null);
+        DataSet dataSet = new DataSet("Testing Set", "#AB1C2A", labels, states, indexes, ",");
 
-        DataHolder dataHolder = new DataHolder(0, datasetConfig);
+        DataHolder dataHolder = new DataHolder(0, dataSet);
         dataHolder.hiddenDataTypes.add(new DataType(2, 0));
 
         dataHolder.set(0, "102020399293"); // has to be long (timestamp)

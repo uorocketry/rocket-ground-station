@@ -76,7 +76,7 @@ public class DataHolder {
 	public boolean set(int index, String currentData) {
 		// Check for special cases first
 		boolean isFormattedCoordinate =  dataSet.indexEquals("latitude", index) || dataSet.indexEquals("longitude", index);
-		boolean isTimestamp = dataSet.indexEquals("timestampIndex", index);
+		boolean isTimestamp = dataSet.indexEquals("timestamp", index);
 
 		if (isFormattedCoordinate) {
 			// These need to be converted to decimal coordinates to be used
