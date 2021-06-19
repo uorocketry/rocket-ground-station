@@ -312,7 +312,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 				if (window.stateButtons.size() > i && dataPoint != null && dataPoint.getReceivedData() != null) {
 					try {
-						int stateIndex = config.getObject().getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
+						int stateIndex = config.getDataSet(i).getIndex("state");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
 						    Float value = dataPoint.getReceivedData().data[stateIndex].getDecimalValue();
 						    if (value != null) {
