@@ -36,7 +36,6 @@ import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.XYSeries.XYSeriesRenderStyle;
 import org.knowm.xchart.style.Styler.LegendPosition;
 import org.knowm.xchart.style.Styler.YAxisPosition;
@@ -50,10 +49,7 @@ import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
-import uorocketry.basestation.data.DataHolder;
-import uorocketry.basestation.data.DataProcessor;
-import uorocketry.basestation.data.DataTableCellRenderer;
-import uorocketry.basestation.data.DataType;
+import uorocketry.basestation.data.*;
 import uorocketry.basestation.external.GoogleEarthUpdater;
 import uorocketry.basestation.external.WebViewUpdater;
 import uorocketry.basestation.panel.*;
@@ -285,7 +281,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	public void updateUI() {
 		// If not ready yet
-		if (dataProcessor== null || dataProcessor.getAllReceivedData().size() == 0 || updatingUI) return;
+		if (dataProcessor== null || dataProcessor.getDataPointHolder().size() == 0 || updatingUI) return;
 
 		updatingUI = true;
 
@@ -296,29 +292,29 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	private void updateUIInternal() {
 		try {
 			// Update every table's data
-			for (int i = 0; i < dataProcessor.getAllReceivedData().size(); i++) {
+			for (int i = 0; i < dataProcessor.getDataPointHolder().size(); i++) {
 				// If not ready yet
-				if (dataProcessor.getAllReceivedData().get(i).size() == 0) continue;
+				if (dataProcessor.getDataPointHolder().get(i).size() == 0) continue;
 
 				// Don't change slider if paused
 				if (!paused) {
 					// Set max value of the sliders
-					window.maxSliders.get(i).setMaximum(dataProcessor.getAllReceivedData().get(i).size() - 1);
-					window.minSliders.get(i).setMaximum(dataProcessor.getAllReceivedData().get(i).size() - 1);
+					window.maxSliders.get(i).setMaximum(dataProcessor.getDataPointHolder().get(i).size() - 1);
+					window.minSliders.get(i).setMaximum(dataProcessor.getDataPointHolder().get(i).size() - 1);
 
 					// Move position to end
 					if (latest) {
-						window.maxSliders.get(i).setValue(dataProcessor.getAllReceivedData().get(i).size() - 1);
+						window.maxSliders.get(i).setValue(dataProcessor.getDataPointHolder().get(i).size() - 1);
 					}
 				}
 
-				DataHolder receivedData = dataProcessor.setTableTo(i, currentDataIndexes.get(i), latest && !paused);
+				DataPoint dataPoint = dataProcessor.setTableTo(i, currentDataIndexes.get(i), latest && !paused);
 
-				if (window.stateButtons.size() > i && receivedData != null) {
+				if (window.stateButtons.size() > i && dataPoint != null && dataPoint.getReceivedData() != null) {
 					try {
 						int stateIndex = config.getObject().getJSONArray("datasets").getJSONObject(i).getInt("stateIndex");
 						for (StateButton stateButton: window.stateButtons.get(i)) {
-						    Float value = receivedData.data[stateIndex].getDecimalValue();
+						    Float value = dataPoint.getReceivedData().data[stateIndex].getDecimalValue();
 						    if (value != null) {
 						        stateButton.stateChanged(value.intValue());
 						    }
@@ -445,8 +441,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (e.getSource() == window.clearDataButton) {
 			if (JOptionPane.showConfirmDialog(window, 
 					"Are you sure you would like to clear all the data?") == 0) {
-				for (int i = 0; i < dataProcessor.getAllReceivedData().size(); i++) {
-					dataProcessor.getAllReceivedData().get(i).clear();
+				for (int i = 0; i < dataProcessor.getDataPointHolder().size(); i++) {
+					dataProcessor.getDataPointHolder().get(i).clear();
 				}
 				
 				updateUI();
@@ -485,7 +481,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 				window.latestButton.setText("Detach From Latest");
 				
 				for (int i = 0; i < window.maxSliders.size(); i++) {
-					window.maxSliders.get(i).setValue(dataProcessor.getAllReceivedData().get(0).size() - 1);
+					window.maxSliders.get(i).setValue(dataProcessor.getDataPointHolder().get(0).size() - 1);
 				}
 			} else {
 				window.latestButton.setText("Latest");
@@ -525,11 +521,10 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
-			for (List<DataHolder> dataHolders : dataProcessor.getAllReceivedData()) {
-				for (DataHolder dataHolder : dataHolders) {
-					// See if the hidden list needs to be cleared
-					if (dataHolder != null && !dataHolder.hiddenDataTypes.isEmpty()) {
-						dataHolder.hiddenDataTypes.clear();
+			for (List<DataPoint> dataPoints : dataProcessor.getDataPointHolder()) {
+				for (DataPoint dataPoint : dataPoints) {
+					if (dataPoint != null) {
+						dataPoint.clearHiddenTypes();
 					}
 				}
 			}
@@ -663,7 +658,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		}
 	}
-	
+
 	public void addChart() {
 		addChart(false);
 	}
