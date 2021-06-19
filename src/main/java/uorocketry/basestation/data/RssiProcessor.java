@@ -27,13 +27,13 @@ public class RssiProcessor {
             localNoise,
             remoteNoise,
             packets,
+            temperature,
             txe,
             rxe,
             stx,
             srx,
             ecc1,
             ecc2,
-            temperature,
             dco
     };
 
@@ -43,13 +43,13 @@ public class RssiProcessor {
             "Local Noise",
             "Remote Noise",
             "Packets",
+            "Temperature",
             "txe",
             "rxe",
             "stx",
             "srx",
             "ecc1",
             "ecc2",
-            "Temperature",
             "dco"
     };
 
