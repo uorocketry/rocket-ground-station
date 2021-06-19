@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class RssiProcessor {
 
-    private static final Pattern validMessage = Pattern.compile("L\\/R RSSI: .+dco=[^\\s] $");
+    private static final Pattern validMessage = Pattern.compile("L\\/R RSSI: .+dco=[^\\s]$");
 
     private static final Pattern localRSSI = Pattern.compile("L\\/R RSSI: ([^\\s]+)\\/");
     private static final Pattern remoteRSSI = Pattern.compile("L\\/R RSSI: [^\\s]+\\/([^\\s]+)");
