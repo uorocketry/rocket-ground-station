@@ -55,7 +55,7 @@ public class DataSet {
 
     private String[] jsonStringArrayToArray(JSONArray jsonArray) {
         String[] result = new String[jsonArray.length()];
-        for (int i = 0; i < labels.length; i++) {
+        for (int i = 0; i < result.length; i++) {
             result[i] = jsonArray.getString(i);
         }
 
