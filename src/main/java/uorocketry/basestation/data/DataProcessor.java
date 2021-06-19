@@ -203,7 +203,7 @@ public class DataProcessor {
 
 			// Write to file
 			try (OutputStream outputStream = new FileOutputStream(
-					LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()))) {
+					LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()), true)) {
 				outputStream.write(data);
 
 				Queue<byte[]> logQueue = logQueues.get(deviceConnection.getTableIndex());
