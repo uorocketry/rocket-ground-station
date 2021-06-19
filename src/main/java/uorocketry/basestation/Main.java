@@ -328,11 +328,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 
 			if (googleEarth) {
-				googleEarthUpdater.updateKMLFile(dataProcessor.getAllReceivedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"), false);
+				googleEarthUpdater.updateKMLFile(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes, config, false);
 			}
 
 			if (webView) {
-				webViewUpdater.sendUpdate(dataProcessor.getAllReceivedData(), minDataIndexes, currentDataIndexes, config.getObject().getJSONArray("datasets"));
+				webViewUpdater.sendUpdate(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes, config);
 			}
 
 			// Update every chart
