@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class FileConfig extends Config {
     public FileConfig(String fileName) {
         String configString = null;
         try {
-            configString = Files.readString(Paths.get(fileName));
+            configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
 
