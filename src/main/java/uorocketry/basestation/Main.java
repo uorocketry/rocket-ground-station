@@ -312,7 +312,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					}
 				}
 
-				DataHolder receivedData = dataProcessor.setTableTo(i, currentDataIndexes.get(i));
+				DataHolder receivedData = dataProcessor.setTableTo(i, currentDataIndexes.get(i), latest && !paused);
 
 				if (window.stateButtons.size() > i && receivedData != null) {
 					try {

@@ -99,12 +99,15 @@ public class DataProcessor {
 			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allReceivedData.get(tableIndex));
 			if (lastDataPointDataHolder != null) {
 				Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
-				if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
-					System.err.println("Timestamp just went backwards");
+				try {
+					if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
+						System.err.println("Timestamp just went backwards");
 
-					// Treat as invalid data
-					return null;
-				}
+						// Treat as invalid data
+						return null;
+					}
+				} catch (NumberFormatException e) {}
+
 			}
 		}
 
@@ -135,17 +138,25 @@ public class DataProcessor {
 	/**
 	 * Sets tables up for the given index
 	 *
+	 * @param showMaxIndex If true, it will make sure to always show the latest index,
+	 *                     for use when connection info and received data drift apart
 	 * @return The received DataHolder
 	 */
-	public DataHolder setTableTo(int tableIndex, int index) {
+	public DataHolder setTableTo(int tableIndex, int index, boolean showMaxIndex) {
 		DataHolder currentDataHolder = allReceivedData.get(tableIndex).get(index);
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
 		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex));
 
-		if (currentDataHolder != null) {
-			JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
-			updateTable(index, currentDataHolder.getConnectionInfoData(), connectionInfoTable, rssiDataSets.get(tableIndex));
+		List<DataHolder> connectionInfoHolders = allConnectionInfoData.get(tableIndex);
+		DataHolder connectionInfoData = null;
+		if (showMaxIndex && connectionInfoHolders.size() > 0) {
+			connectionInfoData = connectionInfoHolders.get(connectionInfoHolders.size() - 1);
+		} else if (currentDataHolder != null) {
+			connectionInfoData = currentDataHolder.getConnectionInfoData();
 		}
+
+		JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
+		updateTable(index, connectionInfoData, connectionInfoTable, rssiDataSets.get(tableIndex));
 
 		return currentDataHolder;
 	}

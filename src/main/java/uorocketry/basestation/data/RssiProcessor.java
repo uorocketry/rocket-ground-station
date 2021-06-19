@@ -61,9 +61,8 @@ public class RssiProcessor {
         for (int i = 0; i < patterns.length; i++) {
             String value = getCapturedValue(patterns[i], data);
 
-            if (value != null) {
-                dataHolder.set(i, value);
-            } else {
+            // If setting failed
+            if (value == null || !dataHolder.set(i, value)) {
                 return false;
             }
         }
