@@ -54,7 +54,7 @@ public class DataChart implements Chart {
 
 	@Override
 	public void update(DataPointHolder dataPointHolder, int minDataPointIndex, int maxDataPointIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
-		if ((minDataPointIndex == 0 && maxDataPointIndex == 0) || toDataHolder(dataPointHolder).size() == 0) return;
+		if ((minDataPointIndex <= 0 && maxDataPointIndex <= 0) || toDataHolder(dataPointHolder).size() <= 0) return;
 
 		// Update altitude chart
 		ArrayList<Float> altitudeDataX = new ArrayList<>();
@@ -71,6 +71,7 @@ public class DataChart implements Chart {
 		{
 			int minDataIndex = toDataHolderIndex(dataPointHolder, yType.tableIndex, minDataPointIndex);
 			int maxDataIndex = toDataHolderIndex(dataPointHolder, yType.tableIndex, maxDataPointIndex);
+			if (minDataIndex <= 0 && maxDataIndex <= 0) return; // Not Ready
 
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
 				if (dataPointHolder.get(yType.tableIndex).size() == 0) continue;
@@ -91,6 +92,7 @@ public class DataChart implements Chart {
 
 			int minDataIndex = toDataHolderIndex(dataPointHolder, xTypes[i].tableIndex, minDataPointIndex);
 			int maxDataIndex = toDataHolderIndex(dataPointHolder, xTypes[i].tableIndex, maxDataPointIndex);
+			if (minDataIndex <= 0 && maxDataIndex <= 0) return; // Not Ready
 
 			// Used to limit the max number of data points displayed
 			float targetRatio = (float) maxDataPointsDisplayed / (maxDataIndex - minDataIndex);

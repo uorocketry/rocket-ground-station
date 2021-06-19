@@ -107,7 +107,7 @@ public class DataProcessor {
 				Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
 				try {
 					if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
-						System.err.println("Timestamp just went backwards");
+						System.err.println("Timestamp just went backwards. Original was " + value);
 
 						// Treat as invalid data
 						return null;
