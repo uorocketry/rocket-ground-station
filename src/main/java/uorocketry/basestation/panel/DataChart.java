@@ -6,6 +6,8 @@ import org.knowm.xchart.XYSeries;
 import uorocketry.basestation.Main;
 import uorocketry.basestation.config.Config;
 import uorocketry.basestation.data.DataHolder;
+import uorocketry.basestation.data.DataPoint;
+import uorocketry.basestation.data.DataPointHolder;
 import uorocketry.basestation.data.DataType;
 
 import javax.swing.*;
@@ -51,26 +53,31 @@ public class DataChart implements Chart {
 	}
 
 	@Override
-	public void update(List<List<DataHolder>> dataHolders, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
+	public void update(DataPointHolder dataPointHolder, int minDataPointIndex, int maxDataPointIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
+		if ((minDataPointIndex <= 0 && maxDataPointIndex <= 0) || toDataHolder(dataPointHolder).size() <= 0) return;
+
 		// Update altitude chart
 		ArrayList<Float> altitudeDataX = new ArrayList<>();
 		ArrayList<ArrayList<Float>> altitudeDataY = new ArrayList<ArrayList<Float>>();
 
 		// Add all array lists
 		for (int i = 0; i < xTypes.length; i++) {
-			altitudeDataY.add(new ArrayList<Float>());
+			altitudeDataY.add(new ArrayList<>());
 		}
 		
-		if (onlyShowLatestData) minDataIndex = Math.max(maxDataIndex - maxDataPointsDisplayed, minDataIndex);
+		if (onlyShowLatestData) minDataPointIndex = Math.max(minDataPointIndex - maxDataPointsDisplayed, minDataPointIndex);
 
 		// Add y axis
 		{
+			int minDataIndex = toDataHolderIndex(dataPointHolder, yType.tableIndex, minDataPointIndex);
+			int maxDataIndex = toDataHolderIndex(dataPointHolder, yType.tableIndex, maxDataPointIndex);
+			if (minDataIndex <= 0 && maxDataIndex <= 0) return; // Not Ready
 
 			for (int i = minDataIndex; i <= maxDataIndex; i++) {
-				if (dataHolders.get(yType.tableIndex).size() == 0) continue;
+				if (dataPointHolder.get(yType.tableIndex).size() == 0) continue;
 
-				DataHolder data = dataHolders.get(yType.tableIndex).get(i);
-				DataHolder other = dataHolders.get(xTypes[0].tableIndex).get(i);
+				DataHolder data = toDataHolder(dataPointHolder).get(yType.tableIndex).get(i);
+				DataHolder other = toDataHolder(dataPointHolder).get(xTypes[0].tableIndex).get(i);
 
 				if (data != null && (other == null || !other.hiddenDataTypes.contains(other.types[xTypes[0].index]))) {
 					altitudeDataX.add(data.data[yType.index].getDecimalValue());
@@ -82,15 +89,19 @@ public class DataChart implements Chart {
 		// Add x axis
 		for (int i = 0; i < xTypes.length; i++) {
 			if (xTypes[i].tableIndex != yType.tableIndex) continue;
-			
+
+			int minDataIndex = toDataHolderIndex(dataPointHolder, xTypes[i].tableIndex, minDataPointIndex);
+			int maxDataIndex = toDataHolderIndex(dataPointHolder, xTypes[i].tableIndex, maxDataPointIndex);
+			if (minDataIndex <= 0 && maxDataIndex <= 0) return; // Not Ready
+
 			// Used to limit the max number of data points displayed
 			float targetRatio = (float) maxDataPointsDisplayed / (maxDataIndex - minDataIndex);
 			int dataPointsAdded = 0;
 
 			for (int j = minDataIndex; j <= maxDataIndex; j++) {
-				if (dataHolders.get(yType.tableIndex).size() == 0) continue;
+				if (dataPointHolder.get(yType.tableIndex).size() == 0) continue;
 
-				DataHolder data = dataHolders.get(xTypes[i].tableIndex).get(j);
+				DataHolder data = toDataHolder(dataPointHolder).get(xTypes[i].tableIndex).get(j);
 
 				if (data != null) {
 					// Ensures that not too many data points are displayed
@@ -158,6 +169,20 @@ public class DataChart implements Chart {
 		activeSeries = newActiveSeries;
 	}
 
+	/**
+	 * Convert an index for the general dataPoints array into an index for the
+	 * specific array dataHolder array
+	 */
+	public int toDataHolderIndex(DataPointHolder dataPointHolder, int tableIndex, int index) {
+		//TODO: Choose between receivedDataIndex and connectionInfoDataIndex depending on chart type
+		return dataPointHolder.toReceivedDataIndex(tableIndex, index);
+	}
+
+	public List<List<DataHolder>> toDataHolder(DataPointHolder dataPointHolder) {
+		//TODO: Choose between receivedData and connectionInfoData depending on chart type
+		return dataPointHolder.getAllReceivedData();
+	}
+
 	@Override
 	public boolean mouseDragged(MouseEvent e) {
 		if (main.dataDeletionMode) {
@@ -170,7 +195,7 @@ public class DataChart implements Chart {
 			// Find all data points near the click
 			for (int xTypeIndex = 0; xTypeIndex < xTypes.length; xTypeIndex++) {
 				DataType currentType = xTypes[xTypeIndex];
-				List<DataHolder> dataHolders = main.dataProcessor.getAllReceivedData().get(currentType.tableIndex);
+				List<DataHolder> dataHolders = toDataHolder(main.dataProcessor.getDataPointHolder()).get(currentType.tableIndex);
 
 				// Y axis depends on the which data is being checked
 				double yMousePos = chartPanel.getChart().getChartYFromCoordinate(e.getY(), xTypeIndex);

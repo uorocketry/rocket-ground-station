@@ -26,13 +26,6 @@ public class DataHolder {
 	 */
 	public int tableIndex = 0;
 
-	/**
-	 * Contains the available RSSI data at the time this notice was recieved if it exists.
-	 * This only is used with Radio, not TCP
-	 */
-	@Nullable
-	private DataHolder connectionInfoData;
-
 	private DataSet dataSet;
 
 	
@@ -48,12 +41,6 @@ public class DataHolder {
 		}
 	}
 
-	public DataHolder(int tableIndex, DataSet dataSet, DataHolder connectionInfoData) {
-		this(tableIndex, dataSet);
-
-		this.connectionInfoData = connectionInfoData;
-	}
-	
 	public void updateTableUIWithData(JTable table, String[] labels) {
 		TableModel tableModel = table.getModel();
 		
@@ -131,9 +118,5 @@ public class DataHolder {
 		}
 		
 		return true;
-	}
-
-	public DataHolder getConnectionInfoData() {
-		return connectionInfoData;
 	}
 }

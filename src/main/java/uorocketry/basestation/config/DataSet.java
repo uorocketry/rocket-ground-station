@@ -1,8 +1,10 @@
 package uorocketry.basestation.config;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,8 +22,12 @@ public class DataSet {
     public DataSet(JSONObject dataSet) {
         if (dataSet.has("name")) name = dataSet.getString("name");
         if (dataSet.has("color")) color = dataSet.getString("color");
-        if (dataSet.has("labels")) labels = dataSet.getJSONArray("labels").toList().toArray(String[]::new);
-        if (dataSet.has("states")) states = dataSet.getJSONArray("states").toList().toArray(String[]::new);
+        if (dataSet.has("labels")) {
+            labels = jsonStringArrayToArray(dataSet.getJSONArray("labels"));
+        }
+        if (dataSet.has("states")) {
+            states = jsonStringArrayToArray(dataSet.getJSONArray("states"));
+        }
 
         if (dataSet.has("name")) {
             JSONObject indexesJson = dataSet.getJSONObject("indexes");
@@ -45,6 +51,15 @@ public class DataSet {
         this.states = states;
         this.indexes = indexes;
         this.separator = separator;
+    }
+
+    private String[] jsonStringArrayToArray(JSONArray jsonArray) {
+        String[] result = new String[jsonArray.length()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = jsonArray.getString(i);
+        }
+
+        return result;
     }
 
     public String getName() {

@@ -21,11 +21,9 @@ public class DataProcessor {
 	/** Separator for the data */
 	public static final String SEPARATOR = ",";
 
-	private final List<List<DataHolder>> allReceivedData;
-	private final List<List<DataHolder>> allConnectionInfoData;
+	private DataPointHolder dataPointHolder;
 	private final Config mainConfig;
 	private final List<DataSet> rssiDataSets;
-
 
 	/** Where to save the log file */
 	private static final String LOG_FILE_SAVE_LOCATION = "data/";
@@ -41,15 +39,12 @@ public class DataProcessor {
 		this.mainConfig = mainConfig;
 		this.dataTables = dataTables;
 
-		allReceivedData = new ArrayList<>(mainConfig.getDataSourceCount());
-		allConnectionInfoData = new ArrayList<>(mainConfig.getDataSourceCount());
+		dataPointHolder = new DataPointHolder(mainConfig.getDataSourceCount());
 		currentLogFileName = new ArrayList<>(mainConfig.getDataSourceCount());
 		logQueues = new ArrayList<>(mainConfig.getDataSourceCount());
 		rssiDataSets = new ArrayList<>(mainConfig.getDataSourceCount());
 
 		for (int i = 0; i < mainConfig.getDataSourceCount(); i++) {
-			allReceivedData.add(new ArrayList<>());
-			allConnectionInfoData.add(new ArrayList<>());
 			logQueues.add(new ArrayDeque<>());
 
 			rssiDataSets.add(new DataSet(mainConfig.getDataSet(i).getName() + " RSSI",
@@ -67,17 +62,28 @@ public class DataProcessor {
 		String delimitedMessage = new String(data, StandardCharsets.UTF_8);
 
 		if (RssiProcessor.isValid(delimitedMessage)) {
-			allConnectionInfoData.get(tableIndex).add(parseRSSI(tableIndex, delimitedMessage));
+			DataHolder dataHolder = parseRSSI(tableIndex, delimitedMessage);
+			List<DataHolder> connectionInfoData = dataPointHolder.getAllConnectionInfoData().get(tableIndex);
+			connectionInfoData.add(dataHolder);
+
+			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
+			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
+					receivedData.size() - 1,
+					connectionInfoData.size() - 1));
 		} else {
-			allReceivedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
+			DataHolder dataHolder = parseData(tableIndex, delimitedMessage);
+			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
+			receivedData.add(dataHolder);
+
+			List<DataHolder> connectionInfoData = dataPointHolder.getAllConnectionInfoData().get(tableIndex);
+			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
+					receivedData.size() - 1,
+					connectionInfoData.size() - 1));
 		}
 	}
 
 	protected DataHolder parseData(int tableIndex, String data) {
-		List<DataHolder> connectionInfoHolders = allConnectionInfoData.get(tableIndex);
-
-		DataHolder dataHolder = new DataHolder(tableIndex, mainConfig.getDataSet(tableIndex)
-				, connectionInfoHolders.size() > 0 ? connectionInfoHolders.get(connectionInfoHolders.size() - 1) : null);
+		DataHolder dataHolder = new DataHolder(tableIndex, mainConfig.getDataSet(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|(?:\\\\r\\\\n|\\r\\n)'?", "");
@@ -96,12 +102,12 @@ public class DataProcessor {
 		// Ensure that the timestamp has not gone back in time
 		Integer timestampIndex = mainConfig.getDataSet(tableIndex).getIndex("timestamp");
 		if (timestampIndex != null) {
-			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allReceivedData.get(tableIndex));
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(dataPointHolder.getAllReceivedData().get(tableIndex));
 			if (lastDataPointDataHolder != null) {
 				Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
 				try {
 					if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
-						System.err.println("Timestamp just went backwards");
+						System.err.println("Timestamp just went backwards. Original was " + value);
 
 						// Treat as invalid data
 						return null;
@@ -142,23 +148,19 @@ public class DataProcessor {
 	 *                     for use when connection info and received data drift apart
 	 * @return The received DataHolder
 	 */
-	public DataHolder setTableTo(int tableIndex, int index, boolean showMaxIndex) {
-		DataHolder currentDataHolder = allReceivedData.get(tableIndex).get(index);
+	public DataPoint setTableTo(int tableIndex, int index, boolean showMaxIndex) {
+		DataPoint dataPoint = dataPointHolder.get(tableIndex).get(index);
+		if (dataPoint == null) return null;
+
+		DataHolder currentDataHolder = dataPoint.getReceivedData();
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
 		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex));
 
-		List<DataHolder> connectionInfoHolders = allConnectionInfoData.get(tableIndex);
-		DataHolder connectionInfoData = null;
-		if (showMaxIndex && connectionInfoHolders.size() > 0) {
-			connectionInfoData = connectionInfoHolders.get(connectionInfoHolders.size() - 1);
-		} else if (currentDataHolder != null) {
-			connectionInfoData = currentDataHolder.getConnectionInfoData();
-		}
-
+		DataHolder connectionInfoHolder = dataPoint.getConnectionInfoData();
 		JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
-		updateTable(index, connectionInfoData, connectionInfoTable, rssiDataSets.get(tableIndex));
+		updateTable(index, connectionInfoHolder, connectionInfoTable, rssiDataSets.get(tableIndex));
 
-		return currentDataHolder;
+		return dataPoint;
 	}
 
 	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet) {
@@ -186,8 +188,7 @@ public class DataProcessor {
 	}
 
 	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
-		// TODO: Choose a different allData list depending on the chart's preference
-		chart.update(allReceivedData, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
+		chart.update(dataPointHolder, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
 	}
 
 	/**
@@ -285,7 +286,7 @@ public class DataProcessor {
 	}
 
 	private int getDataSourceCount() {
-		return allReceivedData.size();
+		return dataPointHolder.size();
 	}
 
 	/**
@@ -304,9 +305,13 @@ public class DataProcessor {
 		return null;
 	}
 
+	@Deprecated
     public List<List<DataHolder>> getAllReceivedData() {
-		return allReceivedData;
+		return dataPointHolder.getAllReceivedData();
 	}
 
+	public DataPointHolder getDataPointHolder() {
+		return dataPointHolder;
+	}
 
 }
