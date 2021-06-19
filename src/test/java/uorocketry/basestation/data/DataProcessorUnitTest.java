@@ -53,12 +53,42 @@ public class DataProcessorUnitTest {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
+/*
+    @Test
+    public void parseData_binarySyntax() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+        assertAndParseData(setupParseDataConfig(), data);
+    }
 
     @Test
     public void parseData_binarySyntax() {
         String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
+
+    @Test
+    public void parseData_binarySyntax() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+        assertAndParseData(setupParseDataConfig(), data);
+    }
+
+    @Test
+    public void parseData_binarySyntax() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+        assertAndParseData(setupParseDataConfig(), data);
+    }
+
+    @Test
+    public void parseData_binarySyntax() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+        assertAndParseData(setupParseDataConfig(), data);
+    }
+
+    @Test
+    public void parseData_binarySyntax() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+        assertAndParseData(setupParseDataConfig(), data);
+    }*/
 
     private DataProcessor setupParseDataConfig() {
         return new DataProcessor(config, null);
