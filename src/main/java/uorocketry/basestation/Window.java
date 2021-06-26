@@ -33,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
@@ -135,7 +136,7 @@ public class Window extends JFrame {
 		leftPanel.add(dataTablePanel);
 		
 		for (int i = 0; i < config.getDataSourceCount(); i++) {
-			generateTelemetryPanel(i, config.getObject().getJSONArray("datasets").getJSONObject(i));
+			generateTelemetryPanel(i, config.getDataSet(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -303,9 +304,9 @@ public class Window extends JFrame {
 	}
 
 
-	public void generateTelemetryPanel(int tableIndex, JSONObject dataSet) {
+	public void generateTelemetryPanel(int tableIndex, DataSet dataSet) {
 		JPanel borderPanel = new JPanel();
-		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
+		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getName()));
 		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 
 		JTable receivedDataTable = createTable(config.getDataLength(tableIndex), 2, 30, 130);
