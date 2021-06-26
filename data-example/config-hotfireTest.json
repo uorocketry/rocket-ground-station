@@ -25,9 +25,11 @@
                 "Abort Burn",
                 "Max States"
         	],
-	        "timestampIndex": 0,
-	        "stateIndex": 1,
-            "seperator": ","
+            "indexes": {
+                "timestamp": 0,
+                "state": 1
+	        },
+            "separator": ","
         }
     ],
     "stateEvents": [

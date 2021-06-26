@@ -7,23 +7,24 @@ import java.util.List;
 
 public abstract class Config {
 
-    /** How many data points are there. By default, it is the number of labels */
-    protected List<Integer> dataLength = new ArrayList<>(2);
-    protected List<String[]> labels = new ArrayList<>();
-    /** How many data sources to record data from. It is set when the config is loaded. */
-    protected int dataSourceCount = 1;
+    protected List<DataSet> dataSet = new ArrayList<>(2);
+
     protected JSONObject configObject = null;
 
     public Integer getDataLength(int index) {
-        return dataLength.get(index);
+        return getDataSet(index).getLabels().length;
     }
 
-    public String[] getLabel(int index) {
-        return labels.get(index);
+    public String[] getLabels(int index) {
+        return getDataSet(index).getLabels();
     }
 
     public int getDataSourceCount() {
-        return dataSourceCount;
+        return dataSet.size();
+    }
+
+    public DataSet getDataSet(int index) {
+        return dataSet.get(index);
     }
 
     public JSONObject getObject() {

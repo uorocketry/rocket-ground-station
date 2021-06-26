@@ -79,8 +79,13 @@ public class SerialConnectionMethod extends AbstractConnectionMethod implements 
 
     @Override
     public void serialEvent(SerialPortEvent event) {
-        if (listener != null) {
-            listener.receivedData(event.getReceivedData());
+        try {
+            if (listener != null) {
+                listener.receivedData(event.getReceivedData());
+            }
+        } catch (Exception e) {
+            // Serial event hijacks exceptions, this will cause them to still be printed
+            e.printStackTrace();
         }
     }
 }

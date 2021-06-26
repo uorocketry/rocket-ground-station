@@ -6,9 +6,9 @@ import java.util.*;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.panel.Chart;
 import uorocketry.basestation.panel.TableHolder;
@@ -18,36 +18,40 @@ import javax.swing.table.TableModel;
 
 public class DataProcessor {
 
-	private List<List<DataHolder>> allReceivedData;
-	private Config config;
+	/** Separator for the data */
+	public static final String SEPARATOR = ",";
+
+	private DataPointHolder dataPointHolder;
+	private final Config mainConfig;
+	private final List<DataSet> rssiDataSets;
 
 	/** Where to save the log file */
-	public static final String LOG_FILE_SAVE_LOCATION = "data/";
-	public static final String DEFAULT_LOG_FILE_NAME = "log";
-	public static final String LOG_FILE_EXTENSION = ".txt";
+	private static final String LOG_FILE_SAVE_LOCATION = "data/";
+	private static final String DEFAULT_LOG_FILE_NAME = "log";
+	private static final String LOG_FILE_EXTENSION = ".txt";
 	/** Will have a number appended to the end to not overwrite old logs */
-	final ArrayList<String> currentLogFileName;
-	final ArrayList<Queue<byte[]>> logQueues;
+	private final ArrayList<String> currentLogFileName;
+	private final ArrayList<Queue<byte[]>> logQueues;
 
-	private ArrayList<TableHolder> dataTables;
+	private final ArrayList<TableHolder> dataTables;
 
-	public DataProcessor(Config config, ArrayList<TableHolder> dataTables) {
-		this.config = config;
+	public DataProcessor(Config mainConfig, ArrayList<TableHolder> dataTables) {
+		this.mainConfig = mainConfig;
 		this.dataTables = dataTables;
 
-		allReceivedData = new ArrayList<>(config.getDataSourceCount());
-		currentLogFileName = new ArrayList<>(config.getDataSourceCount());
-		logQueues = new ArrayList<>(config.getDataSourceCount());
+		dataPointHolder = new DataPointHolder(mainConfig.getDataSourceCount());
+		currentLogFileName = new ArrayList<>(mainConfig.getDataSourceCount());
+		logQueues = new ArrayList<>(mainConfig.getDataSourceCount());
+		rssiDataSets = new ArrayList<>(mainConfig.getDataSourceCount());
 
-		for (int i = 0; i < config.getDataSourceCount(); i++) {
-			allReceivedData.add(new ArrayList<>());
+		for (int i = 0; i < mainConfig.getDataSourceCount(); i++) {
 			logQueues.add(new ArrayDeque<>());
+
+			rssiDataSets.add(new DataSet(mainConfig.getDataSet(i).getName() + " RSSI",
+					mainConfig.getDataSet(i).getColor(), RssiProcessor.labels, null, null, SEPARATOR));
 		}
 	}
 
-	/** Separator for the data */
-	public static final String SEPARATOR = ",";
-    
 	public void receivedData(@NotNull DeviceConnection deviceConnection, byte[] data) {
 		receivedData(deviceConnection.getTableIndex(), data);
 
@@ -55,14 +59,31 @@ public class DataProcessor {
 	}
 
 	public void receivedData(int tableIndex, byte[] data) {
-		//TODO: Determine whether a normal packet or RSSI packet before converting to string
 		String delimitedMessage = new String(data, StandardCharsets.UTF_8);
 
-		allReceivedData.get(tableIndex).add(parseData(tableIndex, delimitedMessage));
+		if (RssiProcessor.isValid(delimitedMessage)) {
+			DataHolder dataHolder = parseRSSI(tableIndex, delimitedMessage);
+			List<DataHolder> connectionInfoData = dataPointHolder.getAllConnectionInfoData().get(tableIndex);
+			connectionInfoData.add(dataHolder);
+
+			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
+			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
+					receivedData.size() - 1,
+					connectionInfoData.size() - 1));
+		} else {
+			DataHolder dataHolder = parseData(tableIndex, delimitedMessage);
+			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
+			receivedData.add(dataHolder);
+
+			List<DataHolder> connectionInfoData = dataPointHolder.getAllConnectionInfoData().get(tableIndex);
+			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
+					receivedData.size() - 1,
+					connectionInfoData.size() - 1));
+		}
 	}
 
 	protected DataHolder parseData(int tableIndex, String data) {
-		DataHolder dataHolder = new DataHolder(tableIndex, config.getObject().getJSONArray("datasets").getJSONObject(tableIndex));
+		DataHolder dataHolder = new DataHolder(tableIndex, mainConfig.getDataSet(tableIndex));
 		
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|(?:\\\\r\\\\n|\\r\\n)'?", "");
@@ -79,21 +100,23 @@ public class DataProcessor {
 		}
 		
 		// Ensure that the timestamp has not gone back in time
-		try {
-			DataHolder lastDataPointDataHolder = findLastValidDataPoint(allReceivedData.get(tableIndex));
-			
-			int timestampIndex = config.getObject().getJSONArray("datasets").getJSONObject(tableIndex).getInt("timestampIndex");
+		Integer timestampIndex = mainConfig.getDataSet(tableIndex).getIndex("timestamp");
+		if (timestampIndex != null) {
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(dataPointHolder.getAllReceivedData().get(tableIndex));
 			if (lastDataPointDataHolder != null) {
-			    Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
-			    if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
-					System.err.println("Timestamp just went backwards");
+				Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
+				try {
+					if (value != null && Float.parseFloat(splitData[timestampIndex]) < value) {
+						System.err.println("Timestamp just went backwards. Original was " + value);
 
-					// Treat as invalid data
-			        return null;
-			    }
+						// Treat as invalid data
+						return null;
+					}
+				} catch (NumberFormatException e) {}
+
 			}
-		} catch (NumberFormatException | JSONException e) {}
-		
+		}
+
 		for (int i = 0; i < splitData.length; i++) {
 			if (!dataHolder.set(i, splitData[i])) {
 				System.err.println("Failed to set data handler");
@@ -106,22 +129,46 @@ public class DataProcessor {
 		return dataHolder;
 	}
 
+	protected DataHolder parseRSSI(int tableIndex, String data) {
+		DataHolder dataHolder = new DataHolder(tableIndex, rssiDataSets.get(tableIndex));
+
+		if (RssiProcessor.setDataHolder(dataHolder, data)) {
+			return dataHolder;
+		} else {
+			System.err.println("RSSI Line with invalid data. " + data);
+			return null;
+		}
+
+	}
+
 	/**
 	 * Sets tables up for the given index
 	 *
-	 * @return The recieved DataHolder
+	 * @param showMaxIndex If true, it will make sure to always show the latest index,
+	 *                     for use when connection info and received data drift apart
+	 * @return The received DataHolder
 	 */
-	public DataHolder setTableTo(int tableIndex, int index) {
-		DataHolder currentDataHolder = allReceivedData.get(tableIndex).get(index);
+	public DataPoint setTableTo(int tableIndex, int index, boolean showMaxIndex) {
+		DataPoint dataPoint = dataPointHolder.get(tableIndex).get(index);
+		if (dataPoint == null) return null;
+
+		DataHolder currentDataHolder = dataPoint.getReceivedData();
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
+		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex));
 
+		DataHolder connectionInfoHolder = dataPoint.getConnectionInfoData();
+		JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
+		updateTable(index, connectionInfoHolder, connectionInfoTable, rssiDataSets.get(tableIndex));
+
+		return dataPoint;
+	}
+
+	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet) {
 		if (currentDataHolder != null) {
-			currentDataHolder.updateTableUIWithData(receivedDataTable, config.getLabel(tableIndex));
+			currentDataHolder.updateTableUIWithData(dataTable, dataSet.getLabels());
 		} else {
-			setTableToError(index, receivedDataTable);
+			setTableToError(index, dataTable);
 		}
-
-		return currentDataHolder;
 	}
 
 	private void setTableToError(int index, JTable table) {
@@ -141,8 +188,7 @@ public class DataProcessor {
 	}
 
 	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
-		// TODO: Choose a different allData list depending on the chart's preference
-		chart.update(allReceivedData, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
+		chart.update(dataPointHolder, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
 	}
 
 	/**
@@ -157,7 +203,7 @@ public class DataProcessor {
 
 			// Write to file
 			try (OutputStream outputStream = new FileOutputStream(
-					LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()))) {
+					LOG_FILE_SAVE_LOCATION + currentLogFileName.get(deviceConnection.getTableIndex()), true)) {
 				outputStream.write(data);
 
 				Queue<byte[]> logQueue = logQueues.get(deviceConnection.getTableIndex());
@@ -201,7 +247,7 @@ public class DataProcessor {
 
 		int logIndex = 0;
 
-		JSONArray dataSets = config.getObject().getJSONArray("datasets");
+		JSONArray dataSets = mainConfig.getObject().getJSONArray("datasets");
 
 		// Find a suitable filename
 		for (int i = 0; i <= listOfLogFiles.length; i++) {
@@ -240,7 +286,7 @@ public class DataProcessor {
 	}
 
 	private int getDataSourceCount() {
-		return allReceivedData.size();
+		return dataPointHolder.size();
 	}
 
 	/**
@@ -259,9 +305,13 @@ public class DataProcessor {
 		return null;
 	}
 
+	@Deprecated
     public List<List<DataHolder>> getAllReceivedData() {
-		return allReceivedData;
+		return dataPointHolder.getAllReceivedData();
 	}
 
+	public DataPointHolder getDataPointHolder() {
+		return dataPointHolder;
+	}
 
 }

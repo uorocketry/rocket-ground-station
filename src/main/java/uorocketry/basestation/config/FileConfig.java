@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class FileConfig extends Config {
     public FileConfig(String fileName) {
         String configString = null;
         try {
-            configString = Files.readString(Paths.get(fileName));
+            configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
 
@@ -38,24 +39,9 @@ public class FileConfig extends Config {
         configObject = new JSONObject(configString);
 
         JSONArray datasetsJSONArray = configObject.getJSONArray("datasets");
-        dataSourceCount = datasetsJSONArray.length();
-
-        // Add all data
+        dataSet = new ArrayList<>(datasetsJSONArray.length());
         for (int i = 0; i < datasetsJSONArray.length(); i++) {
-            JSONObject currentDataset = datasetsJSONArray.getJSONObject(i);
-
-            JSONArray labelsJsonArray = currentDataset.getJSONArray("labels");
-
-            // Load labels
-            String[] labelsArray = new String[labelsJsonArray.length()];
-
-            for (int j = 0; j < labelsArray.length; j++) {
-                labelsArray[j] = labelsJsonArray.getString(j);
-            }
-
-            labels.add(labelsArray);
-
-            dataLength.add(labelsArray.length);
+            dataSet.add(new DataSet(datasetsJSONArray.getJSONObject(i)));
         }
     }
 }
