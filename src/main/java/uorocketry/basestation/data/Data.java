@@ -4,16 +4,16 @@ import java.text.DecimalFormat;
 
 public class Data {
 	//the actual data point
-	public Float data;
-	
-	Long dataLong;
+	private Float data;
+
+	private Long dataLong;
 	
 	//used for special data types
-	float minutes;
-	
-	Types type;
-	
-	DecimalFormat format = new DecimalFormat("#.######");
+	private float minutes;
+
+	private Types type;
+
+	private DecimalFormat format = new DecimalFormat("#.######");
 	
 	enum Types {
 		NORMAL,

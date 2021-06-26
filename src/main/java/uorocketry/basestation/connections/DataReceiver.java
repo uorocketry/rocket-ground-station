@@ -1,5 +1,7 @@
 package uorocketry.basestation.connections;
 
+import org.jetbrains.annotations.NotNull;
+
 public interface DataReceiver {
-    void receivedData(DeviceConnection deviceConnection, byte[] data);
+    void receivedData(@NotNull DeviceConnection deviceConnection, byte[] data);
 }

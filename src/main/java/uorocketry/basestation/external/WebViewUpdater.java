@@ -12,8 +12,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import uorocketry.basestation.Main;
+import uorocketry.basestation.config.Config;
 import uorocketry.basestation.data.Data;
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.data.DataHolder;
+import uorocketry.basestation.data.DataPoint;
+import uorocketry.basestation.data.DataPointHolder;
 
 /**
  * DOES NOT support multiple data sources
@@ -22,9 +25,11 @@ import uorocketry.basestation.data.DataHandler;
  *
  */
 public class WebViewUpdater extends WebSocketServer {
+
+	private final int TABLE_INDEX = 0;
 	
 	List<WebSocket> connections = new ArrayList<>();
-	
+
 	public WebViewUpdater() {
 		super(new InetSocketAddress(Main.WEBVIEW_PORT));
 		
@@ -33,44 +38,38 @@ public class WebViewUpdater extends WebSocketServer {
 
 	/**
 	 * Generates a json from the data currentDataIndex
-	 * 
-	 * @param main
 	 */
-	public JSONObject generateJSON(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
-		JSONObject coordinateIndexes = dataSets.getJSONObject(0).getJSONObject("coordinateIndexes");
-		
+	public JSONObject generateJSON(DataPointHolder dataPointHolder, List<Integer> minDataIndex, List<Integer> currentDataIndex, Config config) {
 		JSONObject jsonObject = new JSONObject();
 		
-		int index = currentDataIndex.get(0);
-		List<DataHandler> currentDataList = allData.get(0);
+		int index = currentDataIndex.get(TABLE_INDEX);
+		List<DataPoint> currentDataList = dataPointHolder.get(TABLE_INDEX);
 		if (currentDataList == null) return null;
 		
-		DataHandler dataPoint = currentDataList.get(index);
-		if (dataPoint == null) return null;
+		DataHolder dataHolder = currentDataList.get(index).getReceivedData();
+		if (dataHolder == null) return null;
 		
-		Data altitudeData = dataPoint.data[coordinateIndexes.getInt("altitude")];
-		Data longitudeData = dataPoint.data[coordinateIndexes.getInt("longitude")];
-		Data latitudeData = dataPoint.data[coordinateIndexes.getInt("latitude")];
+		Data altitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("altitude")];
+		Data longitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("longitude")];
+		Data latitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("latitude")];
 		if (altitudeData == null || longitudeData == null || latitudeData == null) return null;
-		
-		
+
 		jsonObject.put("latitude", latitudeData.getDecimalValue());
 		jsonObject.put("longitude", longitudeData.getDecimalValue());
 		jsonObject.put("altitude", altitudeData.getDecimalValue());
-		
+
 		return jsonObject;
 	}
 	
 	/**
 	 * Sends updated data over the websocket channel
 	 * 
-	 * @param tableIndex
-	 * @param allData
+	 * @param dataPointHolder
 	 * @param currentDataIndex
-	 * @param dataSets
+	 * @param config
 	 */
-	public void sendUpdate(List<List<DataHandler>> allData, List<Integer> minDataIndex, List<Integer> currentDataIndex, JSONArray dataSets) {
-		JSONObject jsonObject = generateJSON(allData, minDataIndex, currentDataIndex, dataSets);
+	public void sendUpdate(DataPointHolder dataPointHolder, List<Integer> minDataIndex, List<Integer> currentDataIndex, Config config) {
+		JSONObject jsonObject = generateJSON(dataPointHolder, minDataIndex, currentDataIndex, config);
 		if (jsonObject == null) return;
 		
 		String fileContent = jsonObject.toString();

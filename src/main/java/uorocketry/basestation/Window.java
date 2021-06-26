@@ -32,21 +32,27 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
 import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.data.RssiProcessor;
+import uorocketry.basestation.panel.Chart;
 import uorocketry.basestation.panel.DataChart;
+import uorocketry.basestation.panel.TableHolder;
 
 public class Window extends JFrame {
 	
 	private static final long serialVersionUID = -5397816377154627951L;
 	private Main main;
-	
+	private Config config;
+
 	private JPanel dataTablePanel;
-	ArrayList<JTable> dataTables = new ArrayList<>();
-	
+	ArrayList<TableHolder> dataTables = new ArrayList<>();
+
 	private JPanel leftPanel;
 	private JScrollPane scrollPane;
 	JCheckBox googleEarthCheckBox;
@@ -87,7 +93,7 @@ public class Window extends JFrame {
 	
 	public JPanel centerChartPanel;
 	
-	public final ArrayList<DataChart> charts = new ArrayList<>();
+	public final ArrayList<Chart> charts = new ArrayList<>();
 	
 	JButton addChartButton;
 	private JPanel savingToPanel;
@@ -97,8 +103,9 @@ public class Window extends JFrame {
 	JButton loadLayout;
 	private JSplitPane splitPane;
 	
-	public Window(Main main) {
+	public Window(Main main, Config config) {
 	    this.main = main;
+	    this.config = config;
 	    
 		// Set look and feel
 		try {
@@ -128,8 +135,8 @@ public class Window extends JFrame {
 		dataTablePanel.setLayout(new BoxLayout(dataTablePanel, BoxLayout.X_AXIS));
 		leftPanel.add(dataTablePanel);
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addJTable(i, main.config.getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+			generateTelemetryPanel(i, config.getDataSet(i));
 		}
 		
 		scrollPane = new JScrollPane(leftPanel);
@@ -207,8 +214,8 @@ public class Window extends JFrame {
 		
 		sliderTabs = new JTabbedPane(JTabbedPane.TOP);
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-			addSlider(main.config.getJSONArray("datasets").getJSONObject(i));
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+			addSlider(config.getObject().getJSONArray("datasets").getJSONObject(i));
 		}
 		
 		sliderSection.add(sliderTabs, BorderLayout.SOUTH);
@@ -252,7 +259,7 @@ public class Window extends JFrame {
 		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
 		
 		try {
-			JSONArray array = main.config.getJSONArray("stateEvents");
+			JSONArray array = config.getObject().getJSONArray("stateEvents");
 			
 			if (array.length() > 0) {
 				stateSendingPanel = new JPanel();
@@ -281,8 +288,8 @@ public class Window extends JFrame {
 			}
 		}
 		
-		for (int i = 0; i < Main.dataSourceCount; i++) {
-            addComSelectorPanel(main.config.getJSONArray("datasets").getJSONObject(i), main);
+		for (int i = 0; i < config.getDataSourceCount(); i++) {
+            addComSelectorPanel(config.getObject().getJSONArray("datasets").getJSONObject(i), main);
         }
 		comPanelParent.setLayout(new GridLayout(comPanelParent.getComponentCount(), 1, 0, 0));
 		
@@ -295,38 +302,47 @@ public class Window extends JFrame {
 		setVisible(true);
 		
 	}
-	
-	public void addJTable(int tableIndex, JSONObject dataSet) {
-		JTable dataTable = new JTable(Main.dataLength.get(tableIndex), 2);
-		dataTable.setBorder(new LineBorder(new Color(0, 0, 0)));
-		dataTable.setDefaultRenderer(Object.class, new DataTableCellRenderer());
-		dataTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		dataTable.setAlignmentY(Component.TOP_ALIGNMENT);
-		dataTable.setAlignmentX(Component.LEFT_ALIGNMENT);
-		dataTable.setCellSelectionEnabled(true);
+
+
+	public void generateTelemetryPanel(int tableIndex, DataSet dataSet) {
+		JPanel borderPanel = new JPanel();
+		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getName()));
+		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
+
+		JTable receivedDataTable = createTable(config.getDataLength(tableIndex), 2, 30, 130);
+		JTable connectionInfoTable = createTable(RssiProcessor.labels.length, 2, 30, 130);
+		borderPanel.add(receivedDataTable);
+		borderPanel.add(connectionInfoTable);
+
+		dataTables.add(new TableHolder(receivedDataTable, connectionInfoTable));
+
+		dataTablePanel.add(borderPanel);
+	}
+
+	public JTable createTable(int rows, int columns, int height, int width) {
+		JTable table = new JTable(rows, columns);
+		table.setBorder(new LineBorder(new Color(0, 0, 0)));
+		table.setDefaultRenderer(Object.class, new DataTableCellRenderer());
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		table.setAlignmentY(Component.TOP_ALIGNMENT);
+		table.setAlignmentX(Component.LEFT_ALIGNMENT);
+		table.setCellSelectionEnabled(true);
 		
 		// Make non editable
-		dataTable.setDefaultEditor(Object.class, null);
+		table.setDefaultEditor(Object.class, null);
 		
 		// Increase row height
-		dataTable.setRowHeight(30);
+		table.setRowHeight(height);
 		
 		// Adjust width
-		dataTable.getColumnModel().getColumn(0).setPreferredWidth(130);
-		dataTable.getColumnModel().getColumn(1).setPreferredWidth(130);
+		table.getColumnModel().getColumn(0).setPreferredWidth(width);
+		table.getColumnModel().getColumn(1).setPreferredWidth(width);
 		
-		dataTable.setFont(new Font("Arial", Font.PLAIN, 15));
-		
-		// Make outer title
-		JPanel borderPanel = new JPanel();
-		borderPanel.setBorder(BorderFactory.createTitledBorder(dataSet.getString("name")));
-		
-		borderPanel.add(dataTable);
-		
-		dataTablePanel.add(borderPanel);
-		dataTables.add(dataTable);
+		table.setFont(new Font("Arial", Font.PLAIN, 15));
+
+		return table;
 	}
-	
+		
 	public void addSlider(JSONObject dataSet) {
 		// Add sliders to tabbedPane
 		JPanel sliders = new JPanel();

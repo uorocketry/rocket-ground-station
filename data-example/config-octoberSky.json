@@ -37,14 +37,14 @@
         		"Ground",
         		"Max States"
         	],
-        	"coordinateIndexes": {
+        	"indexes": {
+                "timestamp": 1,
+                "state": 19,
 	        	"altitude": 10,
 	        	"latitude": 8,
 	        	"longitude": 9
 	        },
-	        "timestampIndex": 1,
-	        "stateIndex": 19,
-            "seperator": ","
+            "separator": ","
         }
     ]
 }

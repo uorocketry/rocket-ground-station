@@ -4,42 +4,42 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import uorocketry.basestation.Main;
+import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
+import uorocketry.basestation.config.FakeConfig;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
-import java.util.Arrays;
-import java.util.Collections;
+import java.lang.reflect.Field;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DataHandlerUnitTest {
+public class DataHolderUnitTest {
 
     @Test
     public void updateTableUI() {
-        JSONObject datasetConfig = new JSONObject();
-        datasetConfig.put("timestampIndex", 0);
-        datasetConfig.put("stateIndex", 1);
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put("First State");
-        jsonArray.put("Second State");
-        datasetConfig.put("states", jsonArray);
-
         String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
-        Main.dataLength = Collections.singletonList(labels.length);
+        String[] states = new String[] {"First State", "Second State"};
+        Map<String, Integer> indexes = new HashMap<>();
+        indexes.put("timestamp", 0);
+        indexes.put("state", 1);
 
-        DataHandler dataHandler = new DataHandler(0, datasetConfig);
-        dataHandler.hiddenDataTypes.add(new DataType(2, 0));
+        DataSet dataSet = new DataSet("Testing Set", "#AB1C2A", labels, states, indexes, ",");
 
-        dataHandler.set(0, "102020399293"); // has to be long (timestamp)
-        dataHandler.set(1, "1");
-        dataHandler.set(2, "2");
-        dataHandler.set(3, "ovf");
-        dataHandler.set(4, "nan");
-        dataHandler.set(5, "5.2");
-        dataHandler.set(6, "2321.34");
+        DataHolder dataHolder = new DataHolder(0, dataSet);
+        dataHolder.hiddenDataTypes.add(new DataType(2, 0));
+
+        dataHolder.set(0, "102020399293"); // has to be long (timestamp)
+        dataHolder.set(1, "1");
+        dataHolder.set(2, "2");
+        dataHolder.set(3, "ovf");
+        dataHolder.set(4, "nan");
+        dataHolder.set(5, "5.2");
+        dataHolder.set(6, "2321.34");
 
         JTable table = new JTable(labels.length, 2);
-        dataHandler.updateTableUIWithData(table, labels);
+        dataHolder.updateTableUIWithData(table, labels);
 
         TableModel tableModel = table.getModel();
 

@@ -10,13 +10,16 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import uorocketry.basestation.data.DataHandler;
+import uorocketry.basestation.Main;
+import uorocketry.basestation.data.DataHolder;
 import uorocketry.basestation.data.DataType;
 
 /**
  * Makes JPanel have the ability to snap and move in an absolute layout
  */
 public class SnapPanel implements MouseListener, MouseMotionListener {
+
+	private Main main;
 	
 	int lastMouseX = -1;
 	int lastMouseY = -1;
@@ -25,7 +28,7 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	// Used to check for double clicks
 	long lastClickTime = 0;
 	
-	public DataChart chart;
+	public Chart chart;
 	public JPanel panel;
 	
 	SnapPanelListener snapPanelListener;
@@ -43,10 +46,11 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	public double relWidth;
 	public double relHeight;
 	
-	public SnapPanel(DataChart chart) {
+	public SnapPanel(Main main, Chart chart) {
 		this.chart = chart;
-		this.panel = chart.chartPanel;
-		
+		this.panel = chart.getPanel();
+		this.main = main;
+
 		panel.addMouseListener(this);
 		panel.addMouseMotionListener(this);
 	}
@@ -69,10 +73,10 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		
 		if (e.getButton() == MouseEvent.BUTTON2) {
 			// Close this
-			synchronized (chart.main.window.charts) {
-				chart.main.window.charts.remove(chart);
+			synchronized (main.window.charts) {
+				main.window.charts.remove(chart);
 			}
-			chart.main.window.centerChartPanel.remove(panel);
+			main.window.centerChartPanel.remove(panel);
 			
 		}
 		
@@ -102,23 +106,23 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 		// Snap
 		Dimension panelSize = panel.getParent().getSize();
 		
-		DataChart closestLeftChart = findClosestChart(mouseX, mouseY, 0, 0);
-		DataChart closestRightChart = findClosestChart(mouseX, mouseY, 1, 0);
+		Chart closestLeftChart = findClosestChart(mouseX, mouseY, 0, 0);
+		Chart closestRightChart = findClosestChart(mouseX, mouseY, 1, 0);
 		
-		DataChart closestTopChart = findClosestChart(mouseX, mouseY, 0, 1);
-		DataChart closestBottomChart = findClosestChart(mouseX, mouseY, 1, 1);
+		Chart closestTopChart = findClosestChart(mouseX, mouseY, 0, 1);
+		Chart closestBottomChart = findClosestChart(mouseX, mouseY, 1, 1);
 		
 		int x = 0;
-		if (closestLeftChart != null) x = (int) (closestLeftChart.chartPanel.getBounds().getX() + closestLeftChart.chartPanel.getBounds().getWidth());
+		if (closestLeftChart != null) x = (int) (closestLeftChart.getPanel().getBounds().getX() + closestLeftChart.getPanel().getBounds().getWidth());
 		
 		int width = (int) panelSize.getWidth() - x;
-		if (closestRightChart != null) width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.chartPanel.getBounds().getX()));
+		if (closestRightChart != null) width = (int) (panelSize.getWidth() - x - (panelSize.getWidth() - closestRightChart.getPanel().getBounds().getX()));
 		
 		int y = 0;
-		if (closestTopChart != null) y = (int) (closestTopChart.chartPanel.getBounds().getY() + closestTopChart.chartPanel.getBounds().getHeight());
+		if (closestTopChart != null) y = (int) (closestTopChart.getPanel().getBounds().getY() + closestTopChart.getPanel().getBounds().getHeight());
 		
 		int height = (int) panelSize.getHeight() - y;
-		if (closestBottomChart != null) height = (int) (panelSize.getHeight() - y - (panelSize.getHeight() - closestBottomChart.chartPanel.getBounds().getY()));
+		if (closestBottomChart != null) height = (int) (panelSize.getHeight() - y - (panelSize.getHeight() - closestBottomChart.getPanel().getBounds().getY()));
 		
 		setRelBounds(x, y, width, height);
 	}
@@ -130,8 +134,8 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	 * @param coordinate 0 for x, 1 for y
 	 * @return
 	 */
-	public DataChart findClosestChart(int x, int y, int direction, int coordinate) {
-		DataChart closestChart = null;
+	public Chart findClosestChart(int x, int y, int direction, int coordinate) {
+		Chart closestChart = null;
 		
 		// This is the variable that will be compared against
 		int pos = x;
@@ -142,32 +146,32 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 			otherPos = x;
 		}
 		
-		synchronized (chart.main.window.charts) {
-			for (DataChart chart : chart.main.window.charts) {
+		synchronized (main.window.charts) {
+			for (Chart chart : main.window.charts) {
 				if (chart == this.chart) continue;
 				
-				int currentChartPos = (int) chart.chartPanel.getBounds().getX();
-				int currentChartOtherPos = (int) chart.chartPanel.getBounds().getY();
-				int currentChartSize = (int) chart.chartPanel.getBounds().getWidth();
-				int currentChartOtherSize = (int) chart.chartPanel.getBounds().getHeight();
+				int currentChartPos = (int) chart.getPanel().getBounds().getX();
+				int currentChartOtherPos = (int) chart.getPanel().getBounds().getY();
+				int currentChartSize = (int) chart.getPanel().getBounds().getWidth();
+				int currentChartOtherSize = (int) chart.getPanel().getBounds().getHeight();
 				int closestChartPos = 0;
 				int closestChartSize = 0;
 				// To prevent null pointer exceptions
 				if (closestChart != null) {
-					closestChartPos = (int) closestChart.chartPanel.getBounds().getX();
-					closestChartSize = (int) closestChart.chartPanel.getBounds().getWidth();
+					closestChartPos = (int) closestChart.getPanel().getBounds().getX();
+					closestChartSize = (int) closestChart.getPanel().getBounds().getWidth();
 				}
 				
 				// For Y coordinate
 				if (coordinate == 1) {
-					currentChartPos = (int) chart.chartPanel.getBounds().getY();
-					currentChartOtherPos = (int) chart.chartPanel.getBounds().getX();
-					currentChartSize = (int) chart.chartPanel.getBounds().getHeight();
-					currentChartOtherSize = (int) chart.chartPanel.getBounds().getWidth();
+					currentChartPos = (int) chart.getPanel().getBounds().getY();
+					currentChartOtherPos = (int) chart.getPanel().getBounds().getX();
+					currentChartSize = (int) chart.getPanel().getBounds().getHeight();
+					currentChartOtherSize = (int) chart.getPanel().getBounds().getWidth();
 					
 					if (closestChart != null) {
-						closestChartPos = (int) closestChart.chartPanel.getBounds().getY();
-						closestChartSize = (int) closestChart.chartPanel.getBounds().getHeight();
+						closestChartPos = (int) closestChart.getPanel().getBounds().getY();
+						closestChartSize = (int) closestChart.getPanel().getBounds().getHeight();
 					}
 				}
 				
@@ -193,41 +197,9 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		if (chart.main.dataDeletionMode) {
-			double xMousePos = chart.chartPanel.getChart().getChartXFromCoordinate(e.getX());
-			
-			// Start value - Last value is the total chart size in chart coordinates
-			double chartSizeX = Math.abs(chart.chartPanel.getChart().getChartXFromCoordinate(0) - 
-					chart.chartPanel.getChart().getChartXFromCoordinate(chart.chartPanel.getChart().getWidth()));
-			
-			// Find all data points near the click
-			for (int xTypeIndex = 0; xTypeIndex < chart.xTypes.length; xTypeIndex++) {
-				DataType currentType = chart.xTypes[xTypeIndex];
-				List<DataHandler> dataHandlers = chart.main.allData.get(currentType.tableIndex);
-				
-				// Y axis depends on the which data is being checked
-				double yMousePos = chart.chartPanel.getChart().getChartYFromCoordinate(e.getY(), xTypeIndex);
-				double chartSizeY = Math.abs(chart.chartPanel.getChart().getChartYFromCoordinate(0, xTypeIndex) - 
-						chart.chartPanel.getChart().getChartYFromCoordinate(chart.chartPanel.getChart().getHeight(), xTypeIndex));
-				
-				for (DataHandler dataHandler: dataHandlers) {
-					// See if click is anywhere near this point
-					if (dataHandler != null && Math.abs(dataHandler.data[chart.yType.index].data - xMousePos) < chartSizeX / 100
-						&& Math.abs(dataHandler.data[currentType.index].data - yMousePos) < chartSizeY / 100
-						&& !dataHandler.hiddenDataTypes.contains(currentType)) {
-						
-						// Hide this point
-						dataHandler.hiddenDataTypes.add(new DataType(currentType.index, currentType.tableIndex));
-					}
-				}
-			}
-			
-			chart.main.updateUI();
-			
-			// Don't allow window moving
-			return;
-		}
-		
+		// If the chart returned true, then windw movement should not happen
+		if (chart.mouseDragged(e)) return;
+
 		int currentX = e.getXOnScreen();
 		int currentY = e.getYOnScreen();
 		
@@ -440,9 +412,6 @@ public class SnapPanel implements MouseListener, MouseMotionListener {
 	
 	/**
 	 * Called whenever the parent is resized to change the layout to the new size.
-	 * 
-	 * @param xFactor The factor the x is stretched by (new/old)
-	 * @param yFactor The factor the y is stretched by (new/old)
 	 */
 	public void containerResized(int newWidth, int newHeight) {
 		updateBounds(newWidth, newHeight);
