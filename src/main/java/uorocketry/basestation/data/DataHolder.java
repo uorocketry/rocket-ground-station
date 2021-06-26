@@ -62,7 +62,8 @@ public class DataHolder {
 	
 	public boolean set(int index, String currentData) {
 		// Check for special cases first
-		boolean isFormattedCoordinate =  dataSet.indexEquals("latitude", index) || dataSet.indexEquals("longitude", index);
+		boolean isFormattedCoordinate =  (dataSet.indexEquals("latitude", index) && dataSet.indexEquals("latitudeFormatted", index))
+											|| (dataSet.indexEquals("longitude", index) && dataSet.indexEquals("longitudeFormatted", index));
 		boolean isTimestamp = dataSet.indexEquals("timestamp", index);
 
 		if (isFormattedCoordinate) {
