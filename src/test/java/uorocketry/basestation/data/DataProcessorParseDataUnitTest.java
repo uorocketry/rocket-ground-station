@@ -9,13 +9,15 @@ import uorocketry.basestation.config.Config;
 import uorocketry.basestation.config.DataSet;
 import uorocketry.basestation.config.FakeConfig;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DataProcessorUnitTest {
+public class DataProcessorParseDataUnitTest {
 
     Config config;
 
@@ -60,7 +62,19 @@ public class DataProcessorUnitTest {
 
     private void assertAndParseData(DataProcessor testObject, String data) {
         DataHolder result = testObject.parseData(0, data);
+        assertData(result);
 
+        assertAndReceiveData(testObject, data);
+    }
+
+    private void assertAndReceiveData(DataProcessor testObject, String data) {
+        testObject.receivedData(0, data.getBytes(StandardCharsets.UTF_8));
+
+        List<DataPoint> dataPoints = testObject.getDataPointHolder().get(0);
+        assertData(dataPoints.get(dataPoints.size() - 1).getReceivedData());
+    }
+
+    private void assertData(DataHolder result) {
         assertEquals(102020399293L, result.data[0].getLongValue());
         assertEquals("102,020,399,293", result.data[0].getFormattedString());
         assertEquals(2, result.data[1].getDecimalValue());
