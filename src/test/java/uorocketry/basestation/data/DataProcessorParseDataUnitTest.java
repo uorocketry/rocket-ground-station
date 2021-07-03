@@ -55,44 +55,42 @@ public class DataProcessorParseDataUnitTest {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
-<<<<<<< HEAD:src/test/java/uorocketry/basestation/data/DataProcessorUnitTest.java
 
     @Test
     public void parseData_binarySyntax1() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,2\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax2() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,3\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax3() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,4\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax4() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,6\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax5() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,7\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax6() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,8\\r\\n'";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
-=======
 
     private DataProcessor setupParseDataConfig() {
         return new DataProcessor(config, null);
@@ -107,8 +105,6 @@ public class DataProcessorParseDataUnitTest {
 
     private void assertAndReceiveData(DataProcessor testObject, String data) {
         testObject.receivedData(0, data.getBytes(StandardCharsets.UTF_8));
->>>>>>> 47dfb831056f96b5584471ec499d7ba9aa16f500:src/test/java/uorocketry/basestation/data/DataProcessorParseDataUnitTest.java
-
         List<DataPoint> dataPoints = testObject.getDataPointHolder().get(0);
         assertData(dataPoints.get(dataPoints.size() - 1).getReceivedData());
     }
@@ -127,4 +123,19 @@ public class DataProcessorParseDataUnitTest {
         assertEquals(12, result.data[8].getDecimalValue());
         assertEquals(1, result.data[9].getDecimalValue());
     }
+
+ /*   private void assertData2(DataHolder result) {
+        assertEquals(102020399293L, result.data[0].getLongValue());
+        assertEquals("102,020,399,293", result.data[0].getFormattedString());
+        assertEquals(2, result.data[1].getDecimalValue());
+        assertEquals(182.12f, result.data[2].getDecimalValue());
+        assertEquals(192, result.data[3].getDecimalValue());
+        assertEquals(12.41f, result.data[4].getDecimalValue());
+        assertEquals(2, result.data[5].getDecimalValue());
+        assertEquals(1, result.data[6].getDecimalValue());
+        assertEquals("1", result.data[6].getFormattedString());
+        assertEquals(331, result.data[7].getDecimalValue());
+        assertEquals(12, result.data[8].getDecimalValue());
+        assertEquals(1, result.data[9].getDecimalValue());
+    }*/
 }
