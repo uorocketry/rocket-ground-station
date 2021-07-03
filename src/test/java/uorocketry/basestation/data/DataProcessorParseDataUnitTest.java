@@ -56,6 +56,7 @@ public class DataProcessorParseDataUnitTest {
         assertAndParseData(setupParseDataConfig(), data);
     }
 
+    //test case 1
     @Test
     public void parseData_binarySyntax1() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
@@ -92,6 +93,12 @@ public class DataProcessorParseDataUnitTest {
         assertAndParseData(setupParseDataConfig(), data);
     }
 
+    @Test
+    public void parseData_binarySyntax7() {
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        assertAndParseData(setupParseDataConfig(), data);
+    }
+
     private DataProcessor setupParseDataConfig() {
         return new DataProcessor(config, null);
     }
@@ -123,19 +130,4 @@ public class DataProcessorParseDataUnitTest {
         assertEquals(12, result.data[8].getDecimalValue());
         assertEquals(1, result.data[9].getDecimalValue());
     }
-
- /*   private void assertData2(DataHolder result) {
-        assertEquals(102020399293L, result.data[0].getLongValue());
-        assertEquals("102,020,399,293", result.data[0].getFormattedString());
-        assertEquals(2, result.data[1].getDecimalValue());
-        assertEquals(182.12f, result.data[2].getDecimalValue());
-        assertEquals(192, result.data[3].getDecimalValue());
-        assertEquals(12.41f, result.data[4].getDecimalValue());
-        assertEquals(2, result.data[5].getDecimalValue());
-        assertEquals(1, result.data[6].getDecimalValue());
-        assertEquals("1", result.data[6].getFormattedString());
-        assertEquals(331, result.data[7].getDecimalValue());
-        assertEquals(12, result.data[8].getDecimalValue());
-        assertEquals(1, result.data[9].getDecimalValue());
-    }*/
 }
