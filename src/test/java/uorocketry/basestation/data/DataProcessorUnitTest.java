@@ -53,42 +53,42 @@ public class DataProcessorUnitTest {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
-/*
+
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax1() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,2\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax2() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,3\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax3() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,4\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax4() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,6\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax5() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,7\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax() {
-        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n'";
+    public void parseData_binarySyntax6() {
+        String data = "b'102020399293,2,182.12,192,12.41,2,1,331,12,8\\r\\n'";
         assertAndParseData(setupParseDataConfig(), data);
-    }*/
+    }
 
     private DataProcessor setupParseDataConfig() {
         return new DataProcessor(config, null);
