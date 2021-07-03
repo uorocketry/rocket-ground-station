@@ -20,9 +20,9 @@ public class DataPoint {
     public DataPoint(List<DataHolder> receivedDataHolders, List<DataHolder> connectionInfoDataHolders,
                      int receivedDataIndex, int connectionInfoIndex) {
         this(receivedDataIndex,
-                receivedDataIndex > 0 && receivedDataIndex < receivedDataHolders.size() ? receivedDataHolders.get(receivedDataIndex) : null,
+                receivedDataIndex >= 0 && receivedDataIndex < receivedDataHolders.size() ? receivedDataHolders.get(receivedDataIndex) : null,
                 connectionInfoIndex,
-                connectionInfoIndex > 0 && connectionInfoIndex < connectionInfoDataHolders.size() ? connectionInfoDataHolders.get(connectionInfoIndex): null);
+                connectionInfoIndex >= 0 && connectionInfoIndex < connectionInfoDataHolders.size() ? connectionInfoDataHolders.get(connectionInfoIndex): null);
     }
 
     public void clearHiddenTypes() {
