@@ -23,7 +23,7 @@ public class DataProcessorParseDataUnitTest {
 
     @BeforeEach
     public void setup() {
-        String[] labels = new String[] {"Timestamp (ns)", "Value 1", "Value 2", "Value 3", "Value 4", "Value 5", "Value 6", "Value 7", "Value 8", "Value 9"};
+        String[] labels = new String[] {"Timestamp (ns)", "Value 1", "Value 2", "Value 3", "Value 4", "Value 5", "Value 6", "Value 7", "Value 8", "Value 9", "Value 10", "Value 11", "Value 12"};
         String[] states = new String[] {"First State", "Second State"};
         Map<String, Integer> indexes = new HashMap<>();
         indexes.put("timestamp", 0);
@@ -34,68 +34,68 @@ public class DataProcessorParseDataUnitTest {
 
     @Test
     public void parseData_plain() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_newline() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_plainNewline() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_plainNewlineAndNewline() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     //test case 1
     @Test
     public void parseData_binarySyntax1() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\r";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax2() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax3() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax4() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax5() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\r\r";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax6() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
     public void parseData_binarySyntax7() {
-        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1\\r\\n\r\n";
+        String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
@@ -129,5 +129,8 @@ public class DataProcessorParseDataUnitTest {
         assertEquals(331, result.data[7].getDecimalValue());
         assertEquals(12, result.data[8].getDecimalValue());
         assertEquals(1, result.data[9].getDecimalValue());
+        assertEquals(5, result.data[10].getDecimalValue());
+        assertEquals(23, result.data[11].getDecimalValue());
+        assertEquals(74, result.data[12].getDecimalValue());
     }
 }
