@@ -56,45 +56,44 @@ public class DataProcessorParseDataUnitTest {
         assertAndParseData(setupParseDataConfig(), data);
     }
 
-    //test case 1
     @Test
-    public void parseData_binarySyntax1() {
+    public void parseData_additionalSyntax1() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\r";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax2() {
+    public void parseData_additionalSyntax2() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax3() {
+    public void parseData_additionalSyntax3() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax4() {
+    public void parseData_additionalSyntax4() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax5() {
+    public void parseData_additionalSyntax5() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\r\r";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax6() {
+    public void parseData_additionalSyntax6() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
 
     @Test
-    public void parseData_binarySyntax7() {
+    public void parseData_additionalSyntax7() {
         String data = "102020399293,2,182.12,192,12.41,2,1,331,12,1,5,23,74\\r\\n\r\n\n";
         assertAndParseData(setupParseDataConfig(), data);
     }
