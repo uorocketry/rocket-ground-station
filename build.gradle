@@ -20,7 +20,7 @@ jar {
 }
 
 dependencies {
-	implementation	'com.fazecast:jSerialComm:2.5.2'
+	implementation	'com.fazecast:jSerialComm:2.6.2'
 	implementation	'org.json:json:20210307'
 	implementation	'org.knowm.xchart:xchart:3.6.1'
 	implementation	'org.java-websocket:Java-WebSocket:1.5.1'
