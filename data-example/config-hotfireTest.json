@@ -9,7 +9,8 @@
                 "Current State",
                 "Valve 606",
                 "Valve 404",
-                "Valve 505"
+                "Valve 505",
+                "Log Status"
         	],
         	"states": [
         		"Init",
