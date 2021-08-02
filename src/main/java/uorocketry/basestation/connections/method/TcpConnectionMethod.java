@@ -16,6 +16,7 @@ public class TcpConnectionMethod extends AbstractConnectionMethod implements Run
     private Socket socket;
     private InputStream in;
     private OutputStream out;
+    private Thread thread;
 
     public TcpConnectionMethod(String hostname, int port) {
         this.hostname = hostname;
@@ -31,6 +32,9 @@ public class TcpConnectionMethod extends AbstractConnectionMethod implements Run
 
             in = socket.getInputStream();
             out = socket.getOutputStream();
+
+            thread = new Thread(this);
+            thread.start();
         } catch (IOException e) {
             e.printStackTrace();
 
