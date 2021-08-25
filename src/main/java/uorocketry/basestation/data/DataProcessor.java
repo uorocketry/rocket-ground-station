@@ -67,19 +67,21 @@ public class DataProcessor {
 			connectionInfoData.add(dataHolder);
 
 			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
-			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
-					receivedData.size() - 1,
-					connectionInfoData.size() - 1));
+			addDataPoint(tableIndex, receivedData, connectionInfoData);
 		} else {
 			DataHolder dataHolder = parseData(tableIndex, delimitedMessage);
 			List<DataHolder> receivedData = dataPointHolder.getAllReceivedData().get(tableIndex);
 			receivedData.add(dataHolder);
 
 			List<DataHolder> connectionInfoData = dataPointHolder.getAllConnectionInfoData().get(tableIndex);
-			dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
-					receivedData.size() - 1,
-					connectionInfoData.size() - 1));
+			addDataPoint(tableIndex, receivedData, connectionInfoData);
 		}
+	}
+
+	private void addDataPoint(int tableIndex, List<DataHolder> receivedData, List<DataHolder> connectionInfoData) {
+		dataPointHolder.get(tableIndex).add(new DataPoint(receivedData, connectionInfoData,
+				receivedData.size() - 1,
+				connectionInfoData.size() - 1));
 	}
 
 	protected DataHolder parseData(int tableIndex, String data) {
@@ -154,20 +156,24 @@ public class DataProcessor {
 
 		DataHolder currentDataHolder = dataPoint.getReceivedData();
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
-		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex));
+		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex), false);
 
 		DataHolder connectionInfoHolder = dataPoint.getConnectionInfoData();
 		JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
-		updateTable(index, connectionInfoHolder, connectionInfoTable, rssiDataSets.get(tableIndex));
+		updateTable(index, connectionInfoHolder, connectionInfoTable, rssiDataSets.get(tableIndex), true);
 
 		return dataPoint;
 	}
 
-	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet) {
+	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet, boolean hideTable) {
 		if (currentDataHolder != null) {
 			currentDataHolder.updateTableUIWithData(dataTable, dataSet.getLabels());
 		} else {
-			setTableToError(index, dataTable);
+			if (hideTable) {
+				setTableInvisible(dataTable);
+			} else {
+				setTableToError(index, dataTable);
+			}
 		}
 	}
 
@@ -185,6 +191,10 @@ public class DataProcessor {
 			// Set data
 			tableModel.setValueAt("", i, 1);
 		}
+	}
+
+	private void setTableInvisible(JTable table) {
+		table.setVisible(false);
 	}
 
 	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
