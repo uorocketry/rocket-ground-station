@@ -75,6 +75,7 @@ public class DeviceConnection implements ListSelectionListener, MouseListener, C
         panel.add(comSelectorList);
 
         hostnameField = new JTextField();
+        hostnameField.setText("localhost");
         portField = new JTextField(4);
         portField.setMaximumSize(portField.getPreferredSize());
         portField.setText("8080");
