@@ -39,7 +39,7 @@
     	{
     		"name": "Start Filling",
     		"data": 0,
-    		"availableStates": [2],
+    		"availableStates": [2, 9],
     		"successStates": [3, 4, 5, 6, 7, 8, 9, 10]
     	},
     	{
@@ -51,7 +51,7 @@
     	{
     		"name": "Ignition",
     		"data": 2,
-    		"availableStates": [4],
+    		"availableStates": [4, 9],
     		"successStates": [5, 6, 7, 8, 9, 10]
     	},
     	{
