@@ -30,6 +30,9 @@ public class WebViewUpdater extends WebSocketServer {
 	
 	List<WebSocket> connections = new ArrayList<>();
 
+	long lastUpdate;
+	long updateFrequency = 500; // twice per second
+
 	public WebViewUpdater() {
 		super(new InetSocketAddress(Main.WEBVIEW_PORT));
 		
@@ -48,15 +51,23 @@ public class WebViewUpdater extends WebSocketServer {
 		
 		DataHolder dataHolder = currentDataList.get(index).getReceivedData();
 		if (dataHolder == null) return null;
-		
-		Data altitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("altitude")];
-		Data longitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("longitude")];
-		Data latitudeData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("latitude")];
-		if (altitudeData == null || longitudeData == null || latitudeData == null) return null;
 
-		jsonObject.put("latitude", latitudeData.getDecimalValue());
-		jsonObject.put("longitude", longitudeData.getDecimalValue());
-		jsonObject.put("altitude", altitudeData.getDecimalValue());
+		Integer altitudeIndex = config.getDataSet(TABLE_INDEX).getIndex("altitude");
+		Integer longitudeIndex = config.getDataSet(TABLE_INDEX).getIndex("longitude");
+		Integer latitudeIndex = config.getDataSet(TABLE_INDEX).getIndex("latitude");
+
+		if (altitudeIndex != null && longitudeIndex != null && latitudeIndex != null) {
+			Data altitudeData = dataHolder.data[altitudeIndex];
+			Data longitudeData = dataHolder.data[longitudeIndex];
+			Data latitudeData = dataHolder.data[latitudeIndex];
+
+			jsonObject.put("latitude", latitudeData.getDecimalValue());
+			jsonObject.put("longitude", longitudeData.getDecimalValue());
+			jsonObject.put("altitude", altitudeData.getDecimalValue());
+		}
+
+		Data stateData = dataHolder.data[config.getDataSet(TABLE_INDEX).getIndex("state")];
+		jsonObject.put("state", stateData.getDecimalValue());
 
 		return jsonObject;
 	}
@@ -70,8 +81,9 @@ public class WebViewUpdater extends WebSocketServer {
 	 */
 	public void sendUpdate(DataPointHolder dataPointHolder, List<Integer> minDataIndex, List<Integer> currentDataIndex, Config config) {
 		JSONObject jsonObject = generateJSON(dataPointHolder, minDataIndex, currentDataIndex, config);
-		if (jsonObject == null) return;
-		
+		if (jsonObject == null || System.currentTimeMillis() - lastUpdate < updateFrequency) return;
+		lastUpdate = System.currentTimeMillis();
+
 		String fileContent = jsonObject.toString();
 		
 		for (WebSocket connection : connections) {
