@@ -1,15 +1,13 @@
 package uorocketry.basestation.control;
 
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.json.JSONArray;
 
@@ -26,7 +24,13 @@ import uorocketry.basestation.helper.Helper;
  *
  */
 public class StateButton implements ActionListener, DataReceiver {
-	
+
+	enum State {
+		INACTIVE,
+		AVAILABLE,
+		SUCCESS
+	};
+
 	// Always zero for now
 	private static final int TABLE_INDEX = 0;
 	
@@ -42,10 +46,15 @@ public class StateButton implements ActionListener, DataReceiver {
 	int[] availableStates;
 	/** Which states means this button has been complete */
 	int[] successStates;
+
+	private State state;
 	
 	private JButton button;
 	private JPanel borderPanel;
     private Timer timer = new Timer();
+
+    // Only true if this is a servo control button
+	private JPanel servoControls;
 
 	private DeviceConnectionHolder deviceConnectionHolder;
 	
@@ -60,10 +69,46 @@ public class StateButton implements ActionListener, DataReceiver {
 		button = new JButton(name);
 		button.addActionListener(this);
 		button.setFont(new Font("Arial", Font.PLAIN, 20));
+		button.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
 		borderPanel = new JPanel();
+		borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
 		borderPanel.setBorder(BorderFactory.createTitledBorder(name));
 		borderPanel.add(button);
+
+		if (name.equals("Servo Control")) {
+			servoControls = new JPanel();
+
+			String[] valves = {
+					"SV01",
+					"SV02 (Unused)",
+					"SBV01",
+					"SBV02",
+					"SBV03"
+			};
+
+			JCheckBox[] checkBoxes = new JCheckBox[valves.length];
+			for (int i = 0; i < checkBoxes.length; i++) {
+				checkBoxes[i] = new JCheckBox(valves[i]);
+				servoControls.add(checkBoxes[i]);
+			}
+
+			JButton send = new JButton("Send");
+			servoControls.add(send);
+			send.addActionListener((e) -> {
+				byte sendBit = 1;
+				for (int i = 0; i < checkBoxes.length; i++) {
+					if (checkBoxes[i].isSelected()) {
+						sendBit += 1 << (i + 1);
+					}
+				}
+
+				deviceConnectionHolder.get(TABLE_INDEX).writeBytes(new byte[] {sendBit});
+			});
+
+			servoControls.setVisible(false);
+			borderPanel.add(servoControls);
+		}
 	}
 	
 	public void sendAction() {
@@ -73,11 +118,18 @@ public class StateButton implements ActionListener, DataReceiver {
 	public void stateChanged(int newState) {
         if (Helper.arrayIncludes(availableStates, newState)) {
             button.setForeground(AVAILABLE_COLOR);
+			state = State.AVAILABLE;
         } else if (Helper.arrayIncludes(successStates, newState)) {
             button.setForeground(SUCCESS_COLOR);
+            state = State.SUCCESS;
         } else {
             button.setForeground(INACTIVE_COLOR);
+            state = State.INACTIVE;
         }
+
+        if (servoControls != null) {
+			servoControls.setVisible(state == State.SUCCESS);
+		}
     }
 
 	@Override
