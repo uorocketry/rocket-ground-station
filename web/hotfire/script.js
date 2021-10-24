@@ -52,6 +52,19 @@ const lastStateIcon = document.querySelector("#lastState i");
 
 
 let lastState = -1;
+let lastData = null;
+
+function setup() {
+    createCanvas(window.innerWidth, window.innerHeight);
+    loadImage('images/cold_flow.png', img => {
+        image(img, 0, 0, height=window.innerHeight);
+    });
+
+}
+
+function draw() {
+
+}
 
 init();
 async function init() {
@@ -62,16 +75,19 @@ async function init() {
     const updateMarkerDiv = document.getElementById("updateMarker");
 
     let lastUpdateMarker = Date.now();
+
+
     webSocket.onmessage = (event) => {
         const startTime = Date.now();
         try {
             const data = JSON.parse(event.data);
+            lastData = data;
             const state = data.state;
 
             if (state !== lastState) {
                 lastState = state;
 
-                stateProgress.style.width = Math.max(Math.min(state / maxStates * 100, 100), 1) + "%"  
+                stateProgress.style.width = Math.max(Math.min(state / maxStates * 100, 100), 1) + "%"
                 if (state > maxStates) stateProgress.classList.add("red");
                 else stateProgress.classList.remove("red");
 
