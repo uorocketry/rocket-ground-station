@@ -1,76 +1,83 @@
 {
-    "designedFor": "hotfire test",
-    "datasets": [
-    	{
-    		"name": "Rocket",
-    		"color": "DD000000",
-    		"labels": [
-	            "Timestamp (ms)",
-                "Current State",
+	"designedFor": "hotfire test",
+	"datasets": [
+		{
+			"name": "Rocket",
+			"color": "DD000000",
+			"labels": [
+				"Timestamp (ms)",
+				"Current State",
 				"Valve SV-01",
 				"Valve SV-02",
 				"Valve SBV01 (PWM)",
 				"Valve SBV02 (PWM)",
 				"Valve SBV03 (PWM)",
 				"Log Status"
-        	],
-        	"states": [
-        		"Init",
-        		"Wait For Init",
-        		"Wait For Filling",
-        		"Filling",
-        		"Wait For Ignition",
-        		"Ignition",
-        		"Full Burn",
-        		"Final Venting",
-        		"Done",
-                "Abort Filling",
-                "Abort Burn",
-                "Max States"
-        	],
-            "indexes": {
-                "timestamp": 0,
-                "state": 1
-	        },
-            "separator": ","
-        }
-    ],
-    "stateEvents": [
-    	{
-    		"name": "Start Filling",
-    		"data": 0,
-    		"availableStates": [2, 9],
-    		"successStates": [3, 4, 5, 6, 7, 8, 10]
-    	},
-    	{
-    		"name": "Stop Filling",
-    		"data": 1,
-    		"availableStates": [3],
-    		"successStates": [4, 5, 6, 7, 8, 9, 10]
-    	},
-    	{
-    		"name": "Ignition",
-    		"data": 2,
-    		"availableStates": [4, 9],
-    		"successStates": [5, 6, 7, 8, 10]
-    	},
-    	{
-    		"name": "Final Venting",
-    		"data": 3,
-    		"availableStates": [6, 9, 10],
-    		"successStates": [7, 8, 9, 10]
-    	},
-    	{
-    		"name": "Done",
-    		"data": 4,
-    		"availableStates": [7],
-    		"successStates": [8, 9, 10]
-    	},
-    	{
-    		"name": "Abort!",
-    		"data": 5,
-    		"availableStates": [2, 3, 4, 5, 6],
-    		"successStates": [9, 10]
-    	}
-    ]
+			],
+			"states": [
+				"Init",
+				"Wait For Init",
+				"Wait For Filling",
+				"Filling",
+				"Wait For Ignition",
+				"Ignition",
+				"Full Burn",
+				"Final Venting",
+				"Done",
+				"Abort Filling",
+				"Abort Burn",
+				"Servo Control",
+				"Max States"
+			],
+			"indexes": {
+				"timestamp": 0,
+				"state": 1
+			},
+			"separator": ","
+		}
+	],
+	"stateEvents": [
+		{
+			"name": "Start Filling",
+			"data": 0,
+			"availableStates": [2, 9],
+			"successStates": [3, 4, 5, 6, 7, 8, 10]
+		},
+		{
+			"name": "Stop Filling",
+			"data": 1,
+			"availableStates": [3],
+			"successStates": [4, 5, 6, 7, 8, 9, 10]
+		},
+		{
+			"name": "Ignition",
+			"data": 2,
+			"availableStates": [4, 9],
+			"successStates": [5, 6, 7, 8, 10]
+		},
+		{
+			"name": "Final Venting",
+			"data": 3,
+			"availableStates": [6, 9, 10],
+			"successStates": [7, 8, 9, 10]
+		},
+		{
+			"name": "Done",
+			"data": 4,
+			"availableStates": [7],
+			"successStates": [8, 9, 10]
+		},
+		{
+			"name": "Abort!",
+			"data": 5,
+			"availableStates": [2, 3, 4, 5, 6],
+			"successStates": [9, 10]
+		},
+		{
+			"name": "Servo Control",
+			"data": 6,
+			"availableStates": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+			"successStates": [11]
+		}
+	]
 }
