@@ -7,16 +7,17 @@
 			"labels": [
 				"Timestamp (ms)",
 				"Current State",
-				"Valve SV-01",
+				"Valve SV-01 Filling",
 				"Valve SV-02",
-				"Valve SBV01 (PWM)",
-				"Valve SBV02 (PWM)",
-				"Valve SBV03 (PWM)",
+				"Valve SBV01 Main Valve",
+				"Valve SBV02 Fill Cart Venting",
+				"Valve SBV03 Pinhole Venting",
 				"Log Status"
 			],
 			"states": [
 				"Init",
 				"Wait For Init",
+				"Wait For Ready",
 				"Wait For Filling",
 				"Filling",
 				"Wait For Ignition",
@@ -38,46 +39,52 @@
 	],
 	"stateEvents": [
 		{
+			"name": "Ready",
+			"data": 7,
+			"availableStates": [2, 10],
+			"successStates": [3, 4, 5, 6, 7, 8, 9, 11]
+		},
+		{
 			"name": "Start Filling",
 			"data": 0,
-			"availableStates": [2, 9],
-			"successStates": [3, 4, 5, 6, 7, 8, 10]
+			"availableStates": [3, 10],
+			"successStates": [4, 5, 6, 7, 8, 9, 11]
 		},
 		{
 			"name": "Stop Filling",
 			"data": 1,
-			"availableStates": [3],
-			"successStates": [4, 5, 6, 7, 8, 9, 10]
+			"availableStates": [4],
+			"successStates": [5, 6, 7, 8, 9, 10, 11]
 		},
 		{
 			"name": "Ignition",
 			"data": 2,
-			"availableStates": [4, 9],
-			"successStates": [5, 6, 7, 8, 10]
+			"availableStates": [5, 10],
+			"successStates": [6, 7, 8, 9, 11]
 		},
 		{
 			"name": "Final Venting",
 			"data": 3,
-			"availableStates": [6, 9, 10],
-			"successStates": [7, 8, 9, 10]
+			"availableStates": [7, 10, 11],
+			"successStates": [8, 9, 10, 11]
 		},
 		{
 			"name": "Done",
 			"data": 4,
-			"availableStates": [7],
-			"successStates": [8, 9, 10]
+			"availableStates": [8],
+			"successStates": [9, 10, 11]
 		},
 		{
 			"name": "Abort!",
 			"data": 5,
-			"availableStates": [2, 3, 4, 5, 6],
-			"successStates": [9, 10]
+			"availableStates": [3, 4, 5, 6, 7],
+			"successStates": [10, 11]
 		},
 		{
 			"name": "Servo Control",
 			"data": 6,
-			"availableStates": [2, 3, 4, 5, 6, 7],
-			"successStates": [11]
+			"availableStates": [3, 4, 5, 6, 7, 8],
+			"successStates": [12]
 		}
 	]
 }
