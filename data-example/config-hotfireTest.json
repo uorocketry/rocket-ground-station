@@ -7,11 +7,10 @@
 			"labels": [
 				"Timestamp (ms)",
 				"Current State",
-				"Valve SV-01",
-				"Valve SV-02",
-				"Valve SBV01 (PWM)",
-				"Valve SBV02 (PWM)",
-				"Valve SBV03 (PWM)",
+				"Valve SOLENOID",
+				"Valve MANIFOLD (PWM)",
+				"Valve FILL (PWM)",
+				"Valve VENT (PWM)",
 				"Log Status"
 			],
 			"states": [
