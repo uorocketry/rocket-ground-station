@@ -89,11 +89,11 @@ public class StateButton implements ActionListener, DataReceiver {
 			servoControls.add(valveControls);
 
 			String[] valves = {
-					"SV01",
+					"VENT",
 					"SV02 (Unused)",
-					"SBV01",
-					"SBV02",
-					"SBV03"
+					"MAIN",
+					"PINHOLE",
+					"FILL"
 			};
 
 			JCheckBox[] checkBoxes = new JCheckBox[valves.length];
