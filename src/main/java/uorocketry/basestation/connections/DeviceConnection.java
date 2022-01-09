@@ -213,7 +213,7 @@ public class DeviceConnection implements ListSelectionListener, MouseListener, C
 
         connectionMethod = new TcpConnectionMethod(hostname, port);
 
-        initConnection();
+        new Thread(this::initConnection).start();
     }
 
     private void initConnection() {
