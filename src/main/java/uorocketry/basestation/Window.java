@@ -7,7 +7,9 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -109,7 +111,16 @@ public class Window extends JFrame {
 	    
 		// Set look and feel
 		try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			String lookAndFeel = UIManager.getSystemLookAndFeelClassName();
+			Stream<UIManager.LookAndFeelInfo> allFeels = Arrays.stream(UIManager.getInstalledLookAndFeels());
+
+			// Force GTK theme if available
+			String gtkLook = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
+			if (allFeels.anyMatch(look -> gtkLook.equals(look.getClassName()))) {
+				lookAndFeel = gtkLook;
+			}
+
+            UIManager.setLookAndFeel(lookAndFeel);
         } catch (ClassNotFoundException | InstantiationException
                 | IllegalAccessException | UnsupportedLookAndFeelException e) {
             e.printStackTrace();
