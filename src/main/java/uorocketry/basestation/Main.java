@@ -125,6 +125,9 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public boolean dataDeletionMode = false;
 	
 	public static void main(String[] args) {
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+
 		// Find different possible commands
 		for (int i = 0; i + 1 < args.length; i++) {
 			switch(args[i]) {
