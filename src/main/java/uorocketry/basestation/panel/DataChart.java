@@ -65,7 +65,7 @@ public class DataChart implements Chart {
 			altitudeDataY.add(new ArrayList<>());
 		}
 		
-		if (onlyShowLatestData) minDataPointIndex = Math.max(minDataPointIndex - maxDataPointsDisplayed, minDataPointIndex);
+		if (onlyShowLatestData) minDataPointIndex = Math.max(maxDataPointIndex - maxDataPointsDisplayed, minDataPointIndex);
 
 		// Add y axis
 		{
