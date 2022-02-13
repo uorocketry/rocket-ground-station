@@ -90,7 +90,7 @@ public class StateButton implements ActionListener, DataReceiver {
 
 			String[] valves = {
 					"VENT",
-					"SV02 (Unused)",
+					"Unused",
 					"MAIN",
 					"PINHOLE",
 					"FILL"

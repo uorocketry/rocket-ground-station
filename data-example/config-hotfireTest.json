@@ -7,14 +7,14 @@
 			"labels": [
 				"Timestamp (ms)",
 				"Current State",
-				"Valve SBV02 Fill Cart Venting Target",
-				"Valve SV-01 Filling Target",
-				"Valve SBV01 Main Valve Target",
-				"Valve SBV03 Pinhole Venting Target",
-				"Valve SBV02 Fill Cart Venting State",
-				"Valve SV-01 Filling State",
-				"Valve SBV01 Main Valve State",
-				"Valve SBV03 Pinhole Venting State",
+				"Valve Filling Target",
+				"Valve Main Valve Target",
+				"Valve Fill Cart Venting Target",
+				"Valve Pinhole Venting Target",
+				"Valve Filling State",
+				"Valve Main Valve State",
+				"Valve Fill Cart Venting State",
+				"Valve Pinhole Venting State",
 				"Log Status"
 			],
 			"states": [
@@ -86,7 +86,7 @@
 		{
 			"name": "Servo Control",
 			"data": 6,
-			"availableStates": [3, 4, 5, 6, 7, 8],
+			"availableStates": [2, 3, 4, 5, 6, 7, 8, 9],
 			"successStates": [12]
 		}
 	]
