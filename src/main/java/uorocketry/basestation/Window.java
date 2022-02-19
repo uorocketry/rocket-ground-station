@@ -88,6 +88,7 @@ public class Window extends JFrame {
 	JLabel savingToLabel;
 	
 	public JPanel sidePanel;
+	private JScrollPane sideScrollPane;
 	public JPanel comPanelParent;
 	
 	public JPanel stateSendingPanel;
@@ -263,9 +264,11 @@ public class Window extends JFrame {
 		eastSliderButtons.add(latestButton);
 		
 		sidePanel = new JPanel();
-		getContentPane().add(sidePanel, BorderLayout.EAST);
 		sidePanel.setLayout(new BorderLayout());
-		
+
+		sideScrollPane = new JScrollPane(sidePanel);
+		getContentPane().add(sideScrollPane, BorderLayout.EAST);
+
 		comPanelParent = new JPanel();
 		sidePanel.add(comPanelParent, BorderLayout.SOUTH);
 		
