@@ -21,9 +21,10 @@ public class DeviceConnectionHolder implements Iterable<DeviceConnection> {
     }
     
     public DeviceConnection add(Type type, DataReceiver[] dataReceivers, String name) {
-        DeviceConnection deviceConnection = new DeviceConnection(this, name);
+        List<DeviceConnection> list = getList(type);
+        DeviceConnection deviceConnection = new DeviceConnection(this, name, list.size());
         deviceConnection.setDataReceivers(dataReceivers);
-        getList(type).add(deviceConnection);
+        list.add(deviceConnection);
 
         return deviceConnection;
     }

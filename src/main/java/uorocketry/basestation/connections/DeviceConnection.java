@@ -39,8 +39,9 @@ public class DeviceConnection implements ListSelectionListener, MouseListener, C
 
     private final byte[] DELIMITER = "\n".getBytes(StandardCharsets.UTF_8);
 
-    public DeviceConnection(DeviceConnectionHolder deviceConnectionHolder, String name) {
+    public DeviceConnection(DeviceConnectionHolder deviceConnectionHolder, String name, int tableIndex) {
         this.deviceConnectionHolder = deviceConnectionHolder;
+        this.tableIndex = tableIndex;
 
         createUI(name);
     }
