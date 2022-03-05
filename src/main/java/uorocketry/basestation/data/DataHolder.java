@@ -85,7 +85,7 @@ public class DataHolder {
 			Long longData = -1L;
 			
 			try {
-				longData = Long.parseLong(currentData);
+				longData = Long.parseLong(currentData.trim());
 			} catch (NumberFormatException e) {
 				if (currentData.equals("ovf") || currentData.contentEquals("nan")) {
 					// ovf means overflow
@@ -103,7 +103,7 @@ public class DataHolder {
 		    Float floatData = -1f;
 			
 			try {
-				floatData = Float.parseFloat(currentData);
+				floatData = Float.parseFloat(currentData.trim());
 			} catch (NumberFormatException e) {
 				if (currentData.equals("ovf") || currentData.contentEquals("nan")) {
 					// ovf means overflow
