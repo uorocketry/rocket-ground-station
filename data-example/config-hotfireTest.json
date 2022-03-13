@@ -88,6 +88,18 @@
 			"data": 6,
 			"availableStates": [2, 3, 4, 5, 6, 7, 8, 9],
 			"successStates": [12]
+		},
+		{
+			"name": "Heater On",
+			"data": 8,
+			"availableStates": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+			"successStates": []
+		},
+		{
+			"name": "Heater Off",
+			"data": 9,
+			"availableStates": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+			"successStates": []
 		}
 	]
 }
