@@ -7,10 +7,12 @@
 			"labels": [
 				"Timestamp (ms)",
 				"Current State",
+				"Heater Target",
 				"Valve Filling Target",
 				"Valve Main Valve Target",
 				"Valve Fill Cart Venting Target",
 				"Valve Pinhole Venting Target",
+				"Heater State",
 				"Valve Filling State",
 				"Valve Main Valve State",
 				"Valve Fill Cart Venting State",
