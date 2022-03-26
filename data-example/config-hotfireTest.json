@@ -17,7 +17,8 @@
 				"Valve Main Valve State",
 				"Valve Fill Cart Venting State",
 				"Valve Pinhole Venting State",
-				"Log Status"
+				"Log Status",
+				"Temperature"
 			],
 			"states": [
 				"Init",
