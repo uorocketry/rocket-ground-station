@@ -100,6 +100,10 @@ public class StateButton implements ActionListener, DataReceiver {
 			for (int i = 0; i < checkBoxes.length; i++) {
 				checkBoxes[i] = new JCheckBox(valves[i]);
 				valveControls.add(checkBoxes[i]);
+
+				final int index = i;
+				checkBoxes[i].addActionListener((l) ->
+						checkBoxes[index].setText(valves[index] + (checkBoxes[index].isSelected() ? " (Open)" : "")));
 			}
 
 			JButton send = new JButton("Send");
@@ -109,6 +113,9 @@ public class StateButton implements ActionListener, DataReceiver {
 				for (int i = 0; i < checkBoxes.length; i++) {
 					if (checkBoxes[i].isSelected()) {
 						sendBit += 1 << (i + 1);
+						checkBoxes[i].setText(valves[i] + " (Open)");
+					} else {
+						checkBoxes[i].setText(valves[i] + " (Open)");
 					}
 				}
 
