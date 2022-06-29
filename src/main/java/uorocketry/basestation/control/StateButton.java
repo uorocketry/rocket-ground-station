@@ -85,9 +85,6 @@ public class StateButton implements ActionListener, DataReceiver {
 			servoControls = new JPanel();
 			servoControls.setLayout(new BoxLayout(servoControls, BoxLayout.Y_AXIS));
 
-			JPanel valveControls = new JPanel();
-			servoControls.add(valveControls);
-
 			String[] valves = {
 					"VENT",
 					"IGNITER",
@@ -99,7 +96,8 @@ public class StateButton implements ActionListener, DataReceiver {
 			JCheckBox[] checkBoxes = new JCheckBox[valves.length];
 			for (int i = 0; i < checkBoxes.length; i++) {
 				checkBoxes[i] = new JCheckBox(valves[i] + " (C)");
-				valveControls.add(checkBoxes[i]);
+				checkBoxes[i].setAlignmentX(Component.CENTER_ALIGNMENT);
+				servoControls.add(checkBoxes[i]);
 
 				final int index = i;
 				checkBoxes[i].addActionListener((l) ->
@@ -107,7 +105,8 @@ public class StateButton implements ActionListener, DataReceiver {
 			}
 
 			JButton send = new JButton("Send");
-			valveControls.add(send);
+			send.setAlignmentX(Component.CENTER_ALIGNMENT);
+			servoControls.add(send);
 			send.addActionListener((e) -> {
 				byte sendBit = 1;
 				for (int i = 0; i < checkBoxes.length; i++) {
