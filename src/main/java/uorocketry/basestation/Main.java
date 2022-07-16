@@ -45,7 +45,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fazecast.jSerialComm.SerialPort;
 
 import uorocketry.basestation.config.Config;
-import uorocketry.basestation.config.Converter;
 import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
@@ -171,7 +170,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		String fileName = "data/config.json";
 		try {
 			String configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
-			config = Converter.fromJsonString(configString);
+			config = Config.fromJsonString(configString);
 		} catch (IOException e) {
 			e.printStackTrace();
 
