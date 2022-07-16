@@ -1,32 +1,36 @@
 package uorocketry.basestation.data;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.jupiter.api.Test;
-import uorocketry.basestation.Main;
-import uorocketry.basestation.config.Config;
-import uorocketry.basestation.config.DataSet;
-import uorocketry.basestation.config.FakeConfig;
-
-import javax.swing.*;
-import javax.swing.table.TableModel;
-import java.lang.reflect.Field;
-import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JTable;
+import javax.swing.table.TableModel;
+
+import org.junit.jupiter.api.Test;
+
+import uorocketry.basestation.config.DataSet;
 
 public class DataHolderUnitTest {
 
     @Test
     public void updateTableUI() {
-        String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
-        String[] states = new String[] {"First State", "Second State"};
+        String[] labels = new String[] { "Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial",
+                "Bigger Decimal" };
+        String[] states = new String[] { "First State", "Second State" };
         Map<String, Integer> indexes = new HashMap<>();
         indexes.put("timestamp", 0);
         indexes.put("state", 1);
 
-        DataSet dataSet = new DataSet("Testing Set", "#AB1C2A", labels, states, indexes, ",");
-
+        DataSet dataSet = DataSet.builder()
+                .name("Testing Set")
+                .color("#AB1C2A")
+                .labels(labels)
+                .states(states)
+                .indexes(indexes)
+                .separator(",")
+                .build();
         DataHolder dataHolder = new DataHolder(0, dataSet);
         dataHolder.hiddenDataTypes.add(new DataType(2, 0));
 

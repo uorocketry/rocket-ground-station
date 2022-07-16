@@ -1,21 +1,17 @@
 package uorocketry.basestation.data;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import uorocketry.basestation.Main;
-import uorocketry.basestation.config.Config;
-import uorocketry.basestation.config.DataSet;
-import uorocketry.basestation.config.FakeConfig;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import uorocketry.basestation.config.Config;
+import uorocketry.basestation.config.DataSet;
 
 public class DataProcessorParseDataUnitTest {
 
@@ -23,13 +19,23 @@ public class DataProcessorParseDataUnitTest {
 
     @BeforeEach
     public void setup() {
-        String[] labels = new String[] {"Timestamp (ns)", "Value 1", "Value 2", "Value 3", "Value 4", "Value 5", "Value 6", "Value 7", "Value 8", "Value 9", "Value 10", "Value 11", "Value 12"};
-        String[] states = new String[] {"First State", "Second State"};
+        String[] labels = new String[] { "Timestamp (ns)", "Value 1", "Value 2", "Value 3", "Value 4", "Value 5",
+                "Value 6", "Value 7", "Value 8", "Value 9", "Value 10", "Value 11", "Value 12" };
+        String[] states = new String[] { "First State", "Second State" };
         Map<String, Integer> indexes = new HashMap<>();
         indexes.put("timestamp", 0);
 
-        DataSet dataSet = new DataSet("Processor Testing Set", "#AC1C3A", labels, states, indexes, ",");
-        config = new FakeConfig(Collections.singletonList(dataSet), null);
+        DataSet dataSet = DataSet.builder()
+                .name("Processor Testing Set")
+                .color("#AC1C3A")
+                .labels(labels)
+                .states(states)
+                .indexes(indexes)
+                .separator(",")
+                .build();
+        config = new Config();
+        DataSet[] datasets = { dataSet };
+        config.setDatasets(datasets);
     }
 
     @Test
