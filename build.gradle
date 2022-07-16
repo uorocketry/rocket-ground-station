@@ -1,27 +1,25 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
+
+plugins {
+	id 'java'
+	id 'eclipse'
+	id 'application'
+  	id "io.freefair.lombok" version "6.5.0.3"
+}
+
 archivesBaseName = 'GroundStation'
+mainClassName = 'uorocketry.basestation.Main'
 
 repositories {
 	mavenCentral()
 }
 
-jar {
-	manifest {
-		exclude  'META-INF/*'
-		attributes (
-			'Main-Class': 'uorocketry.basestation.Main'
-		)
-	}
-	dependsOn configurations.runtimeClasspath
-	from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
+
+
+
 
 dependencies {
 	implementation	'com.fazecast:jSerialComm:2.6.2'
-	implementation	'org.json:json:20210307'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
 	implementation	'org.knowm.xchart:xchart:3.6.1'
 	implementation	'org.java-websocket:Java-WebSocket:1.5.1'
     implementation 'org.jetbrains:annotations:19.0.0'
