@@ -1,7 +1,5 @@
 package uorocketry.basestation.data;
 
-import uorocketry.basestation.connections.DeviceConnection;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +61,7 @@ public class DataPointHolder implements Iterable<List<DataPoint>> {
     /**
      * Convert an index for the general dataPoints array into an index for the
      * specific array allConnectionInfoData
+     * 
      * @return
      */
     public int toConnectionInfoDataIndex(int tableIndex, int dataPointIndex) {

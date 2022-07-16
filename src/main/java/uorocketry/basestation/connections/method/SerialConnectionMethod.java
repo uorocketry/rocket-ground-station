@@ -4,8 +4,6 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
-import java.nio.charset.StandardCharsets;
-
 public class SerialConnectionMethod extends AbstractConnectionMethod implements SerialPortMessageListener {
 
     private SerialPort serialPort;

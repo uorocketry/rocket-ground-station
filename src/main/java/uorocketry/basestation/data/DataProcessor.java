@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
 
 import uorocketry.basestation.config.Config;
 import uorocketry.basestation.config.DataSet;
@@ -39,16 +38,21 @@ public class DataProcessor {
 		this.mainConfig = mainConfig;
 		this.dataTables = dataTables;
 
-		dataPointHolder = new DataPointHolder(mainConfig.getDataSourceCount());
-		currentLogFileName = new ArrayList<>(mainConfig.getDataSourceCount());
-		logQueues = new ArrayList<>(mainConfig.getDataSourceCount());
-		rssiDataSets = new ArrayList<>(mainConfig.getDataSourceCount());
+		var nDataSets = mainConfig.getDatasets().length;
 
-		for (int i = 0; i < mainConfig.getDataSourceCount(); i++) {
+		dataPointHolder = new DataPointHolder(nDataSets);
+		currentLogFileName = new ArrayList<>(nDataSets);
+		logQueues = new ArrayList<>(nDataSets);
+		rssiDataSets = new ArrayList<>(nDataSets);
+
+		for (int i = 0; i < nDataSets; i++) {
 			logQueues.add(new ArrayDeque<>());
-
-			rssiDataSets.add(new DataSet(mainConfig.getDataSet(i).getName() + " RSSI",
-					mainConfig.getDataSet(i).getColor(), RssiProcessor.labels, null, null, SEPARATOR));
+			var newDataSet = DataSet.builder()
+					.name(mainConfig.getDatasets()[i].getName() + " RSSI")
+					.color(mainConfig.getDatasets()[i].getColor())
+					.labels(RssiProcessor.labels)
+					.build();
+			rssiDataSets.add(newDataSet);
 		}
 	}
 
@@ -85,26 +89,28 @@ public class DataProcessor {
 	}
 
 	protected DataHolder parseData(int tableIndex, String data) {
-		DataHolder dataHolder = new DataHolder(tableIndex, mainConfig.getDataSet(tableIndex));
-		
+		DataHolder dataHolder = new DataHolder(tableIndex, mainConfig.getDatasets()[tableIndex]);
+
 		// Clear out the b' ' stuff added that is only meant for the radio to see
 		data = data.replaceAll("b'|(?:\\\\r\\\\n|\\r\\n)'?", "");
-		if (data.endsWith(",")) data = data.substring(0, data.length() - 1);
+		if (data.endsWith(","))
+			data = data.substring(0, data.length() - 1);
 
 		// Semi-colon separated
 		String[] splitData = data.split(SEPARATOR);
 		if (splitData.length != dataHolder.data.length) {
-			//invalid data
+			// invalid data
 			System.err.println("Line with invalid data (Not the correct amount of data). It was "
 					+ splitData.length + " vs " + dataHolder.data.length + ". " + data);
-			
+
 			return null;
 		}
-		
+
 		// Ensure that the timestamp has not gone back in time
-		Integer timestampIndex = mainConfig.getDataSet(tableIndex).getIndex("timestamp");
+		Integer timestampIndex = mainConfig.getDatasets()[tableIndex].getIndexes().get("timestamp");
 		if (timestampIndex != null) {
-			DataHolder lastDataPointDataHolder = findLastValidDataPoint(dataPointHolder.getAllReceivedData().get(tableIndex));
+			DataHolder lastDataPointDataHolder = findLastValidDataPoint(
+					dataPointHolder.getAllReceivedData().get(tableIndex));
 			if (lastDataPointDataHolder != null) {
 				Float value = lastDataPointDataHolder.data[timestampIndex].getDecimalValue();
 				try {
@@ -114,7 +120,8 @@ public class DataProcessor {
 						// Treat as invalid data
 						return null;
 					}
-				} catch (NumberFormatException e) {}
+				} catch (NumberFormatException e) {
+				}
 
 			}
 		}
@@ -146,17 +153,20 @@ public class DataProcessor {
 	/**
 	 * Sets tables up for the given index
 	 *
-	 * @param showMaxIndex If true, it will make sure to always show the latest index,
-	 *                     for use when connection info and received data drift apart
+	 * @param showMaxIndex If true, it will make sure to always show the latest
+	 *                     index,
+	 *                     for use when connection info and received data drift
+	 *                     apart
 	 * @return The received DataHolder
 	 */
 	public DataPoint setTableTo(int tableIndex, int index, boolean showMaxIndex) {
 		DataPoint dataPoint = dataPointHolder.get(tableIndex).get(index);
-		if (dataPoint == null) return null;
+		if (dataPoint == null)
+			return null;
 
 		DataHolder currentDataHolder = dataPoint.getReceivedData();
 		JTable receivedDataTable = dataTables.get(tableIndex).getReceivedDataTable();
-		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDataSet(tableIndex), false);
+		updateTable(index, currentDataHolder, receivedDataTable, mainConfig.getDatasets()[tableIndex], false);
 
 		DataHolder connectionInfoHolder = dataPoint.getConnectionInfoData();
 		JTable connectionInfoTable = dataTables.get(tableIndex).getConnectionInfoTable();
@@ -165,7 +175,8 @@ public class DataProcessor {
 		return dataPoint;
 	}
 
-	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet, boolean hideTable) {
+	private void updateTable(int index, DataHolder currentDataHolder, JTable dataTable, DataSet dataSet,
+			boolean hideTable) {
 		if (currentDataHolder != null) {
 			currentDataHolder.updateTableUIWithData(dataTable, dataSet.getLabels());
 		} else {
@@ -197,7 +208,8 @@ public class DataProcessor {
 		table.setVisible(false);
 	}
 
-	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData, int maxDataPointsDisplayed) {
+	public void updateChart(Chart chart, int minDataIndex, int maxDataIndex, boolean onlyShowLatestData,
+			int maxDataPointsDisplayed) {
 		chart.update(dataPointHolder, minDataIndex, maxDataIndex, onlyShowLatestData, maxDataPointsDisplayed);
 	}
 
@@ -230,7 +242,6 @@ public class DataProcessor {
 					}
 				}
 
-
 			} catch (IOException err) {
 				err.printStackTrace();
 			}
@@ -249,7 +260,7 @@ public class DataProcessor {
 		File[] listOfLogFiles = folder.listFiles();
 		Set<String> usedFileNames = new HashSet<String>();
 
-		for (File file: listOfLogFiles) {
+		for (File file : listOfLogFiles) {
 			if (file.isFile() && file.getName().contains(DEFAULT_LOG_FILE_NAME)) {
 				usedFileNames.add(file.getName());
 			}
@@ -257,13 +268,15 @@ public class DataProcessor {
 
 		int logIndex = 0;
 
-		JSONArray dataSets = mainConfig.getObject().getJSONArray("datasets");
+		DataSet[] dataSets = mainConfig.getDatasets();
 
 		// Find a suitable filename
 		for (int i = 0; i <= listOfLogFiles.length; i++) {
 			boolean containsFile = false;
-			for (int j = 0 ; j < getDataSourceCount(); j++) {
-				if (usedFileNames.contains(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(j).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION)) {
+			for (int j = 0; j < getDataSourceCount(); j++) {
+				if (usedFileNames.contains(
+						DEFAULT_LOG_FILE_NAME + "_" + dataSets[j].getName().toLowerCase() + "_"
+								+ logIndex + LOG_FILE_EXTENSION)) {
 					containsFile = true;
 					break;
 				}
@@ -277,8 +290,9 @@ public class DataProcessor {
 		}
 
 		// Set the names
-		for (int i = 0 ; i < getDataSourceCount(); i++) {
-			currentLogFileName.add(DEFAULT_LOG_FILE_NAME + "_" + dataSets.getJSONObject(i).getString("name").toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION);
+		for (int i = 0; i < getDataSourceCount(); i++) {
+			currentLogFileName.add(DEFAULT_LOG_FILE_NAME + "_"
+					+ dataSets[i].getName().toLowerCase() + "_" + logIndex + LOG_FILE_EXTENSION);
 		}
 	}
 
@@ -286,8 +300,9 @@ public class DataProcessor {
 		StringBuilder savingToText = new StringBuilder();
 
 		// Add text for each file
-		for (int i = 0 ; i < getDataSourceCount(); i++) {
-			if (i != 0) savingToText.append(", ");
+		for (int i = 0; i < getDataSourceCount(); i++) {
+			if (i != 0)
+				savingToText.append(", ");
 
 			savingToText.append(LOG_FILE_SAVE_LOCATION + currentLogFileName.get(i));
 		}
@@ -301,7 +316,7 @@ public class DataProcessor {
 
 	/**
 	 * Find last non null data point
-	 * 
+	 *
 	 * @param currentTableData
 	 * @return DataHolder if found, null otherwise
 	 */
@@ -311,12 +326,12 @@ public class DataProcessor {
 				return currentTableData.get(i);
 			}
 		}
-		
+
 		return null;
 	}
 
 	@Deprecated
-    public List<List<DataHolder>> getAllReceivedData() {
+	public List<List<DataHolder>> getAllReceivedData() {
 		return dataPointHolder.getAllReceivedData();
 	}
 

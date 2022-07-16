@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +31,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -41,29 +39,43 @@ import org.knowm.xchart.style.Styler.LegendPosition;
 import org.knowm.xchart.style.Styler.YAxisPosition;
 import org.knowm.xchart.style.XYStyler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fazecast.jSerialComm.SerialPort;
 
 import uorocketry.basestation.config.Config;
-import uorocketry.basestation.config.FileConfig;
+import uorocketry.basestation.config.Converter;
+import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
-import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.control.StateButton;
-import uorocketry.basestation.data.*;
+import uorocketry.basestation.data.DataPoint;
+import uorocketry.basestation.data.DataProcessor;
+import uorocketry.basestation.data.DataTableCellRenderer;
+import uorocketry.basestation.data.DataType;
 import uorocketry.basestation.external.GoogleEarthUpdater;
 import uorocketry.basestation.external.WebViewUpdater;
-import uorocketry.basestation.panel.*;
+import uorocketry.basestation.panel.Chart;
+import uorocketry.basestation.panel.DataChart;
+import uorocketry.basestation.panel.SnapPanel;
+import uorocketry.basestation.panel.SnapPanelListener;
+import uorocketry.basestation.panel.TableHolder;
 
-public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener, DataReceiver, SnapPanelListener {
-	
+public class Main implements ComponentListener, ChangeListener, ActionListener, MouseListener, ListSelectionListener,
+		DataReceiver, SnapPanelListener {
+
 	/** Constants */
 
-	/** Data file location for the simulation (new line separated for each event). This does not include the extension/ */
+	/**
+	 * Data file location for the simulation (new line separated for each event).
+	 * This does not include the extension/
+	 */
 	public static final String SIM_DATA_LOCATION = "data/data";
 	public static final String SIM_DATA_EXTENSION = ".txt";
-	
+
 	public static final Color LEGEND_BACKGROUND_COLOR = new Color(255, 255, 255, 100);
-	
+
 	/** Whether to update Google Earth file */
 	public static boolean googleEarth = false;
 	/** Where the updating Google Earth kml file is stored */
@@ -73,85 +85,109 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 	/** Used for the map view */
 	GoogleEarthUpdater googleEarthUpdater;
-	
+
 	/** Whether to update web view JSON file */
 	public static boolean webView = false;
 	public static int WEBVIEW_PORT = 4534;
-	
+
 	/** Used for the web view */
 	WebViewUpdater webViewUpdater;
-	
+
 	/** Used to limit displayed data points to speed up rendering */
 	public static int maxDataPointsDisplayed = 800;
-	
-	/** Is this running in simulation mode. Must be set at the beginning as it changes the setup. */
+
+	/**
+	 * Is this running in simulation mode. Must be set at the beginning as it
+	 * changes the setup.
+	 */
 	public static boolean simulation = false;
-	
+
 	public DataProcessor dataProcessor;
-	
+
 	/** Index of the current data point being looked at */
 	ArrayList<Integer> currentDataIndexes = new ArrayList<>(2);
 	/** Index of the minimum data point being looked at */
 	ArrayList<Integer> minDataIndexes = new ArrayList<>(2);
-	
+
 	/** If {@link this.currentDataIndexes} should be set to the latest message */
 	boolean latest = true;
 	/** If true, slider will temporarily stop growing */
 	boolean paused = false;
-	
-	/** Used to only update the UI once at a time, even though it runs in its own thread */
+
+	/**
+	 * Used to only update the UI once at a time, even though it runs in its own
+	 * thread
+	 */
 	boolean updatingUI = false;
-	
+
 	/** If not in a simulation, the serial ports being listened to */
 	DeviceConnectionHolder deviceConnectionHolder = new DeviceConnectionHolder();
-	
+
 	public Window window;
-	
+
 	/** The chart last clicked */
 	Chart selectedChart;
 	Border selectionBorder = BorderFactory.createLineBorder(Color.blue);
-	
-	/** The width and height of the chart container to resize elements inside on resize. */
+
+	/**
+	 * The width and height of the chart container to resize elements inside on
+	 * resize.
+	 */
 	int chartContainerWidth = -1;
 	int chartContainerHeight = -1;
-	
-	/** Set to true when automatically selecting or deselcting from the data table */
+
+	/**
+	 * Set to true when automatically selecting or deselcting from the data table
+	 */
 	boolean ignoreSelections = false;
-	
-	/** If true, it will show the latest data instead of showing a subset of all data */
+
+	/**
+	 * If true, it will show the latest data instead of showing a subset of all data
+	 */
 	boolean onlyShowLatestData = false;
-	
+
 	/** If true, clicking on data in a chart will hide it */
 	public boolean dataDeletionMode = false;
-	
+
 	public static void main(String[] args) {
-        System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
+		System.setProperty("awt.useSystemAAFontSettings", "on");
+		System.setProperty("swing.aatext", "true");
 
 		// Find different possible commands
 		for (int i = 0; i + 1 < args.length; i++) {
-			switch(args[i]) {
-			case "--sim":
-				simulation = Boolean.parseBoolean(args[i + 1]);
-				
-				break;
+			switch (args[i]) {
+				case "--sim":
+					simulation = Boolean.parseBoolean(args[i + 1]);
+
+					break;
 			}
 		}
-		
+
 		new Main();
 	}
-	
+
 	public Main() {
 		// Load labels
-		config = new FileConfig();
-		
+		String fileName = "data/config.json";
+		try {
+			String configString = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8);
+			config = Converter.fromJsonString(configString);
+		} catch (IOException e) {
+			e.printStackTrace();
+
+			JOptionPane.showMessageDialog(null, "There was an error reading the file at " + fileName +
+					"\r\n\r\nIf you plan downloaded a release build, you might want to download the version with labels and sample data included.");
+
+			return;
+		}
+
 		// Create window
 		window = new Window(this, config);
-		
+
 		window.addComponentListener(this);
-		
+
 		setupUI();
-		
+
 		// Different setups depending on if simulation or not
 		setupData();
 
@@ -159,23 +195,23 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (googleEarth) {
 			setupGoogleEarth();
 		}
-		
+
 		// Setup web view support
 		if (webView) {
 			setupWebView();
 		}
-		
+
 		// Update UI once
 		updateUI();
 	}
-	
+
 	private void setupData() {
 		dataProcessor = new DataProcessor(config, window.dataTables);
 
-		currentDataIndexes = new ArrayList<>(config.getDataSourceCount());
-		minDataIndexes = new ArrayList<>(config.getDataSourceCount());
+		currentDataIndexes = new ArrayList<>(config.getDatasets().length);
+		minDataIndexes = new ArrayList<>(config.getDatasets().length);
 
-		for (int i = 0; i < config.getDataSourceCount(); i++) {
+		for (int i = 0; i < config.getDatasets().length; i++) {
 			// Add data indexes
 			currentDataIndexes.add(0);
 			minDataIndexes.add(0);
@@ -199,7 +235,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	public void setupSerialComList() {
-	    deviceConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
+		deviceConnectionHolder.setAllSerialPorts(SerialPort.getCommPorts());
 
 		// Make array for the selector
 		String[] comSelectorData = new String[deviceConnectionHolder.getAllSerialPorts().length];
@@ -209,7 +245,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		}
 
 		for (DeviceConnection deviceConnection : deviceConnectionHolder) {
-		    deviceConnection.getComSelectorList().setListData(comSelectorData);
+			deviceConnection.getComSelectorList().setListData(comSelectorData);
 		}
 	}
 
@@ -223,7 +259,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		addChart();
 
 		// Add slider listeners
-		for (int i = 0; i < config.getDataSourceCount(); i++) {
+		for (int i = 0; i < config.getDatasets().length; i++) {
 			window.maxSliders.get(i).addChangeListener(this);
 			window.minSliders.get(i).addChangeListener(this);
 		}
@@ -274,17 +310,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		googleEarthUpdater = new GoogleEarthUpdater();
 
 		// Setup updater file
-//		googleEarthUpdater.createKMLUpdaterFile();
+		// googleEarthUpdater.createKMLUpdaterFile();
 	}
 
 	public void setupWebView() {
-		if (webViewUpdater != null) webViewUpdater.close();
+		if (webViewUpdater != null)
+			webViewUpdater.close();
 		webViewUpdater = new WebViewUpdater();
 	}
 
 	public void updateUI() {
 		// If not ready yet
-		if (dataProcessor== null || dataProcessor.getDataPointHolder().size() == 0 || updatingUI) return;
+		if (dataProcessor == null || dataProcessor.getDataPointHolder().size() == 0 || updatingUI)
+			return;
 
 		updatingUI = true;
 
@@ -297,7 +335,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			// Update every table's data
 			for (int i = 0; i < dataProcessor.getDataPointHolder().size(); i++) {
 				// If not ready yet
-				if (dataProcessor.getDataPointHolder().get(i).size() == 0) continue;
+				if (dataProcessor.getDataPointHolder().get(i).size() == 0)
+					continue;
 
 				// Don't change slider if paused
 				if (!paused) {
@@ -315,23 +354,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 
 				if (window.stateButtons.size() > i && dataPoint != null && dataPoint.getReceivedData() != null) {
 					try {
-						int stateIndex = config.getDataSet(i).getIndex("state");
-						for (StateButton stateButton: window.stateButtons.get(i)) {
-						    Float value = dataPoint.getReceivedData().data[stateIndex].getDecimalValue();
-						    if (value != null) {
-						        stateButton.stateChanged(value.intValue());
-						    }
+						int stateIndex = config.getDatasets()[i].getIndexes().get("state");
+						for (StateButton stateButton : window.stateButtons.get(i)) {
+							Float value = dataPoint.getReceivedData().data[stateIndex].getDecimalValue();
+							if (value != null) {
+								stateButton.stateChanged(value.intValue());
+							}
 						}
-					} catch (JSONException ignored) {}
+					} catch (Exception ignored) {
+					}
 				}
 			}
 
 			if (googleEarth) {
-				googleEarthUpdater.updateKMLFile(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes, config, false);
+				googleEarthUpdater.updateKMLFile(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes,
+						config, false);
 			}
 
 			if (webView) {
-				webViewUpdater.sendUpdate(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes, config);
+				webViewUpdater.sendUpdate(dataProcessor.getDataPointHolder(), minDataIndexes, currentDataIndexes,
+						config);
 			}
 
 			// Update every chart
@@ -349,7 +391,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	}
 
 	/**
-	 * Update the chart with data up to currentDataIndex, and then call window.repaint()
+	 * Update the chart with data up to currentDataIndex, and then call
+	 * window.repaint()
 	 *
 	 * @param chart The chart to update
 	 */
@@ -367,11 +410,11 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	 */
 	public void loadSimulationData() {
 		// Load simulation data
-		for (int i = 0; i < config.getDataSourceCount(); i++) {
+		for (int i = 0; i < config.getDatasets().length; i++) {
 			loadSimulationData(i, SIM_DATA_LOCATION + i + SIM_DATA_EXTENSION);
 		}
 	}
-	
+
 	public void loadSimulationData(int index, String fileName) {
 		BufferedReader br = null;
 		try {
@@ -380,23 +423,23 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			e.printStackTrace();
 			return;
 		}
-		
+
 		try {
 			try {
-			    String line = null;
+				String line = null;
 
-			    while ((line = br.readLine()) != null) {
-			        // Parse this line and add it as a data point
+				while ((line = br.readLine()) != null) {
+					// Parse this line and add it as a data point
 					dataProcessor.receivedData(index, line.getBytes(StandardCharsets.UTF_8));
-			    }
+				}
 			} finally {
-			    br.close();
+				br.close();
 			}
-		} catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Triggered every time the slider changes
 	 */
@@ -405,29 +448,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		if (e.getSource() instanceof JSlider && window.maxSliders.contains(e.getSource())) {
 			JSlider maxSlider = (JSlider) e.getSource();
 			int tableIndex = window.maxSliders.indexOf(maxSlider);
-			
+
 			currentDataIndexes.set(tableIndex, maxSlider.getValue());
-			
+
 			// Check if min is too high
 			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
 				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
 				window.minSliders.get(tableIndex).setValue(minDataIndexes.get(tableIndex));
 			}
-			
-			
+
 			updateUI();
 		} else if (e.getSource() instanceof JSlider && window.minSliders.contains(e.getSource())) {
 			JSlider minSlider = (JSlider) e.getSource();
 			int tableIndex = window.minSliders.indexOf(minSlider);
 
 			minDataIndexes.set(tableIndex, minSlider.getValue());
-			
+
 			// Check if min is too high
 			if (minDataIndexes.get(tableIndex) > currentDataIndexes.get(tableIndex)) {
 				minDataIndexes.set(tableIndex, currentDataIndexes.get(tableIndex));
 				minSlider.setValue(minDataIndexes.get(tableIndex));
 			}
-			
+
 			updateUI();
 		}
 	}
@@ -435,26 +477,26 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	@Override
 	public void receivedData(DeviceConnection deviceConnection, byte[] data) {
 		dataProcessor.receivedData(deviceConnection, data);
-        
-        updateUI();
+
+		updateUI();
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == window.clearDataButton) {
-			if (JOptionPane.showConfirmDialog(window, 
+			if (JOptionPane.showConfirmDialog(window,
 					"Are you sure you would like to clear all the data?") == 0) {
 				for (int i = 0; i < dataProcessor.getDataPointHolder().size(); i++) {
 					dataProcessor.getDataPointHolder().get(i).clear();
 				}
-				
+
 				updateUI();
 			}
 		} else if (e.getSource() == window.refreshComSelectorButton) {
-            setupSerialComList();
-        }  else if (e.getSource() == window.hideComSelectorButton) {
+			setupSerialComList();
+		} else if (e.getSource() == window.hideComSelectorButton) {
 			window.comPanelParent.setVisible(!window.comPanelParent.isVisible());
-			
+
 			if (window.comPanelParent.isVisible()) {
 				window.hideComSelectorButton.setText("Hide Com Selector");
 			} else {
@@ -462,7 +504,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} else if (e.getSource() == window.hideBarsButton) {
 			window.sliderTabs.setVisible(!window.sliderTabs.isVisible());
-			
+
 			if (window.sliderTabs.isVisible()) {
 				window.hideBarsButton.setText("Hide Sliders");
 			} else {
@@ -470,19 +512,19 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			}
 		} else if (e.getSource() == window.pauseButton) {
 			paused = !paused;
-			
+
 			if (paused) {
 				window.pauseButton.setText("Resume");
 			} else {
 				window.pauseButton.setText("Pause");
 			}
-			
+
 		} else if (e.getSource() == window.latestButton) {
 			latest = !latest;
-			
+
 			if (latest) {
 				window.latestButton.setText("Detach From Latest");
-				
+
 				for (int i = 0; i < window.maxSliders.size(); i++) {
 					window.maxSliders.get(i).setValue(dataProcessor.getDataPointHolder().get(0).size() - 1);
 				}
@@ -493,24 +535,27 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			addChart();
 		} else if (e.getSource() == window.googleEarthCheckBox) {
 			googleEarth = window.googleEarthCheckBox.isSelected();
-			
-			if (googleEarth) setupGoogleEarth();
+
+			if (googleEarth)
+				setupGoogleEarth();
 		} else if (e.getSource() == window.webViewCheckBox) {
 			webView = window.webViewCheckBox.isSelected();
-			
-			if (webView) setupWebView();
+
+			if (webView)
+				setupWebView();
 		} else if (e.getSource() == window.simulationCheckBox && window.simulationCheckBox.isSelected() != simulation) {
 			String warningMessage = "";
 			if (window.simulationCheckBox.isSelected()) {
 				warningMessage = "Are you sure you would like to enable simulation mode?\n\n"
-						+ "The current data will be deleted from the UI. You can find it in " + dataProcessor.formattedSavingToLocations();
+						+ "The current data will be deleted from the UI. You can find it in "
+						+ dataProcessor.formattedSavingToLocations();
 			} else {
 				warningMessage = "Are you sure you would like to disable simulation mode?";
 			}
-			
+
 			if (JOptionPane.showConfirmDialog(window, warningMessage) == 0) {
 				simulation = window.simulationCheckBox.isSelected();
-				
+
 				setupData();
 			} else {
 				window.simulationCheckBox.setSelected(simulation);
@@ -520,7 +565,8 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		} else if (e.getSource() == window.setMaxDataPointsButton) {
 			try {
 				maxDataPointsDisplayed = Integer.parseInt(window.maxDataPointsTextField.getText());
-			} catch (NumberFormatException ignored) {}
+			} catch (NumberFormatException ignored) {
+			}
 		} else if (e.getSource() == window.dataDeletionModeCheckBox) {
 			dataDeletionMode = window.dataDeletionModeCheckBox.isSelected();
 		} else if (e.getSource() == window.restoreDeletedData) {
@@ -531,132 +577,139 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 					}
 				}
 			}
-			
+
 			updateUI();
 		} else if (e.getSource() == window.saveLayout) {
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setAcceptAllFileFilterUsed(false);
 			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			
+
 			// Start the in current working directory
 			fileChooser.setCurrentDirectory(new File("."));
 
 			int result = fileChooser.showSaveDialog(window);
-			
+
 			if (result == JFileChooser.APPROVE_OPTION) {
 				File saveFile = fileChooser.getSelectedFile();
-				
+
 				// Add extension
 				if (!saveFile.getName().endsWith(".rlay")) {
 					saveFile = new File(saveFile.getPath() + ".rlay");
 				}
-				
+
 				// Prep file
-				JSONObject saveObject = new JSONObject();
-				
-				JSONArray chartsArray = new JSONArray();
-				saveObject.put("charts", chartsArray);
-				
-				for (Chart chart: window.charts) {
-					JSONObject chartData = new JSONObject();
-					
+				var mapper = new ObjectMapper();
+				ObjectNode saveObject = mapper.createObjectNode();
+
+				ArrayNode chartsArray = mapper.createArrayNode();
+				saveObject.set("charts", chartsArray);
+
+				for (Chart chart : window.charts) {
+					ObjectNode chartData = mapper.createObjectNode();
+
 					chartData.put("x", chart.getSpanPanel().relX);
 					chartData.put("y", chart.getSpanPanel().relY);
 					chartData.put("width", chart.getSpanPanel().relWidth);
 					chartData.put("height", chart.getSpanPanel().relHeight);
-					
+
 					// Add xTypes
-					JSONArray xTypeArray = new JSONArray();
-					for (DataType dataType: chart.getXTypes()) {
-						JSONObject xTypeData = new JSONObject();
-						
+					ArrayNode xTypeArray = mapper.createArrayNode();
+					for (DataType dataType : chart.getXTypes()) {
+						ObjectNode xTypeData = mapper.createObjectNode();
+
 						xTypeData.put("index", dataType.index);
 						xTypeData.put("tableIndex", dataType.tableIndex);
-						
-						xTypeArray.put(xTypeData);
+
+						xTypeArray.add(xTypeData);
 					}
-					chartData.put("xTypes", xTypeArray);
-					
+					chartData.set("xTypes", xTypeArray);
+
 					// Add yType
-					JSONObject yTypeData = new JSONObject();
+					ObjectNode yTypeData = mapper.createObjectNode();
 					yTypeData.put("index", chart.getYType().index);
 					yTypeData.put("tableIndex", chart.getYType().tableIndex);
-					chartData.put("yType", yTypeData);
-					
-					chartsArray.put(chartData);
+					chartData.set("yType", yTypeData);
+
+					chartsArray.add(chartData);
 				}
-				
+
 				// Save file
 				try (PrintWriter out = new PrintWriter(saveFile)) {
-				    out.println(saveObject.toString());
+					out.println(saveObject.toString());
 				} catch (FileNotFoundException e1) {
 					e1.printStackTrace();
 				}
 			}
-			
+
 		} else if (e.getSource() == window.loadLayout) {
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setAcceptAllFileFilterUsed(false);
 			fileChooser.addChoosableFileFilter(new LayoutFileFilter());
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			
+
 			// Start the in current working directory
 			fileChooser.setCurrentDirectory(new File("."));
 
 			int result = fileChooser.showOpenDialog(window);
-			
+
 			if (result == JFileChooser.APPROVE_OPTION) {
 				File saveFile = fileChooser.getSelectedFile();
-				
+
 				// Load file
-				JSONObject loadedLayout = null;
+				var mapper = new ObjectMapper();
+				ObjectNode loadedLayout = null;
 				try {
-					loadedLayout = new JSONObject(new String(Files.readAllBytes(saveFile.toPath()), StandardCharsets.UTF_8));
-				} catch (JSONException | IOException e1) {
-					e1.printStackTrace();
+					loadedLayout = mapper.readValue(saveFile, ObjectNode.class);
+
+				} catch (Exception err) {
+					err.printStackTrace();
+					return;
 				}
 
-				JSONArray chartsArray = loadedLayout.getJSONArray("charts");
-				
+				ArrayNode chartsArray = (ArrayNode) loadedLayout.get("charts");
+
 				// Clear current charts
-				for (Chart dataChart: window.charts) {
+				for (Chart dataChart : window.charts) {
 					// Remove from the UI
 					window.centerChartPanel.remove(dataChart.getPanel());
 				}
-				
+
 				// Finally, remove it from the list
 				window.charts.clear();
-				
-				for (int i = 0; i < chartsArray.length(); i++) {
-					JSONObject chartData = chartsArray.getJSONObject(i);
-					
+
+				for (int i = 0; i < chartsArray.size(); i++) {
+					var chartData = chartsArray.get(i);
+
 					addChart(true);
-					
+
 					Chart chart = window.charts.get(i);
-					
+
 					// Get location
-					chart.getSpanPanel().relX = chartData.getDouble("x");
-					chart.getSpanPanel().relY = chartData.getDouble("y");
-					chart.getSpanPanel().relWidth = chartData.getDouble("width");
-					chart.getSpanPanel().relHeight = chartData.getDouble("height");
-					
-					chart.getSpanPanel().updateBounds(window.centerChartPanel.getWidth(), window.centerChartPanel.getHeight());
-					
+					chart.getSpanPanel().relX = chartData.get("x").asDouble();
+					chart.getSpanPanel().relY = chartData.get("y").asDouble();
+					chart.getSpanPanel().relWidth = chartData.get("width").asDouble();
+					chart.getSpanPanel().relHeight = chartData.get("height").asDouble();
+
+					chart.getSpanPanel().updateBounds(window.centerChartPanel.getWidth(),
+							window.centerChartPanel.getHeight());
+
 					// Get xTypes
-					JSONArray xTypeArray = chartData.getJSONArray("xTypes");
-					chart.setXTypes(new DataType[xTypeArray.length()]);
+					var xTypeArray = (ArrayNode) chartData.get("xTypes");
+					chart.setXTypes(new DataType[xTypeArray.size()]);
 					for (int j = 0; j < chart.getXTypes().length; j++) {
-						JSONObject xTypeData = xTypeArray.getJSONObject(j);
-						
-						chart.getXTypes()[j] = new DataType(xTypeData.getInt("index"), xTypeData.getInt("tableIndex"));
+						var xTypeData = xTypeArray.get(j);
+
+						chart.getXTypes()[j] = new DataType(xTypeData.get("index").asInt(),
+								xTypeData.get("tableIndex").asInt());
 					}
-					
+
 					// Add yType
-					JSONObject yTypeData = chartData.getJSONObject("yType");
-					chart.setYType(new DataType(yTypeData.getInt("index"), yTypeData.getInt("tableIndex")));
+					var yTypeData = chartData.get("yType");
+					chart.setYType(new DataType(yTypeData.get("index").asInt(),
+							yTypeData.get("tableIndex").asInt()));
 				}
-				
+
 				updateUI();
 			}
 		}
@@ -665,51 +718,57 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	public void addChart() {
 		addChart(false);
 	}
-	
+
 	/**
-	 * @param silent Will not perform tasks such as updating the UI or selecting the chart
+	 * @param silent Will not perform tasks such as updating the UI or selecting the
+	 *               chart
 	 */
 	public void addChart(boolean silent) {
-		XYChart xyChart = new XYChartBuilder().title("Altitude vs Timestamp (s)").xAxisTitle("Timestamp (s)").yAxisTitle("Altitude (m)").build();
+		XYChart xyChart = new XYChartBuilder()
+				.title("Altitude vs Timestamp (s)")
+				.xAxisTitle("Timestamp (s)")
+				.yAxisTitle("Altitude (m)")
+				.build();
 
 		// Customize Chart
 		XYStyler firstChartStyler = xyChart.getStyler();
-		
+
 		firstChartStyler.setLegendPosition(LegendPosition.InsideNE);
 		firstChartStyler.setLegendVisible(true);
 		firstChartStyler.setLegendBackgroundColor(LEGEND_BACKGROUND_COLOR);
 		firstChartStyler.setToolTipsEnabled(true);
 		firstChartStyler.setDefaultSeriesRenderStyle(XYSeriesRenderStyle.Scatter);
-		//noinspection SuspiciousNameCombination
+		// noinspection SuspiciousNameCombination
 		firstChartStyler.setYAxisGroupPosition(1, YAxisPosition.Right);
 
 		// Series
 		xyChart.addSeries("series0", new double[] { 0 }, new double[] { 0 });
-		
+
 		XChartPanel<XYChart> chartPanel = new XChartPanel<>(xyChart);
 		window.centerChartPanel.add(chartPanel);
-		
+
 		DataChart dataChart = new DataChart(this, config, xyChart, chartPanel);
-		
+
 		// Set default size
 		dataChart.getSpanPanel().setRelSize(600, 450);
-		
+
 		// Add these default charts to the list
 		synchronized (window.charts) {
 			window.charts.add(dataChart);
 		}
-		
+
 		// Set to be selected
 		window.centerChartPanel.setComponentZOrder(chartPanel, 0);
 		dataChart.getSpanPanel().setSnapPanelListener(this);
-		
-		if (selectedChart != null) selectedChart.getPanel().setBorder(null);
-		
+
+		if (selectedChart != null)
+			selectedChart.getPanel().setBorder(null);
+
 		if (!silent) {
 			selectedChart = dataChart;
-			
+
 			snapPanelSelected(selectedChart.getSpanPanel());
-			
+
 			updateUI();
 		}
 	}
@@ -717,102 +776,102 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	/** For com selector JList */
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		if(e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
+		if (e.getSource() instanceof ListSelectionModel && !ignoreSelections) {
 			for (int i = 0; i < window.dataTables.size(); i++) {
 				TableHolder tableHolder = window.dataTables.get(i);
 				JTable dataTable = tableHolder.getReceivedDataTable(); // Just this table for now
-				
+
 				if (e.getSource() == dataTable.getSelectionModel()) {
 					int[] selections = dataTable.getSelectedRows();
 					DataType[] formattedSelections = new DataType[selections.length];
-					
+
 					moveSelectionsToNewTable(i, true);
-					
+
 					for (int j = 0; j < formattedSelections.length; j++) {
 						formattedSelections[j] = new DataType(selections[j], window.dataTables.indexOf(tableHolder));
 					}
-					
+
 					synchronized (window.charts) {
 						// Set chart to be based on this row
 						selectedChart.setXTypes(formattedSelections);
 					}
 
 					dataTable.setColumnSelectionInterval(0, 0);
-					
+
 					updateUI();
-					
+
 					break;
 				}
 			}
 		}
 	}
-	
+
 	@Override
 	public void mousePressed(MouseEvent e) {
 		for (int i = 0; i < window.dataTables.size(); i++) {
 			JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
-			
+
 			if (e.getSource() == dataTable && e.getButton() == MouseEvent.BUTTON3) {
 				// Left clicking the dataTable
 				int row = dataTable.rowAtPoint(e.getPoint());
 
 				ignoreSelections = true;
-				
+
 				moveSelectionsToNewTable(i, false);
-				
+
 				selectedChart.setYType(new DataType(row, i));
-				
+
 				((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = row;
 				dataTable.repaint();
-				
+
 				updateUI();
-				
+
 				ignoreSelections = false;
 			}
 		}
 	}
-	
+
 	public void moveSelectionsToNewTable(int newTableIndex, boolean changingX) {
 		boolean movingXType = false;
-		
+
 		// Clear previous selections
 		for (int j = 0; j < selectedChart.getXTypes().length; j++) {
 			if (selectedChart.getXTypes()[j].tableIndex != newTableIndex) {
 				int currentTableIndex = selectedChart.getXTypes()[j].tableIndex;
-				
+
 				// Clear that table's selection
 				window.dataTables.get(currentTableIndex).getReceivedDataTable().clearSelection();
 				window.dataTables.get(currentTableIndex).getReceivedDataTable().repaint();
-				
+
 				movingXType = true;
 			}
 		}
-		
+
 		if (movingXType && !changingX) {
 			selectedChart.setXTypes(new DataType[1]);
 			selectedChart.getXTypes()[0] = new DataType(1, newTableIndex);
-			
+
 			window.dataTables.get(newTableIndex).getReceivedDataTable().setRowSelectionInterval(1, 1);
 			window.dataTables.get(newTableIndex).getReceivedDataTable().setColumnSelectionInterval(0, 0);
 			window.dataTables.get(newTableIndex).getReceivedDataTable().repaint();
 		}
-		
+
 		// Move yType selection if needed
 		if (selectedChart.getYType().tableIndex != newTableIndex) {
 			// Deselect the old one
 			JTable oldDataTable = window.dataTables.get(selectedChart.getYType().tableIndex).getReceivedDataTable();
 			((DataTableCellRenderer) oldDataTable.getDefaultRenderer(Object.class)).coloredRow = -1;
 			oldDataTable.repaint();
-			
+
 			// Select this default selection
 			JTable dataTable = window.dataTables.get(newTableIndex).getReceivedDataTable();
 			((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = 0;
 			dataTable.repaint();
-			
+
 			selectedChart.setYType(new DataType(0, newTableIndex));
 		}
 	}
-	
+
 	/**
 	 * Called when a new snap window is highlighted
 	 */
@@ -823,45 +882,47 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 			selectedChart.getPanel().setBorder(null);
 
 			selectedChart = snapPanel.chart;
-			
+
 			// Add border
 			selectedChart.getPanel().setBorder(selectionBorder);
-			
+
 			// Add selections
 			ignoreSelections = true;
-			
+
 			for (int i = 0; i < window.dataTables.size(); i++) {
 				JTable dataTable = window.dataTables.get(i).getReceivedDataTable();
-				
+
 				dataTable.clearSelection();
 				for (int j = 0; j < selectedChart.getXTypes().length; j++) {
 					if (selectedChart.getXTypes()[j].tableIndex == i) {
-						dataTable.addRowSelectionInterval(selectedChart.getXTypes()[j].index, selectedChart.getXTypes()[j].index);
+						dataTable.addRowSelectionInterval(selectedChart.getXTypes()[j].index,
+								selectedChart.getXTypes()[j].index);
 					}
 				}
-				
+
 				// Update yType
 				if (selectedChart.getYType().tableIndex == i) {
-					((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart.getYType().index;
+					((DataTableCellRenderer) dataTable.getDefaultRenderer(Object.class)).coloredRow = selectedChart
+							.getYType().index;
 				}
-				
+
 				window.repaint();
-				
+
 				dataTable.setColumnSelectionInterval(0, 0);
 			}
-			
+
 			ignoreSelections = false;
 		}
 	}
 
 	@Override
 	public void componentHidden(ComponentEvent e) {
-		
+
 	}
 
 	@Override
 	public void componentMoved(ComponentEvent e) {
-		
+
 	}
 
 	@Override
@@ -869,40 +930,40 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 		// Chart Container resize management
 		int currentChartContainerWidth = window.centerChartPanel.getWidth();
 		int currentChartContainerHeight = window.centerChartPanel.getHeight();
-		
+
 		synchronized (window.charts) {
 			for (Chart chart : window.charts) {
 				chart.getSpanPanel().containerResized(currentChartContainerWidth, currentChartContainerHeight);
 			}
 		}
-		
+
 		chartContainerWidth = currentChartContainerWidth;
 		chartContainerHeight = currentChartContainerHeight;
 	}
 
 	@Override
 	public void componentShown(ComponentEvent e) {
-		
+
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		
+
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		
+
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		
+
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		
+
 	}
 }
 
@@ -921,5 +982,5 @@ class LayoutFileFilter extends javax.swing.filechooser.FileFilter {
 	public String getDescription() {
 		return "Rocket Layout File (.rlay)";
 	}
-	
+
 }
