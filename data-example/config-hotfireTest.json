@@ -18,6 +18,8 @@
 				"Pinhole Venting State",
 				"Main Valve State",
 				"Main Valve Direction",
+				"Main Valve Min Limit",
+				"Main Valve Max Limit",
 				"SensorSuite Timestamp",
 				"MSP2 Transducer",
 				"Swagelock Transducer",
