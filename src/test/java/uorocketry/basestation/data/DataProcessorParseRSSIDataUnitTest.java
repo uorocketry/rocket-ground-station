@@ -22,8 +22,8 @@ public class DataProcessorParseRSSIDataUnitTest {
     public void setup() {
         String[] labels = new String[] {"Timestamp (ns)", "Value 1", "Value 2", "Value 3", "Value 4", "Value 5", "Value 6", "Value 7", "Value 8", "Value 9"};
         String[] states = new String[] {"First State", "Second State"};
-        Map<String, Integer> indexes = new HashMap<>();
-        indexes.put("timestamp", 0);
+        Map<String, String> indexes = new HashMap<>();
+        indexes.put("0", "timestamp");
 
         DataSet dataSet = new DataSet("Processor Testing Set", "#AC1C3A", labels, states, indexes, ",");
         config = new FakeConfig(Collections.singletonList(dataSet), null);

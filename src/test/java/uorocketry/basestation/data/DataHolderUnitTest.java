@@ -21,9 +21,9 @@ public class DataHolderUnitTest {
     public void updateTableUI() {
         String[] labels = new String[] {"Timestamp (ns)", "State Value", "Hidden Value", "Overflow", "NaN", "Decmial", "Bigger Decimal"};
         String[] states = new String[] {"First State", "Second State"};
-        Map<String, Integer> indexes = new HashMap<>();
-        indexes.put("timestamp", 0);
-        indexes.put("state", 1);
+        Map<String, String> indexes = new HashMap<>();
+        indexes.put("0", "timestamp");
+        indexes.put("1", "state");
 
         DataSet dataSet = new DataSet("Testing Set", "#AB1C2A", labels, states, indexes, ",");
 

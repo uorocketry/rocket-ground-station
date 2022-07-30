@@ -55,8 +55,12 @@
 				"Max States"
 			],
 			"indexes": {
-				"timestamp": 0,
-				"state": 1
+				"0": "timestamp",
+				"1": "state",
+				"16": "pressure",
+				"17": "pressure",
+				"18": "pressure",
+				"19": "pressure"
 			},
 			"separator": ","
 		}

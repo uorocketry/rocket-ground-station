@@ -18,7 +18,8 @@ public class Data {
 	enum Types {
 		NORMAL,
 		LONG,
-		FORMATTED_COORDINATE
+		FORMATTED_COORDINATE,
+		PRESSURE
 	}
 	
 	public Data(Float data) {
@@ -28,6 +29,12 @@ public class Data {
 		
 		format.setGroupingUsed(true);
 		format.setGroupingSize(3);
+	}
+
+	public Data(Float data, Types type) {
+		this(data);
+
+		this.type = type;
 	}
 	
 	/**
@@ -64,7 +71,15 @@ public class Data {
 				return Math.round(data) + "° " + minutes + " '";
 			case LONG:
 				return dataLong != null ? format.format(dataLong) : "null";
-			default: 
+			case PRESSURE:
+				if (data != null) {
+					String unitOne = format.format(data);
+					String unitTwo = format.format(data * 6.895f);
+					return unitOne + " PSI | " + unitTwo + " kPa";
+				} else {
+					return "null";
+				}
+			default:
 				return data != null ? format.format(data) : "null";
 		}
 	}

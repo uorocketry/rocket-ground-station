@@ -6,8 +6,6 @@ import java.util.List;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
-import org.jetbrains.annotations.Nullable;
-
 import uorocketry.basestation.config.DataSet;
 
 public class DataHolder {
@@ -51,7 +49,7 @@ public class DataHolder {
 			String dataText = data[i].getFormattedString();
 			if (hiddenDataTypes.contains(types[i])) dataText = "Hidden Data";
 
-			if (dataSet.indexEquals("state", i) && data[i].getDecimalValue() != null) {
+			if (dataSet.indexIsType("state", i) && data[i].getDecimalValue() != null) {
 				dataText = dataSet.getState(data[i].getDecimalValue().intValue());
 			}
 			
@@ -62,9 +60,10 @@ public class DataHolder {
 	
 	public boolean set(int index, String currentData) {
 		// Check for special cases first
-		boolean isFormattedCoordinate =  (dataSet.indexEquals("latitude", index) && dataSet.indexEquals("latitudeFormatted", index))
-											|| (dataSet.indexEquals("longitude", index) && dataSet.indexEquals("longitudeFormatted", index));
-		boolean isTimestamp = dataSet.indexEquals("timestamp", index);
+		boolean isFormattedCoordinate =  (dataSet.indexIsType("latitude", index) && dataSet.indexIsType("latitudeFormatted", index))
+											|| (dataSet.indexIsType("longitude", index) && dataSet.indexIsType("longitudeFormatted", index));
+		boolean isTimestamp = dataSet.indexIsType("timestamp", index);
+		boolean isPressure = dataSet.indexIsType("pressure", index);
 
 		if (isFormattedCoordinate) {
 			// These need to be converted to decimal coordinates to be used
@@ -83,7 +82,7 @@ public class DataHolder {
 		} else if (isTimestamp) {
 			// Long case
 			Long longData = -1L;
-			
+
 			try {
 				longData = Long.parseLong(currentData.trim());
 			} catch (NumberFormatException e) {
@@ -92,11 +91,11 @@ public class DataHolder {
 					longData = null;
 				} else {
 					System.err.println("Number conversion failed for '" + currentData + "', -1 being used instead");
-					
+
 					return false;
 				}
 			}
-			
+
 			data[index] = new Data(longData);
 		} else {
 			// Normal case
@@ -115,7 +114,7 @@ public class DataHolder {
 				}
 			}
 			
-			data[index] = new Data(floatData);
+			data[index] = new Data(floatData, isPressure ? Data.Types.PRESSURE : Data.Types.NORMAL);
 		}
 		
 		return true;

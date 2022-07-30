@@ -4,7 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,7 +14,7 @@ public class DataSet {
 
     private String[] labels;
     private String[] states;
-    private Map<String, Integer> indexes;
+    private Map<String, String> indexes;
 
     private String separator;
 
@@ -35,7 +34,7 @@ public class DataSet {
             for (Iterator<String> it = indexesJson.keys(); it.hasNext(); ) {
                 String key = it.next();
                 try {
-                    indexes.put(key, indexesJson.getInt(key));
+                    indexes.put(key, indexesJson.getString(key));
                 } catch (JSONException e) {}
             }
         }
@@ -44,7 +43,7 @@ public class DataSet {
     }
 
     public DataSet(String name, String color, String[] labels, String[] states,
-                   Map<String, Integer> indexes, String separator) {
+                   Map<String, String> indexes, String separator) {
         this.name = name;
         this.color = color;
         this.labels = labels;
@@ -82,7 +81,7 @@ public class DataSet {
         return states != null ? states[index] : String.valueOf(index);
     }
 
-    public Map<String, Integer> getIndexes() {
+    public Map<String, String> getIndexes() {
         return indexes;
     }
 
@@ -90,15 +89,27 @@ public class DataSet {
         return indexes != null && indexes.containsKey(key);
     }
 
-    public boolean indexEquals(String key, int index) {
+    public boolean indexIsType(String key, int index) {
         if (indexes == null) return false;
 
-        Integer result = indexes.get(key);
-        return result != null && result == index;
+        String result = indexes.get(index + "");
+        return key.equals(result);
     }
 
     public Integer getIndex(String key) {
-        return indexes != null ? indexes.get(key) : null;
+        if (indexes != null) {
+            for (Map.Entry<String, String> entry : indexes.entrySet()) {
+                if (entry.getValue().equals(key)) {
+                    try {
+                        return Integer.parseInt(entry.getKey());
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            return null;
+        } else {
+            return null;
+        }
     }
 
     public String getSeparator() {

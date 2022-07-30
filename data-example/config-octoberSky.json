@@ -37,13 +37,13 @@
         		"Ground",
         		"Max States"
         	],
-        	"indexes": {
-                "timestamp": 1,
-                "state": 19,
-	        	"altitude": 10,
-	        	"latitude": 8,
-	        	"longitude": 9
-	        },
+			"indexes": {
+				"1": "timestamp",
+				"19": "state",
+				"10": "altitude",
+				"8": "latitude",
+				"9": "longitude"
+			},
             "separator": ","
         }
     ]
