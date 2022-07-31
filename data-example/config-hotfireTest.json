@@ -60,10 +60,9 @@
 			"indexes": {
 				"0": "timestamp",
 				"1": "state",
-				"16": "pressure",
-				"17": "pressure",
 				"18": "pressure",
-				"19": "pressure"
+				"19": "pressure",
+				"20": "pressure"
 			},
 			"separator": ","
 		}
