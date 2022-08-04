@@ -7,11 +7,13 @@
 			"labels": [
 				"Timestamp (ms)",
 				"Current State",
+				"Igniter Target",
 				"Heater Target",
 				"Vent Target",
 				"Fill Venting Target",
 				"Pinhole Venting Target",
 				"Main Valve Target",
+				"Igniter State",
 				"Heater State",
 				"Vent State",
 				"Fill Venting State",
@@ -37,7 +39,7 @@
 				"Temp 6",
 				"Temp 7",
 				"Temp 8",
-				"Log Status",
+				"Logger Status",
 				"Temperature"
 			],
 			"states": [
