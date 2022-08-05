@@ -14,7 +14,8 @@ public class Data {
 	private Types type;
 
 	private DecimalFormat format = new DecimalFormat("#.######");
-	
+	private DecimalFormat noDecimals = new DecimalFormat("#");
+
 	enum Types {
 		NORMAL,
 		LONG,
@@ -73,8 +74,8 @@ public class Data {
 				return dataLong != null ? format.format(dataLong) : "null";
 			case PRESSURE:
 				if (data != null) {
-					String unitOne = format.format(data);
-					String unitTwo = format.format(data * 6.895f);
+					String unitOne = noDecimals.format(data);
+					String unitTwo = noDecimals.format(data * 6.895f);
 					return unitOne + " PSI | " + unitTwo + " kPa";
 				} else {
 					return "null";
