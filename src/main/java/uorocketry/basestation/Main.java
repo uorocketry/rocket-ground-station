@@ -119,7 +119,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	boolean ignoreSelections = false;
 	
 	/** If true, it will show the latest data instead of showing a subset of all data */
-	boolean onlyShowLatestData = false;
+	boolean onlyShowLatestData = true;
 	
 	/** If true, clicking on data in a chart will hide it */
 	public boolean dataDeletionMode = false;

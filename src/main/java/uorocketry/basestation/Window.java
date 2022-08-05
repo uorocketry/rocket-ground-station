@@ -147,6 +147,7 @@ public class Window extends JFrame {
 		chartDataPointsOptions.setLayout(new BoxLayout(chartDataPointsOptions, BoxLayout.Y_AXIS));
 		
 		onlyShowLatestDataCheckBox = new JCheckBox("Only Show Latest Data");
+		onlyShowLatestDataCheckBox.setSelected(true);
 		chartDataPointsOptions.add(onlyShowLatestDataCheckBox);
 		
 		maxDataPoints = new JPanel();
