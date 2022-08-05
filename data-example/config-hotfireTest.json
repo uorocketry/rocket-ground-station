@@ -13,11 +13,13 @@
 				"Fill Venting Target",
 				"Pinhole Venting Target",
 				"Main Valve Target",
+				"Purge Vent Target",
 				"Igniter State",
 				"Heater State",
 				"Vent State",
 				"Fill Venting State",
 				"Pinhole Venting State",
+				"Purge Vent State",
 				"Main Valve State",
 				"Main Valve Direction",
 				"Main Valve Min Limit",
@@ -45,8 +47,8 @@
 			"states": [
 				"Init",
 				"Wait For Init",
-				"Wait For Ready",
-				"Wait For Filling",
+				"Wait For Purge",
+				"Purge",
 				"Filling",
 				"Wait For Ignition",
 				"Ignition",
@@ -71,7 +73,7 @@
 	],
 	"stateEvents": [
 		{
-			"name": "Ready",
+			"name": "Purge",
 			"data": 7,
 			"availableStates": [2, 11],
 			"successStates": [3, 4, 5, 6, 7, 8, 9, 11, 12]
@@ -79,7 +81,7 @@
 		{
 			"name": "Start Filling",
 			"data": 0,
-			"availableStates": [3, 11],
+			"availableStates": [3, 5, 11],
 			"successStates": [4, 5, 6, 7, 8, 9, 11, 12]
 		},
 		{
