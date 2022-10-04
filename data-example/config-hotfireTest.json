@@ -24,6 +24,7 @@
 				"Main Valve Direction",
 				"Main Valve Min Limit",
 				"Main Valve Max Limit",
+				"Load Cell",
 				"SensorSuite Timestamp",
 				"Pressure 1",
 				"Pressure 2",
