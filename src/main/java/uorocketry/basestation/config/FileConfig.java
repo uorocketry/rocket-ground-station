@@ -13,16 +13,6 @@ import java.util.List;
 
 public class FileConfig extends Config {
 
-    /** The location of the comma separated labels without the extension. */
-    public static final String CONFIG_LOCATION = "data/config.json";
-
-    /**
-     * Run once at the beginning of simulation mode
-     */
-    public FileConfig() {
-        this(CONFIG_LOCATION);
-    }
-
     public FileConfig(String fileName) {
         String configString = null;
         try {

@@ -2,11 +2,9 @@
 
 ![Demo](https://user-images.githubusercontent.com/12688112/71053199-be5fbb80-211b-11ea-9bd0-936da904a2ce.gif)
 
-# Add labels
+# Labels configuration
 
-Make a folder called `data` and a file called `config.json` in data. This is a JSON file. Follow the format from `data-example/config.json`.
-
-Rename the `data-example` folder to `data` and then rename one of the config files to `config.json`.
+Labels are configured by the json files inside of `configs`. The default config is `configs/config-hotfireTest.json`
 
 # Usage
 
@@ -19,6 +17,22 @@ Setup the labels as described above.
 Run `Main.java`
 
 Build with `./gradlew build`
+
+# Command Line Parameters
+
+```bash
+--data someDir/someFile.json
+```
+
+Specify a different config file from the default `configs/config-hotfireTest.json`
+
+***
+
+```bash
+--sim
+```
+
+Start in simulation mode
 
 # Simulation
 

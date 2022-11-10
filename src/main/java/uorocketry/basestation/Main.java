@@ -128,22 +128,28 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
 
+		String configFilename = "configs/config-hotfireTest.json";
+
 		// Find different possible commands
 		for (int i = 0; i + 1 < args.length; i++) {
-			switch(args[i]) {
-			case "--sim":
+			if (args[i].equals("--sim")) {
 				simulation = Boolean.parseBoolean(args[i + 1]);
-				
-				break;
+			} else if (args[i].startsWith("--data")) {
+				String[] dataArgs = args[i].split(" ");
+				if (dataArgs.length > 1) {
+					configFilename = dataArgs[1];
+				} else {
+					System.err.println("Data filename incorrect");
+				}
 			}
 		}
 		
-		new Main();
+		new Main(configFilename);
 	}
 	
-	public Main() {
+	public Main(String configFilename) {
 		// Load labels
-		config = new FileConfig();
+		config = new FileConfig(configFilename);
 		
 		// Create window
 		window = new Window(this, config);
