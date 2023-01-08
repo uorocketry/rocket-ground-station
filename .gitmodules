@@ -1,0 +1,3 @@
+[submodule "protobuf-definitions"]
+	path = src/main/proto
+	url = https://github.com/uorocketry/protobuf-definitions

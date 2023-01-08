@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 public abstract class AbstractConnectionMethod implements ConnectionMethod {
 
-    protected final byte[] DELIMITER = "\n".getBytes(StandardCharsets.UTF_8);
+    protected final byte[] DELIMITER = { 0 };
 
     protected ConnectionMethodListener listener;
 

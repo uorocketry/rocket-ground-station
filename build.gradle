@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'com.google.protobuf'
 archivesBaseName = 'GroundStation'
 
 repositories {
@@ -17,6 +18,17 @@ jar {
 	from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
+	}
 }
 
 dependencies {
@@ -25,6 +37,8 @@ dependencies {
 	implementation	'org.knowm.xchart:xchart:3.6.1'
 	implementation	'org.java-websocket:Java-WebSocket:1.5.1'
     implementation 'org.jetbrains:annotations:19.0.0'
+	implementation group: 'com.google.protobuf', name: 'protobuf-java', version: '3.19.1'
+	implementation group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.19.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 }

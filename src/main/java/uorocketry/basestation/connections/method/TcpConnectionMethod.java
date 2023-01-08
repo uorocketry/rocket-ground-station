@@ -1,10 +1,13 @@
 package uorocketry.basestation.connections.method;
 
+import themarpe.cobs.Cobs;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class TcpConnectionMethod extends AbstractConnectionMethod implements Runnable {
 
@@ -78,7 +81,14 @@ public class TcpConnectionMethod extends AbstractConnectionMethod implements Run
                         result[i] = receivedData.get(i);
                     }
 
-                    listener.receivedData(result);
+                    byte[] decoded = new byte[receivedData.size()];
+                    Cobs.DecodeResult decodeResult = Cobs.decode(decoded, result);
+
+                    if (decodeResult.status == Cobs.DecodeStatus.OK) {
+                        listener.receivedData(result);
+                    } else {
+                        System.err.println("Failed to decode using COBS due to " + decodeResult.status.toString() + ": " + Arrays.toString(decoded));
+                    }
                 }
 
             } catch (IOException e) {
