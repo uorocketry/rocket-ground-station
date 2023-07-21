@@ -177,6 +177,7 @@ public class Main implements ComponentListener, ChangeListener, ActionListener, 
 	
 	private void setupData() {
 		dataProcessor = new DataProcessor(config, window.dataTables);
+		window.userEventPanel.setDataPointHolder(dataProcessor.getDataPointHolder());
 
 		currentDataIndexes = new ArrayList<>(config.getDataSourceCount());
 		minDataIndexes = new ArrayList<>(config.getDataSourceCount());

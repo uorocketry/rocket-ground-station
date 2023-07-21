@@ -9,6 +9,7 @@ import uorocketry.basestation.connections.DataReceiver;
 import uorocketry.basestation.connections.DeviceConnection;
 import uorocketry.basestation.connections.DeviceConnectionHolder;
 import uorocketry.basestation.control.StateButton;
+import uorocketry.basestation.control.UserEventPanel;
 import uorocketry.basestation.data.DataTableCellRenderer;
 import uorocketry.basestation.data.RssiProcessor;
 import uorocketry.basestation.panel.Chart;
@@ -56,6 +57,7 @@ public class Window extends JFrame {
 	List<JSlider> maxSliders = new ArrayList<JSlider>(2);
 	List<JSlider> minSliders = new ArrayList<JSlider>(2);
 	public JTabbedPane sliderTabs;
+	UserEventPanel userEventPanel;
 	JButton clearDataButton;
 	JButton refreshComSelectorButton;
 	JButton hideComSelectorButton;
@@ -224,7 +226,10 @@ public class Window extends JFrame {
 		
 		eastSliderButtons = new JPanel();
 		sliderButtons.add(eastSliderButtons, BorderLayout.EAST);
-		
+
+		userEventPanel = new UserEventPanel(config);
+		eastSliderButtons.add(userEventPanel.getPanel());
+
 		clearDataButton = new JButton("Clear Data");
 		eastSliderButtons.add(clearDataButton);
 		
